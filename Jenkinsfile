@@ -15,21 +15,21 @@
 // REQUIRED environment values below — update to match the real IIS install before first run:
 //   IIS_APP_POOL, IIS_SITE_APP, IIS_PHYSICAL_PATH, HEALTH_CHECK_URL, MSDEPLOY_EXE
 //
-// TRIGGER: this job is expected to be configured as a single-branch Pipeline job pointed at
-// one branch (e.g. main) via "Pipeline script from SCM", with a GitHub webhook calling
-// <jenkins-url>/github-webhook/ on push so builds start automatically. See setup notes in chat.
+// TRIGGER: this job is configured as a single-branch Pipeline job ("Pipeline script from SCM").
+// Currently using pollSCM (core Jenkins, no plugin required) since this Jenkins instance isn't
+// yet publicly reachable for a GitHub webhook. Once it is, swap this for `triggers { githubPush() }`
+// (requires the GitHub plugin) and check "GitHub hook trigger for GITScm polling" on the job.
 
 pipeline {
     agent { label 'windows-iis' }
 
     options {
-        timestamps()
         disableConcurrentBuilds()
         buildDiscarder(logRotator(numToKeepStr: '20'))
     }
 
     triggers {
-        githubPush()
+        pollSCM('H/2 * * * *')
     }
 
     parameters {
