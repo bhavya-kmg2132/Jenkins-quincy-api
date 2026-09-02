@@ -1,0 +1,39 @@
+name: Trigger Jenkins deploy
+
+# Jenkins itself isn't publicly reachable (it's on a home/office network behind NAT), so this
+# doesn't use a GitHub webhook into Jenkins. Instead it runs on a self-hosted runner installed
+# on the SAME machine as Jenkins/IIS (see C:\actions-runner) — self-hosted runners make an
+# outbound connection to GitHub to pick up jobs, so no inbound port forwarding/DNS/TLS is needed.
+# The job just curls the local Jenkins REST API to kick off the existing Jenkinsfile pipeline
+# (build, publish, harden config, Web Deploy to IIS, inject secrets, health check).
+
+on:
+  push:
+    branches:
+      - feature_Api_dev
+      - main
+
+jobs:
+  trigger-jenkins:
+    runs-on: [self-hosted, windows-iis]
+    steps:
+      - name: Trigger Jenkins build
+        shell: powershell
+        env:
+          JENKINS_USER: ${{ secrets.JENKINS_USER }}
+          JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $jenkinsUrl = "http://localhost:8080"
+          $jobName = "quincy-api-netcoreapi"
+
+          $pair = "$($env:JENKINS_USER):$($env:JENKINS_API_TOKEN)"
+          $basicAuth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($pair))
+          $headers = @{ Authorization = "Basic $basicAuth" }
+
+          $crumbResponse = Invoke-RestMethod -Uri "$jenkinsUrl/crumbIssuer/api/json" -Headers $headers
+          $headers[$crumbResponse.crumbRequestField] = $crumbResponse.crumb
+
+          $buildUrl = "$jenkinsUrl/job/$jobName/buildWithParameters?BUILD_CONFIGURATION=Release&DEPLOY=true"
+          Invoke-RestMethod -Uri $buildUrl -Headers $headers -Method Post
+          Write-Host "Triggered Jenkins job '$jobName'"
