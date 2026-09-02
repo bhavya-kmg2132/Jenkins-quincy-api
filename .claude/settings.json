@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(powershell.exe -NoProfile -Command \"Test-NetConnection -ComputerName pg-server-1.postgres.database.azure.com -Port 5432 -WarningAction SilentlyContinue | Select-Object ComputerName,RemotePort,TcpTestSucceeded\")"
-    ]
-  }
-}
