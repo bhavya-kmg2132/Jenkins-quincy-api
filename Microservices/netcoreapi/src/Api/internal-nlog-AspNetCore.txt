@@ -1,0 +1,25 @@
+2026-09-02 16:16:55.7847 Warn Error has been raised. Exception: NLog.NLogConfigurationException: 'FileTarget' cannot assign unknown property 'writeBuffer'='false'
+   at NLog.Config.LoggingConfigurationParser.SetPropertyValueFromString[T](T targetObject, String propertyName, String propertyValue, ValidatedConfigurationElement element)
+2026-09-02 16:16:55.8605 Warn Error has been raised. Exception: NLog.NLogConfigurationException: 'FileTarget' cannot assign unknown property 'enableArchiveFileCompression'='true'
+   at NLog.Config.LoggingConfigurationParser.SetPropertyValueFromString[T](T targetObject, String propertyName, String propertyValue, ValidatedConfigurationElement element)
+2026-09-02 16:16:55.8940 Info Registered target NLog.Targets.FileTarget(Name=allfile)
+2026-09-02 16:16:55.8993 Warn Error has been raised. Exception: NLog.NLogConfigurationException: 'FileTarget' cannot assign unknown property 'writeBuffer'='false'
+   at NLog.Config.LoggingConfigurationParser.SetPropertyValueFromString[T](T targetObject, String propertyName, String propertyValue, ValidatedConfigurationElement element)
+2026-09-02 16:16:55.8993 Warn Error has been raised. Exception: NLog.NLogConfigurationException: 'FileTarget' cannot assign unknown property 'enableArchiveFileCompression'='true'
+   at NLog.Config.LoggingConfigurationParser.SetPropertyValueFromString[T](T targetObject, String propertyName, String propertyValue, ValidatedConfigurationElement element)
+2026-09-02 16:16:55.8993 Info Registered target NLog.Targets.FileTarget(Name=ownFile-web)
+2026-09-02 16:16:55.9180 Info Registered target NLog.Targets.ConsoleTarget(Name=lifetimeConsole)
+2026-09-02 16:16:55.9334 Info Registered target NLog.Targets.ConsoleTarget(Name=logconsole)
+2026-09-02 16:16:55.9334 Warn Error has been raised. Exception: NLog.NLogConfigurationException: 'FileTarget' cannot assign unknown property 'writeBuffer'='false'
+   at NLog.Config.LoggingConfigurationParser.SetPropertyValueFromString[T](T targetObject, String propertyName, String propertyValue, ValidatedConfigurationElement element)
+2026-09-02 16:16:55.9334 Warn Error has been raised. Exception: NLog.NLogConfigurationException: 'FileTarget' cannot assign unknown property 'enableArchiveFileCompression'='true'
+   at NLog.Config.LoggingConfigurationParser.SetPropertyValueFromString[T](T targetObject, String propertyName, String propertyValue, ValidatedConfigurationElement element)
+2026-09-02 16:16:55.9599 Info Registered target NLog.Targets.FileTarget(Name=infofile)
+2026-09-02 16:16:55.9640 Warn Error has been raised. Exception: NLog.NLogConfigurationException: 'FileTarget' cannot assign unknown property 'writeBuffer'='false'
+   at NLog.Config.LoggingConfigurationParser.SetPropertyValueFromString[T](T targetObject, String propertyName, String propertyValue, ValidatedConfigurationElement element)
+2026-09-02 16:16:55.9640 Warn Error has been raised. Exception: NLog.NLogConfigurationException: 'FileTarget' cannot assign unknown property 'enableArchiveFileCompression'='true'
+   at NLog.Config.LoggingConfigurationParser.SetPropertyValueFromString[T](T targetObject, String propertyName, String propertyValue, ValidatedConfigurationElement element)
+2026-09-02 16:16:55.9640 Info Registered target NLog.Targets.FileTarget(Name=errorfile)
+2026-09-02 16:16:56.0315 Warn Error has been raised. Exception: NLog.NLogConfigurationException: LoggingRule where all filters and FilterDefaultAction=Ignore : logNamePattern: (:All) levels: [ Trace Debug Info Warn Error Fatal ] writeTo: [ ownFile-web ]
+2026-09-02 16:16:56.0315 Info NLog, Version=6.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 6.0.5.4631. Product version: 6.0.5+a023270f66a9445456a70c06668acabe7179c723. GlobalAssemblyCache: False
+2026-09-02 16:16:56.1987 Info Configuration initialized: Targets=6, ConfigItems=158, AutoReload=true, FilePath=C:\Work Space\Jenkins-quincy-api\Microservices\netcoreapi\src\Api\nlog.config
