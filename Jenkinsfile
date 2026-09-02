@@ -44,10 +44,10 @@ pipeline {
         PUBLISH_DIR = "${WORKSPACE}\\_publish"
 
         // --- IIS / Web Deploy target — UPDATE THESE for the real server ---
-        IIS_APP_POOL      = 'QuincyApiPool'
-        IIS_SITE_APP      = 'Default Web Site/QuincyApi'          // msdeploy -dest:iisApp value
+        IIS_APP_POOL      = 'QuincyApi'
+        IIS_SITE_APP      = 'http://localhost:8081/'          // msdeploy -dest:iisApp value
         IIS_PHYSICAL_PATH = 'C:\\inetpub\\wwwroot\\QuincyApi'     // must match IIS_SITE_APP's physical path
-        HEALTH_CHECK_URL  = 'http://localhost/QuincyApi/api/health'
+        HEALTH_CHECK_URL  = 'http://localhost:8081/api/health'
         MSDEPLOY_EXE      = 'C:\\Program Files\\IIS\\Microsoft Web Deploy V3\\msdeploy.exe'
     }
 
