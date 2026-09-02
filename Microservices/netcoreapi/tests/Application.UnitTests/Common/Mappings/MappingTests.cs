@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Application.Common.Mappings;
 using AutoMapper;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Application.UnitTests.Common.Mappings
 {
@@ -15,7 +16,7 @@ namespace Application.UnitTests.Common.Mappings
             _configuration = new MapperConfiguration(cfg =>
             {
                 cfg.AddProfile<MappingProfile>();
-            });
+            }, NullLoggerFactory.Instance);
 
             _mapper = _configuration.CreateMapper();
         }

@@ -4,6 +4,9 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="AWSSDK.S3" Version="4.0.11" />
+		<PackageReference Include="AWSSDK.Core" Version="4.0.3.3" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="2.19.180" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
 		<PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="5.0.1" />
 		<PackageReference Include="Dapper" Version="2.1.66" />
