@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+	<sql name="Master.GetReferenceCustomFields">
+		<![CDATA[SELECT CustomFields FROM ReferenceCustomFields WHERE TableName = @TableName]]>
+	</sql>
+	
+</sql-set>
+

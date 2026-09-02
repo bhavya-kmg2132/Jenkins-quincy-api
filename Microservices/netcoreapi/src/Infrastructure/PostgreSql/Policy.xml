@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+
+  <sql name="Policy.GetPolicyById">
+    <![CDATA[
+SELECT
+    "Id", "PolicyNumber", "PolicyName", "LineOfBusinessCode", "PolicyType",
+    "StatusCode", "TransactionType", "QuoteId", "RenewalStatus",
+    "InsuredId", "InsuredName", "InsuredAddress",
+    "EffectiveDate", "ExpirationDate", "OriginalEffectiveDate",
+    "AccountingDate", "CancellationDate", "CancelReasonDescription",
+    "TotalPremium", "SumInsured", "Deductible", "Currency",
+    "ProducerCode", "ProducerName", "UnderwriterId", "UnderwriterName", "AgentCode",
+    "VesselName", "VesselType", "CargoType", "RouteFrom", "RouteTo",
+    "AircraftRegistration", "FlightNumber", "RiskDescription", "SurveyorName", "Remarks",
+    "CreatedBy", "CreatedDateTime", "UpdatedBy", "UpdatedDateTime",
+    "CustomFields" AS "CustomFieldJson"
+FROM "McaPolicy"
+WHERE "Id" = @Id AND "IsDeleted" = false;
+    ]]>
+  </sql>
+
+  <sql name="Policy.GetPolicyList">
+    <![CDATA[
+SELECT
+    "Id", "PolicyNumber", "PolicyName", "LineOfBusinessCode", "PolicyType",
+    "StatusCode", "TransactionType", "QuoteId", "RenewalStatus",
+    "InsuredId", "InsuredName", "InsuredAddress",
+    "EffectiveDate", "ExpirationDate", "OriginalEffectiveDate",
+    "AccountingDate", "CancellationDate", "CancelReasonDescription",
+    "TotalPremium", "SumInsured", "Deductible", "Currency",
+    "ProducerCode", "ProducerName", "UnderwriterId", "UnderwriterName", "AgentCode",
+    "VesselName", "VesselType", "CargoType", "RouteFrom", "RouteTo",
+    "AircraftRegistration", "FlightNumber", "RiskDescription", "SurveyorName", "Remarks",
+    "CreatedBy", "CreatedDateTime", "UpdatedBy", "UpdatedDateTime",
+    "CustomFields" AS "CustomFieldJson"
+FROM "McaPolicy"
+WHERE "IsDeleted" = false
+ORDER BY "UpdatedDateTime" DESC;
+    ]]>
+  </sql>
+
+  <sql name="Policy.Add">
+    <![CDATA[
+INSERT INTO "McaPolicy" (
+    "PolicyNumber", "PolicyName", "LineOfBusinessCode", "PolicyType",
+    "StatusCode", "TransactionType", "QuoteId", "RenewalStatus",
+    "InsuredId", "InsuredName", "InsuredAddress",
+    "EffectiveDate", "ExpirationDate", "OriginalEffectiveDate",
+    "AccountingDate", "CancellationDate", "CancelReasonDescription",
+    "TotalPremium", "SumInsured", "Deductible", "Currency",
+    "ProducerCode", "ProducerName", "UnderwriterId", "UnderwriterName", "AgentCode",
+    "VesselName", "VesselType", "CargoType", "RouteFrom", "RouteTo",
+    "AircraftRegistration", "FlightNumber", "RiskDescription", "SurveyorName", "Remarks",
+    "CreatedBy", "CreatedDateTime", "UpdatedDateTime",
+    "IsActive", "IsDeleted", "CustomFields"
+)
+VALUES (
+    @PolicyNumber, @PolicyName, @LineOfBusinessCode, @PolicyType,
+    @StatusCode, @TransactionType, @QuoteId, @RenewalStatus,
+    @InsuredId, @InsuredName, @InsuredAddress,
+    @EffectiveDate, @ExpirationDate, @OriginalEffectiveDate,
+    @AccountingDate, @CancellationDate, @CancelReasonDescription,
+    @TotalPremium, @SumInsured, @Deductible, @Currency,
+    @ProducerCode, @ProducerName, @UnderwriterId, @UnderwriterName, @AgentCode,
+    @VesselName, @VesselType, @CargoType, @RouteFrom, @RouteTo,
+    @AircraftRegistration, @FlightNumber, @RiskDescription, @SurveyorName, @Remarks,
+    @CreatedBy, @CreatedDateTime, @UpdatedDateTime,
+    true, false, @CustomFields
+)
+RETURNING "Id";
+    ]]>
+  </sql>
+
+  <sql name="Policy.Update">
+    <![CDATA[
+UPDATE "McaPolicy"
+SET
+    "PolicyName"              = @PolicyName,
+    "PolicyType"              = @PolicyType,
+    "StatusCode"              = @StatusCode,
+    "TransactionType"         = @TransactionType,
+    "QuoteId"                 = @QuoteId,
+    "RenewalStatus"           = @RenewalStatus,
+    "InsuredId"               = @InsuredId,
+    "InsuredName"             = @InsuredName,
+    "InsuredAddress"          = @InsuredAddress,
+    "EffectiveDate"           = @EffectiveDate,
+    "ExpirationDate"          = @ExpirationDate,
+    "OriginalEffectiveDate"   = @OriginalEffectiveDate,
+    "AccountingDate"          = @AccountingDate,
+    "CancellationDate"        = @CancellationDate,
+    "CancelReasonDescription" = @CancelReasonDescription,
+    "TotalPremium"            = @TotalPremium,
+    "SumInsured"              = @SumInsured,
+    "Deductible"              = @Deductible,
+    "Currency"                = @Currency,
+    "ProducerCode"            = @ProducerCode,
+    "ProducerName"            = @ProducerName,
+    "UnderwriterId"           = @UnderwriterId,
+    "UnderwriterName"         = @UnderwriterName,
+    "AgentCode"               = @AgentCode,
+    "VesselName"              = @VesselName,
+    "VesselType"              = @VesselType,
+    "CargoType"               = @CargoType,
+    "RouteFrom"               = @RouteFrom,
+    "RouteTo"                 = @RouteTo,
+    "AircraftRegistration"    = @AircraftRegistration,
+    "FlightNumber"            = @FlightNumber,
+    "RiskDescription"         = @RiskDescription,
+    "SurveyorName"            = @SurveyorName,
+    "Remarks"                 = @Remarks,
+    "UpdatedBy"               = @UpdatedBy,
+    "UpdatedDateTime"         = @UpdatedDateTime,
+    "CustomFields"            = @CustomFields
+WHERE "Id" = @Id;
+    ]]>
+  </sql>
+
+  <sql name="Policy.Delete">
+    <![CDATA[
+UPDATE "McaPolicy"
+SET "IsDeleted" = true, "UpdatedBy" = @UpdatedBy, "UpdatedDateTime" = @UpdatedDateTime
+WHERE "Id" = @Id;
+    ]]>
+  </sql>
+
+  <sql name="Policy.PermanentDelete">
+    <![CDATA[
+DELETE FROM "McaPolicy" WHERE "Id" = @Id;
+    ]]>
+  </sql>
+
+  <sql name="Policy.GeneratePolicyNumber">
+    <![CDATA[
+SELECT "PolicyNumber" FROM "McaPolicy" ORDER BY "CreatedDateTime" DESC LIMIT 1;
+    ]]>
+  </sql>
+
+  <sql name="Policy.GetReferenceCustomFields">
+    <![CDATA[
+SELECT "CustomFields" FROM "ReferenceCustomFields" WHERE "TableName" = @TableName;
+    ]]>
+  </sql>
+
+</sql-set>

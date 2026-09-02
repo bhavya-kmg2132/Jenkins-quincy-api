@@ -1,0 +1,275 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+	<sql name="AcmeProduct.GetAcmeProductById">
+		<![CDATA[SELECT
+    [Id],
+    [Code],
+    [SKU],
+    [Name],
+    [DisplayName],
+    [ShortName],
+    [Description],
+    [ProductType],
+    [BaseCost],
+    [BasePrice],
+    [Currency],
+    [ProductOwnerId],
+    [ProductOwner],
+    [ProductCode],
+    [ProductActive],
+    [SalesStartDate],
+    [SalesEndDate],
+    [SupportStartDate],
+    [SupportEndDate],
+    [VendorId],
+    [VendorName],
+    [ProductCategoryId],
+    [ProductCategory],
+    [ManufacturerId],
+    [Manufacturer],
+    [UnitPrice],
+    [CommissionRate],
+    [TaxId],
+    [Tax],
+    [UsageUnitId],
+    [UsageUnit],
+    [QuantityInStock],
+    [HandlerId],
+    [Handler],
+    [QuantityOrdered],
+    [ReorderLevel],
+    [QuantityInDemand],
+    [CreatedBy],
+    [CreatedDateTime],
+    [UpdatedBy],
+    [UpdatedDateTime],
+    [CustomFields] AS [CustomFieldJson]
+FROM
+    [AcmeProduct]
+WHERE
+    [Id] = @Id
+    AND [IsDeleted] = 0
+ORDER BY
+    [UpdatedDateTime] DESC;
+]]>
+	</sql>
+	<sql name="AcmeProduct.GetAcmeProductList">
+		<![CDATA[SELECT
+    [Id],
+    [Code],
+    [SKU],
+    [Name],
+    [DisplayName],
+    [ShortName],
+    [Description],
+    [ProductType],
+    [BaseCost],
+    [BasePrice],
+    [Currency],
+    [ProductOwnerId],
+    [ProductOwner],
+    [ProductCode],
+    [ProductActive],
+    [SalesStartDate],
+    [SalesEndDate],
+    [SupportStartDate],
+    [SupportEndDate],
+    [VendorId],
+    [VendorName],
+    [ProductCategoryId],
+    [ProductCategory],
+    [ManufacturerId],
+    [Manufacturer],
+    [UnitPrice],
+    [CommissionRate],
+    [TaxId],
+    [Tax],
+    [UsageUnitId],
+    [UsageUnit],
+    [QuantityInStock],
+    [HandlerId],
+    [Handler],
+    [QuantityOrdered],
+    [ReorderLevel],
+    [QuantityInDemand],
+    [CreatedBy],
+    [CreatedDateTime],
+    [UpdatedBy],
+    [UpdatedDateTime],
+    [CustomFields] AS [CustomFieldJson]
+FROM
+    [AcmeProduct]
+WHERE
+    [IsDeleted] = 0
+ORDER BY
+    [UpdatedDateTime] DESC;
+]]>
+	</sql>
+	<sql name="AcmeProduct.FindAcmeProductByName">
+		<![CDATA[SELECT CASE WHEN EXISTS (SELECT 1 FROM AcmeProduct WHERE Name = @Name And (IsActive = 1 And IsDeleted = 0 ) ) THEN 1 ELSE 0 END;]]>
+	</sql>
+	<sql name="AcmeProduct.Add">
+		<![CDATA[INSERT INTO [AcmeProduct] (
+    [Code],
+    [SKU],
+    [Name],
+    [DisplayName],
+    [ShortName],
+    [Description],
+    [ProductType],
+    [BaseCost],
+    [BasePrice],
+    [Currency],
+    [ProductOwnerId],
+    [ProductOwner],
+    [ProductCode],
+    [ProductActive],
+    [SalesStartDate],
+    [SalesEndDate],
+    [SupportStartDate],
+    [SupportEndDate],
+    [VendorId],
+    [VendorName],
+    [ProductCategoryId],
+    [ProductCategory],
+    [ManufacturerId],
+    [Manufacturer],
+    [UnitPrice],
+    [CommissionRate],
+    [TaxId],
+    [Tax],
+    [UsageUnitId],
+    [UsageUnit],
+    [QuantityInStock],
+    [HandlerId],
+    [Handler],
+    [QuantityOrdered],
+    [ReorderLevel],
+    [QuantityInDemand],
+    [CreatedBy],
+    [CreatedDateTime],
+    [UpdatedDateTime],
+    [IsActive],
+    [IsDeleted],
+    [CustomFields]
+)
+OUTPUT INSERTED.[Id]
+VALUES (
+    @Code,
+    @SKU,
+    @Name,
+    @DisplayName,
+    @ShortName,
+    @Description,
+    @ProductType,
+    @BaseCost,
+    @BasePrice,
+    @Currency,
+    @ProductOwnerId,
+    @ProductOwner,
+    @ProductCode,
+    @ProductActive,
+    @SalesStartDate,
+    @SalesEndDate,
+    @SupportStartDate,
+    @SupportEndDate,
+    @VendorId,
+    @VendorName,
+    @ProductCategoryId,
+    @ProductCategory,
+    @ManufacturerId,
+    @Manufacturer,
+    @UnitPrice,
+    @CommissionRate,
+    @TaxId,
+    @Tax,
+    @UsageUnitId,
+    @UsageUnit,
+    @QuantityInStock,
+    @HandlerId,
+    @Handler,
+    @QuantityOrdered,
+    @ReorderLevel,
+    @QuantityInDemand,
+    @CreatedBy,
+    @CreatedDateTime,
+    @UpdatedDateTime,
+    1,
+    0,
+    @CustomFields
+);
+]]>
+	</sql>
+	<sql name="AcmeProduct.Delete">
+		<![CDATA[Update dbo.AcmeProduct
+		Set IsDeleted = 1,
+		UpdatedBy = @UpdatedBy,
+		UpdatedDateTime = @UpdatedDateTime
+		WHERE Id = @Id]]>
+	</sql>
+	<sql name="AcmeProduct.Update">
+		<![CDATA[UPDATE [AcmeProduct]
+SET
+    [SKU] = @SKU,
+    [Name] = @Name,
+    [DisplayName] = @DisplayName,
+    [ShortName] = @ShortName,
+    [Description] = @Description,
+    [ProductType] = @ProductType,
+    [BaseCost] = @BaseCost,
+    [BasePrice] = @BasePrice,
+    [Currency] = @Currency,
+    [ProductOwnerId] = @ProductOwnerId,
+    [ProductOwner] = @ProductOwner,
+    [ProductCode] = @ProductCode,
+    [ProductActive] = @ProductActive,
+    [SalesStartDate] = @SalesStartDate,
+    [SalesEndDate] = @SalesEndDate,
+    [SupportStartDate] = @SupportStartDate,
+    [SupportEndDate] = @SupportEndDate,
+    [VendorId] = @VendorId,
+    [VendorName] = @VendorName,
+    [ProductCategoryId] = @ProductCategoryId,
+    [ProductCategory] = @ProductCategory,
+    [ManufacturerId] = @ManufacturerId,
+    [Manufacturer] = @Manufacturer,
+    [UnitPrice] = @UnitPrice,
+    [CommissionRate] = @CommissionRate,
+    [TaxId] = @TaxId,
+    [Tax] = @Tax,
+    [UsageUnitId] = @UsageUnitId,
+    [UsageUnit] = @UsageUnit,
+    [QuantityInStock] = @QuantityInStock,
+    [HandlerId] = @HandlerId,
+    [Handler] = @Handler,
+    [QuantityOrdered] = @QuantityOrdered,
+    [ReorderLevel] = @ReorderLevel,
+    [QuantityInDemand] = @QuantityInDemand,
+    [UpdatedBy] = @UpdatedBy,
+    [UpdatedDateTime] = @UpdatedDateTime,
+    [CustomFields] = @CustomFields
+WHERE
+    [Id] = @Id;
+]]>
+	</sql>
+
+	<sql name="AcmeProduct.DeletePermanentAcmeProduct">
+		<![CDATA[Delete from 
+		AcmeProduct 
+		WHERE Id = @Id]]>
+	</sql>
+
+	<sql name="AcmeProduct.GetReferenceCustomFields">
+		<![CDATA[
+		SELECT CustomFields FROM ReferenceCustomField WHERE TableName = @TableName;
+		]]>
+		</sql>
+	<sql name="AcmeProduct.GenerateProductCode">
+		<![CDATA[
+SELECT TOP 1 Code 
+FROM AcmeProduct
+ORDER BY CreatedDateTime DESC;
+		]]>
+	</sql>
+</sql-set>
+

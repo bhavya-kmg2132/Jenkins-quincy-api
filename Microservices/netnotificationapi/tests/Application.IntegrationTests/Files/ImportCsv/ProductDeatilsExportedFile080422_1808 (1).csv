@@ -1,0 +1,8 @@
+AcmeProductId,AcmeProductDetailId,Name,Desc,City,Price
+31,4,Alfred Schmidt,Cal324,Erichsen,23423
+31,5,Alfred Schmidt,Cal324,Delhi,2343
+31,6,Alfred Schmidt,Cal324,Jaipur,2343
+32,8,Alfred Schmidt 32,Cal,Delhi,89987
+35,9,Lorem,QA999,QA999,capture
+36,10,Jack,QA,UK,9999
+,,Lorem,Tech,West,343232

@@ -1,0 +1,80 @@
+//"AuthorizationTokenUser": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImpTMVhvMU9XRGpfNTJ2YndHTmd2UU8yVnpNYyJ9.eyJhdWQiOiJjZTk5NmYxMS04NDA2LTQ5ZmMtOTc4ZS0wNmRiNjExMjVjYmUiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vMmQ2OWI5ZGQtMjUwNS00ZTY4LTkyZTgtNjViODc5OGRmNzliL3YyLjAiLCJpYXQiOjE2NTI4NTgxMDIsIm5iZiI6MTY1Mjg1ODEwMiwiZXhwIjoxNjUyODYzMTk1LCJhaW8iOiJBVFFBeS84VEFBQUFwdmdMQnpScStjUkY1bVJwa29ZVFNMWThiWm8xWkFKR0lXcHN6a1NlY0VuRkV4cnF6UTk3emJVNHhWL0ovQzZvIiwiYXpwIjoiY2U5OTZmMTEtODQwNi00OWZjLTk3OGUtMDZkYjYxMTI1Y2JlIiwiYXpwYWNyIjoiMSIsIm5hbWUiOiJDaHJpcyBHcmVlbiIsIm9pZCI6IjYwYzc1MjFmLTkzMTYtNGE1Zi1hNDc4LWNmZmJiMGVhMDM2NyIsInByZWZlcnJlZF91c2VybmFtZSI6IkNocmlzLkdyZWVuQGNhZmZlaW5lMDkub25taWNyb3NvZnQuY29tIiwicmgiOiIwLkFWQUEzYmxwTFFVbGFFNlM2R1c0ZVkzM214RnZtYzRHaFB4Smw0NEcyMkVTWEw1UUFGRS4iLCJyb2xlcyI6WyJNYXJrZXRpbmdNYW5hZ2VyIiwiVXNlciJdLCJzY3AiOiJhY2Nlc3NfYXNfdXNlciIsInN1YiI6Ill6X185R1dVYy1FQzBHZ0g3N1lSUy1pQnp6OW9nT2V6Z2h6LTAtOU9QTlUiLCJ0aWQiOiIyZDY5YjlkZC0yNTA1LTRlNjgtOTJlOC02NWI4Nzk4ZGY3OWIiLCJ1dGkiOiJEdHFIN0NtSDNrR0FRUmt2LW9RSEFBIiwidmVyIjoiMi4wIn0.qziwiOTjTcoJOe-Z-lD2ITXyc-THtU_keTgEnZX8r6gFkSflo4CewQOhoyyGEzcyx4pBrmat6PesoJ85PCOZh13_mkRn1Jr0YtFgLcd1NpItTeUVqaLg0yGeP1TekCtkN97tNQxjPeNA5Zvadtb80Zz5I2Xxd7WeUUeJ2OLha4kjAfLSBAiQEbHOLIvU67YXPvxdRTWmDAwDSP6tUwT-HSCF9cALPTlc7SJFyOCZ7ea-oEGjlhTJTZtxhrl9J7ptEQDpLVwcaUBNDJmfTQq3BCprZGRAtX63YRyn8ewzZ_uA9rk1pU0YJsqbjpzTMF8tlVwnT8-JE0gyceqekRAS8A"
+{
+  "Users":[
+    {
+      "aud": "ce996f11-8406-49fc-978e-06db61125cbe",
+      "iss": "https://login.microsoftonline.com/2d69b9dd-2505-4e68-92e8-65b8798df79b/v2.0",
+      "iat": 1652858102,
+      "nbf": 1652858102,
+      "exp": 1652863195,
+      "aio": "ATQAy/8TAAAApvgLBzRq+cRF5mRpkoYTSLY8bZo1ZAJGIWpszkSecEnFExrqzQ97zbU4xV/J/C6o",
+      "azp": "ce996f11-8406-49fc-978e-06db61125cbe",
+      "azpacr": "1",
+      "name": "Chris Green",
+      "oid": "60c7521f-9316-4a5f-a478-cffbb0ea0367",
+      "preferred_username": "Chris.Green@caffeine09.onmicrosoft.com",
+      "rh": "0.AVAA3blpLQUlaE6S6GW4eY33mxFvmc4GhPxJl44G22ESXL5QAFE.",
+      "roles": [
+        "MarketingManager",
+        "User"
+      ],
+      "scp": "access_as_user",
+      "sub": "Yz__9GWUc-EC0GgH77YRS-iBzz9ogOezghz-0-9OPNU",
+      "tid": "2d69b9dd-2505-4e68-92e8-65b8798df79b",
+      "uti": "DtqH7CmH3kGAQRkv-oQHAA",
+      "ver": "2.0"
+    },
+    {
+      "aud": "ce996f11-8406-49fc-978e-06db61125cbe",
+      "iss": "https://login.microsoftonline.com/2d69b9dd-2505-4e68-92e8-65b8798df79b/v2.0",
+      "iat": 1635858733,
+      "nbf": 1635858733,
+      "exp": 1635862633,
+      "acct": 0,
+      "aio": "AXQAi/8TAAAAEAWqNHFbz+cPPzPAffp4mv9vHMen/3fLcMaiM02T0S1RYbTyiE8ip2sdGqSQU3KIzuqQKowTA/UUf788Q61KXJZbdOK1mn2se7TZYEYaWxma02gvl3yqYa+vUOQ3UABv7QCiDtmzWYw22unzYEA9cQ==",
+      "auth_time": 1635334184,
+      "ctry": "US",
+      "email": "awsservers@spectraltech.ai",
+      "family_name": "STAI",
+      "given_name": "IT",
+      "idp": "https://sts.windows.net/9188040d-6c67-4c5b-b112-36a304b66dad/",
+      "ipaddr": "150.107.190.185",
+      "name": "IT STAI",
+      "nonce": "678910",
+      "oid": "a52d163d-0754-4e85-9e5a-83d5eac78bf7",
+      "preferred_username": "awsservers@spectraltech.ai",
+      "rh": "0.AVAA3blpLQUlaE6S6GW4eY33mxFvmc4GhPxJl44G22ESXL5QAFY.",
+      "roles": [
+        "Admin",
+        "User"
+      ],
+      "sub": "f6h6n5sLMvEAtaUS_LQ7Re39Q-8-fGHIiyyRsG7oaRI",
+      "tid": "2d69b9dd-2505-4e68-92e8-65b8798df79b",
+      "uti": "VELA2dfy1k-vS2yB-IVjAQ",
+      "ver": "2.0"
+    },
+    {
+      "aud": "21444384-a242-4939-a439-f8d0ce5daf6b",
+      "iss": "https://login.microsoftonline.com/b353c2b1-9191-4912-9d7c-1111dabc5dc0/v2.0",
+      "iat": 1675315444,
+      "nbf": 1675315444,
+      "exp": 1675320322,
+      "aio": "ATQAy/8TAAAAjCckXzEno2cAKhv2sg+4yluX9YTeRu/UbGMkImkemThVOrczKtCYcww/vzl3pA5l",
+      "azp": "21444384-a242-4939-a439-f8d0ce5daf6b",
+      "azpacr": "1",
+      "name": "Chris Green",
+      "oid": "d320862d-6863-42f1-94a8-107728e4f20a",
+      "preferred_username": "Chris.Green@lambinsurance.onmicrosoft.com",
+      "rh": "0.AX0AscJTs5GREkmdfBER2rxdwIRDRCFCojlJpDn40M5dr2t9AEg.",
+      "roles": [
+        "SalesDirector",
+        "ClientExecutive"
+      ],
+      "scp": "access_as_user",
+      "sub": "zz7OOC8AV_6eNSTIgYzDdm7gmFopdpWkM1iIAhHoWmM",
+      "tid": "b353c2b1-9191-4912-9d7c-1111dabc5dc0",
+      "uti": "ZqNHKia0X0qpQqCcPOPDAA",
+      "ver": "2.0"
+    }
+  ]
+}

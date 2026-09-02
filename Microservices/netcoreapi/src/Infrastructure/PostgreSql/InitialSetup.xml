@@ -1,0 +1,1133 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+	<sql name="InitialSetup.AppUser">
+		<![CDATA[
+	CREATE TABLE IF NOT EXISTS "AppUser" (
+    "Id" VARCHAR(100) PRIMARY KEY,
+    "UserName" VARCHAR(200) NOT NULL,
+    "PasswordHash" VARCHAR(500) NOT NULL,
+    "CreatedDateTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "UpdatedDateTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	 CONSTRAINT "UQ_AppUser_UserName_key"
+            UNIQUE ("UserName")
+);
+INSERT INTO "AppUser"
+("Id", "UserName", "PasswordHash","CreatedDateTime","UpdatedDateTime")
+VALUES
+(gen_random_uuid()::text,'john_doe','hashed_password_123',Now(),Now()),
+(gen_random_uuid()::text,'jane_smith','hashed_password_456',Now(),Now())
+ON CONFLICT ("UserName") DO NOTHING;
+		]]>
+	</sql>
+
+
+	<sql name="InitialSetup.AddAuthReferenceLookup">
+		<![CDATA[
+    CREATE TABLE IF NOT EXISTS "AuthReferenceLookup" (
+       "Id" VARCHAR(100) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+       "Name" VARCHAR(100),
+       "DisplayName" VARCHAR(100),
+       "Type" VARCHAR(100),
+
+        CONSTRAINT "UQ_AuthReferenceLookup_Name_Type"
+            UNIQUE ("Name", "Type")
+    );
+
+  INSERT INTO "AuthReferenceLookup"
+("Name", "DisplayName", "Type")
+VALUES
+('TodoItemModule','TodoItem Module','Module'),
+('MasterUpdate','MasterUpdate','PermissionSet'),
+('AcmeProductModule','AcmeProduct Module','Module'),
+('SystemDesignModule','SystemDesign Module','Module'),
+('SystemManagerModule','SystemManager Module','Module'),
+('OtherModule','Other Module','Module'),
+('PermissionView','PermissionView','PermissionSet'),
+('UserRoleUpdate','UserRoleUpdate','PermissionSet'),
+('TodoListView','TodoListView','PermissionSet'),
+('SystemDesign','SystemDesign','PermissionSet'),
+('Field','Field','UIPermissionType'),
+('TodoListModule','TodoList Module','Module'),
+('RoleView','RoleView','PermissionSet'),
+('AcmeProductUpdate','AcmeProductUpdate','PermissionSet'),
+('SystemManager','SystemManager','PermissionSet'),
+('UserCreate','UserCreate','PermissionSet'),
+('AcmeProductCreate','AcmeProductCreate','PermissionSet'),
+('AcmeOrderView','AcmeOrderView','PermissionSet'),
+('PermissionModule','Permission Module','Module'),
+('https://netauthapi.azurewebsites.net/','netauthapi-timetrack','InternalApiUrl'),
+('UserUpdate','UserUpdate','PermissionSet'),
+('Other','Other','PermissionSet'),
+('UserModule','User Module','Module'),
+('Screen','Screen','UIPermissionType'),
+('AcmeProductView','AcmeProductView','PermissionSet'),
+('TodoItemCreate','TodoItemCreate','PermissionSet'),
+('RoleModule','Role Module','Module'),
+('MasterModule','Master Module','Module'),
+('TodoItemUpdate','TodoItemUpdate','PermissionSet'),
+('PermissionUpdate','PermissionUpdate','PermissionSet'),
+('MasterView','MasterView','PermissionSet'),
+('TodoListCreate','TodoListCreate','PermissionSet'),
+('MasterCreate','MasterCreate','PermissionSet'),
+('AcmeOrderCreate','AcmeOrderCreate','PermissionSet'),
+('UserView','UserView','PermissionSet'),
+('AcmeOrderUpdate','AcmeOrderUpdate','PermissionSet'),
+('Menu','Menu','UIPermissionType'),
+('TodoItemView','TodoItemView','PermissionSet'),
+('AcemOrderModule','AcmeOrder Module','Module'),
+('TodoListUpdate','TodoListUpdate','PermissionSet')
+ON CONFLICT ("Name", "Type") DO NOTHING;
+  ]]>
+	</sql>
+
+	<sql name="InitialSetup.AddPermission">
+		<![CDATA[
+		-- Create Table
+CREATE TABLE IF NOT EXISTS "Permission" (
+     "Id" VARCHAR(100) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+
+    "PermissionValue" VARCHAR(200) NOT NULL,
+    "PermissionDisplayName" VARCHAR(200) NOT NULL,
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+
+    "SysData" TEXT,
+
+    "ModuleId" VARCHAR(100) NOT NULL,
+    "PermissionSetId" VARCHAR(100) NOT NULL,
+
+    "ApiName" VARCHAR(200),
+
+    -- Clean unique constraints (deduplicated)
+    CONSTRAINT "UQ_Permission_Value" UNIQUE ("PermissionValue"),
+    CONSTRAINT "UQ_Permission_DisplayName" UNIQUE ("PermissionDisplayName"),
+
+    -- Foreign keys
+    CONSTRAINT "FK_Permission_ModuleId"
+        FOREIGN KEY ("ModuleId")
+        REFERENCES "AuthReferenceLookup"("Id"),
+
+    CONSTRAINT "FK_Permission_PermissionSetId"
+        FOREIGN KEY ("PermissionSetId")
+        REFERENCES "AuthReferenceLookup"("Id")
+);
+
+INSERT INTO "Permission"
+(
+    "PermissionValue",
+    "PermissionDisplayName",
+    "CreatedBy",
+    "CreatedDateTime",
+    "UpdatedBy",
+    "UpdatedDateTime",
+    "IsDeleted",
+    "IsActive",
+    "IsApproved",
+    "IsAuthorized",
+    "ModuleId",
+    "PermissionSetId",
+    "ApiName"
+)
+SELECT
+    v."PermissionValue",
+    v."PermissionDisplayName",
+    v."CreatedBy",
+    NOW(),
+    NULL,
+    NOW(),
+    FALSE,
+    TRUE,
+    FALSE,
+    TRUE,
+    m."Id",
+    ps."Id",
+    v."ApiName"
+FROM (
+VALUES
+('GetUsersQuery','Get Users Query',NULL,'UserModule','UserView','User/GetUsersAsync'),
+
+('GetAcmeProductListQuery','GetAcmeProductListQuery','john.smith@kmgus.com','AcmeProductModule','AcmeProductView',NULL),
+
+('GetUsersByStatusQuery','GetUsersByStatusQuery','john.smith@kmgus.com','UserModule','UserView',NULL),
+
+('GetRolesQuery','GetRolesQuery','john.smith@kmgus.com','RoleModule','RoleView',NULL),
+
+('UpdateAcmeProductRequest','UpdateAcmeProductRequest','john.smith@kmgus.com','AcmeProductModule','AcmeProductUpdate',NULL),
+
+('GetUserActivitiesQuery','GetUserActivitiesQuery','john.smith@kmgus.com','UserModule','UserView',NULL),
+
+('GetAcmeProductByIdQuery','GetAcmeProductByIdQuery','john.smith@kmgus.com','AcmeProductModule','AcmeProductView',NULL),
+
+('DeleteAcmeProductRequest','DeleteAcmeProductRequest','john.smith@kmgus.com','AcmeProductModule','AcmeProductUpdate',NULL),
+
+('CreateAcmeProductRequest','CreateAcmeProductRequest','john.smith@kmgus.com','AcmeProductModule','AcmeProductCreate',NULL),
+
+('GetPermissionsQueryAsync','GetPermissionsQueryAsync','john.smith@kmgus.com','PermissionModule','PermissionView',NULL),
+
+
+('GetAcmeOrderListQuery','GetAcmeOrderListQuery','leeladhar.kumawat@kmgus.com','AcemOrderModule','AcmeOrderView',NULL),
+
+('GetAcmeOrderByIdQuery','GetAcmeOrderByIdQuery','leeladhar.kumawat@kmgus.com','AcemOrderModule','AcmeOrderView',NULL),
+
+('CreateAcmeOrderRequest','CreateAcmeOrderRequest','leeladhar.kumawat@kmgus.com','AcemOrderModule','AcmeOrderCreate',NULL),
+
+('UpdateAcmeOrderRequest','UpdateAcmeOrderRequest','leeladhar.kumawat@kmgus.com','AcemOrderModule','AcmeOrderUpdate',NULL),
+
+('DeleteAcmeOrderRequest','DeleteAcmeOrderRequest','leeladhar.kumawat@kmgus.com','AcemOrderModule','AcmeOrderUpdate',NULL)
+
+) AS v(
+    "PermissionValue",
+    "PermissionDisplayName",
+    "CreatedBy",
+    "ModuleName",
+    "PermissionSetName",
+    "ApiName"
+)
+
+JOIN "AuthReferenceLookup" m
+    ON m."Name" = v."ModuleName"
+   AND m."Type" = 'Module'
+
+JOIN "AuthReferenceLookup" ps
+    ON ps."Name" = v."PermissionSetName"
+   AND ps."Type" = 'PermissionSet'
+
+ON CONFLICT ("PermissionValue") DO NOTHING;
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddRole">
+		<![CDATA[
+		-- Create Table
+CREATE TABLE IF NOT EXISTS "Role" (
+   "Id" VARCHAR(100) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+
+    "RoleName" VARCHAR(200),
+    "RoleValue" VARCHAR(200),
+    "DisplayName" VARCHAR(200),
+
+    "AzureRoleGuid" VARCHAR(100) DEFAULT gen_random_uuid()::text,
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+
+    "SysData" TEXT,
+
+    -- Unique constraint
+    CONSTRAINT "UQ_Role_Display_AzureGuid"
+        UNIQUE ("DisplayName", "AzureRoleGuid")
+);
+
+
+INSERT INTO "Role"
+(
+    "AzureRoleGuid",
+    "RoleName",
+    "RoleValue",
+    "DisplayName",
+    "IsDeleted",
+    "IsAuthorized",
+    "IsActive",
+    "OwnerId",
+    "CreatedBy",
+    "CreatedDateTime",
+    "UpdatedBy",
+    "UpdatedDateTime",
+    "SysData",
+    "TenantId",
+    "SubTenantId"
+)
+VALUES
+(NULL,'System Manager','System Manager','System Manager',false,false,true,NULL,NULL,NOW(),NULL,NOW(),NULL,NULL,NULL),
+
+(NULL,'Admin','Admin','Admin',false,false,true,'debe9ba5-92f1-475c-9eaa-d8f86cce89cc',NULL,NOW(),NULL,NOW(),NULL,NULL,NULL),
+
+(NULL,'User','User','User',false,false,true,NULL,NULL,NOW(),NULL,NOW(),NULL,NULL,NULL),
+
+(NULL,'Power','Power','Power',false,false,true,'3eeca4cb-3e85-4b5c-9147-ce6e5f0868f6',NULL,NOW(),NULL,NOW(),NULL,NULL,NULL)
+
+ON CONFLICT DO NOTHING;
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddPermissionDenied">
+		<![CDATA[
+-- Create Table
+CREATE TABLE IF NOT EXISTS "PermissionDenied" (
+     "Id" VARCHAR(100) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+
+    "UserId" VARCHAR(100) NOT NULL,
+    "PermissionId" VARCHAR(100) NOT NULL,
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+
+    "SysData" TEXT,
+
+    -- Unique constraint (clean)
+    CONSTRAINT "UC_PermissionDenied_User_Permission"
+        UNIQUE ("UserId", "PermissionId"),
+
+    -- Foreign keys
+    CONSTRAINT "FK_PermissionDenied_Permission"
+        FOREIGN KEY ("PermissionId")
+        REFERENCES "Permission"("Id"),
+
+    CONSTRAINT "FK_PermissionDenied_User"
+        FOREIGN KEY ("UserId")
+        REFERENCES "User"("Id")
+);
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddPermissionGranted">
+		<![CDATA[
+		-- Create Table
+CREATE TABLE IF NOT EXISTS "PermissionGranted" (
+     "Id" VARCHAR(100) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+
+    "UserId" VARCHAR(100) NOT NULL,
+    "PermissionId" VARCHAR(100) NOT NULL,
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+
+    "SysData" TEXT,
+
+    -- Unique constraint
+    CONSTRAINT "UC_PermissionGranted_User_Permission"
+        UNIQUE ("UserId", "PermissionId"),
+
+    -- Foreign keys
+    CONSTRAINT "FK_PermissionGranted_Permission"
+        FOREIGN KEY ("PermissionId")
+        REFERENCES "Permission"("Id"),
+
+    CONSTRAINT "FK_PermissionGranted_User"
+        FOREIGN KEY ("UserId")
+        REFERENCES "User"("Id")
+);
+
+
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUser">
+		<![CDATA[
+		
+-- Create Table
+CREATE TABLE IF NOT EXISTS "User" (
+    "Id" VARCHAR(100) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+
+    "UserName" VARCHAR(200) NOT NULL,
+    "EmpId" VARCHAR(6),
+    "EmpType" VARCHAR(200),
+
+    "FirstName" VARCHAR(200) NOT NULL,
+    "LastName" VARCHAR(200) NOT NULL,
+
+    "Email" VARCHAR(200),
+    "SecondaryEmail" VARCHAR(200),
+
+    "PhoneNumber" VARCHAR(20),
+    "Extension" VARCHAR(20),
+    "mobile" VARCHAR(20),
+
+    "oid" VARCHAR(100),
+    "preferred_username" VARCHAR(200),
+    "display_name" VARCHAR(200),
+    "given_name" VARCHAR(200),
+    "family_name" VARCHAR(200),
+
+    "Position" VARCHAR(200),
+    "BusinessUnit" VARCHAR(200),
+    "ManagerId" VARCHAR(100),
+    "Designation" VARCHAR(200),
+    "Department" VARCHAR(200),
+    "Location" VARCHAR(200),
+    "Organization" VARCHAR(200),
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+
+    "SysData" TEXT,
+
+    "AccessLevel" VARCHAR(50),
+
+    "CorrelationId" VARCHAR(50),
+    "AuditableRequestId" VARCHAR(50),
+    "AuditableRequestName" VARCHAR(100),
+    "AuditableSourceEventName" VARCHAR(100),
+
+    "auth_type" VARCHAR(200),
+
+    CONSTRAINT "UQ_User_Email" UNIQUE ("Email"),
+    CONSTRAINT "UQ_User_UserName" UNIQUE ("UserName"),
+
+    CONSTRAINT "FK_User_AccessLevel"
+        FOREIGN KEY ("AccessLevel")
+        REFERENCES "UserAccessLevel"("AccessLevel")
+);
+
+-- Insert Data
+INSERT INTO "User"
+(
+    "UserName", "FirstName", "LastName",
+    "Email", "SecondaryEmail",
+    "PhoneNumber",
+    "oid", "preferred_username", "display_name", "given_name", "family_name",
+    "IsDeleted", "IsAuthorized", "IsActive",
+    "CreatedBy", "CreatedDateTime",
+    "UpdatedDateTime",
+    "SysData",
+    "AccessLevel"
+)
+VALUES
+(
+'test_Admin_User@systemdesign.com','Test Admin','User',
+'test_Admin_User@systemdesign.com','test_Admin_User@systemdesign.com',
+'77889988',
+'test_Admin_User@systemdesign.com','test_Admin_User@systemdesign.com','Test AdminUser','Test Admin','User',
+FALSE,TRUE,TRUE,
+'test_Admin_User@systemdesign.com',NOW(),
+NOW(),
+'db',
+'L1'
+),
+
+(
+'test_Level_1_User@systemdesign.com','Test Level 1','User',
+'test_Level_1_User@systemdesign.com','test_Level_1_User@systemdesign.com',
+'1212121212',
+'test_Level_1_User@systemdesign.com','test_Level_1_User@systemdesign.com','Test Level 1User','Test Level 1','User',
+FALSE,TRUE,TRUE,
+'test_Level_1_User@systemdesign.com',NOW(),
+NOW(),
+'db',
+'L1'
+),
+
+(
+'test_Level_2_User@systemdesign.com','Test Level 2','User',
+'test_Level_2_User@systemdesign.com','test_Level_2_User@systemdesign.com',
+'12121212121',
+'test_Level_2_User@systemdesign.com','test_Level_2_User@systemdesign.com','Test Level 2User','Test Level 2','User',
+FALSE,TRUE,TRUE,
+'test_Level_2_User@systemdesign.com',NOW(),
+NOW(),
+'db',
+'L1'
+)
+
+ON CONFLICT ("UserName") DO NOTHING;
+		]]>
+	</sql>
+	<sql name="InitialSetup.AddUserAccessLevel">
+		<![CDATA[
+	-- Create Table
+CREATE TABLE IF NOT EXISTS "UserAccessLevel" (
+    "AccessLevel" VARCHAR(50) PRIMARY KEY,
+
+    "DisplayName" VARCHAR(200) NOT NULL,
+    "Hierarchy" INTEGER NOT NULL,
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+
+    "SysData" TEXT,
+
+    CONSTRAINT "UQ_UserAccessLevel_DisplayName"
+        UNIQUE ("DisplayName")
+);
+
+-- Insert Data
+INSERT INTO "UserAccessLevel"
+(
+    "AccessLevel",
+    "DisplayName",
+    "Hierarchy",
+    "CreatedDateTime",
+    "UpdatedDateTime",
+    "IsDeleted",
+    "IsActive",
+    "IsApproved",
+    "IsAuthorized"
+)
+VALUES
+('L1','Junior Executive',1,NOW(),NOW(),FALSE,TRUE,FALSE,FALSE),
+('L2','Executive',2,NOW(),NOW(),FALSE,TRUE,FALSE,FALSE),
+('L3','Senior Executive',3,NOW(),NOW(),FALSE,TRUE,FALSE,FALSE)
+
+ON CONFLICT ("AccessLevel") DO NOTHING;
+
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUserActivity">
+		<![CDATA[
+		-- Create Table
+CREATE TABLE IF NOT EXISTS "UserActivity" (
+    "Id" VARCHAR(100) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+
+    "UserId" VARCHAR(100) NOT NULL,
+
+    "LastLoginDateTime" TIMESTAMP,
+    "LastLogoutDateTime" TIMESTAMP,
+    "LastActivityDateTime" TIMESTAMP,
+
+    "LastActivityModule" VARCHAR(200),
+    "LastActionType" VARCHAR(200),
+    "LastActivityDetail" TEXT,
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT TRUE,
+
+    "OwnerId" VARCHAR(100),
+
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+
+    "SysData" TEXT,
+    "CustomFields" TEXT,
+
+    -- Foreign key
+    CONSTRAINT "FK_UserActivity_User"
+        FOREIGN KEY ("UserId")
+        REFERENCES "User"("Id"),
+
+    -- JSON validation check (converted from ISJSON)
+    CONSTRAINT "CK_UserActivity_CustomFields_JSON"
+        CHECK ("CustomFields" IS NULL OR "CustomFields"::jsonb IS NOT NULL)
+);
+
+
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUserPasswordHash">
+		<![CDATA[
+		
+		CREATE TABLE IF NOT EXISTS "UserPasswordHash" (
+    "UserId" VARCHAR(100) PRIMARY KEY,
+
+    "PasswordHash" VARCHAR(200),
+    "UpdatedBy" VARCHAR(200),
+    "UpdatedDateTime" TIMESTAMP,
+    "UpdateReason" VARCHAR(200),
+
+    -- Foreign key (recommended, since UserId maps to User table)
+    CONSTRAINT "FK_UserPasswordHash_User"
+        FOREIGN KEY ("UserId")
+        REFERENCES "User"("Id")
+);
+
+INSERT INTO "UserPasswordHash"
+(
+    "UserId",
+    "PasswordHash",
+    "UpdatedBy",
+    "UpdatedDateTime",
+    "UpdateReason"
+)
+SELECT
+    u."Id",
+    v."PasswordHash",
+    NULL,
+    NOW(),
+    'Initial BCrypt password'
+FROM (
+VALUES
+('test_Admin_User@systemdesign.com','$2a$11$LzB1OPiO/FoyQ8IPlXKND.IzDmSloCb5IZZ7LcCCD55U36fWIfgAO'),
+('test_Level_1_User@systemdesign.com','$2a$11$8VhImHUy.k9ekQ.Jao3S6Oy3ZavD726tq8/Cyy.RsiDTuCLThH5nS'),
+('test_Level_2_User@systemdesign.com','$2a$11$CCFTX7LQ54m.RQ5IvlnCPuQOIhULF95IBvwEMB45WmGiGJQ6YCB56')
+) AS v("UserName","PasswordHash")
+
+JOIN "User" u
+    ON u."UserName" = v."UserName"
+
+ON CONFLICT ("UserId") DO NOTHING;	]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUserProfile">
+		<![CDATA[
+		-- Create Table
+CREATE TABLE IF NOT EXISTS "UserProfile" (
+    "Id" VARCHAR(100) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+
+    "UserId" VARCHAR(100) NOT NULL,
+
+    "DOB" VARCHAR(200),
+    "Gender" VARCHAR(200),
+    "BloodGroup" VARCHAR(200),
+    "PersonalEmail" VARCHAR(200),
+    "DateOfJoining" VARCHAR(200),
+    "PassportNumber" VARCHAR(100),
+
+    "FatherName" VARCHAR(200),
+    "MotherName" VARCHAR(200),
+
+    "MaritalStatus" VARCHAR(200),
+    "WeddingAnniversaryDate" VARCHAR(200),
+    "SpouseName" VARCHAR(200),
+    "SpouseDOB" VARCHAR(200),
+
+    "HomeAddress1" VARCHAR(200),
+    "HomeAddress2" VARCHAR(200),
+    "City" VARCHAR(200),
+    "State" VARCHAR(200),
+
+    "HomeAddressCity" VARCHAR(200),
+    "HomeAddressState" VARCHAR(200),
+    "HomeAddressCountry" VARCHAR(200),
+
+    "HomePhoneNumber" VARCHAR(200),
+    "EmergencyContactNumber" VARCHAR(200),
+    "EmergencyContactName" VARCHAR(200),
+
+    "PrimarySkills" VARCHAR(200),
+    "SecondarySkills" VARCHAR(200),
+    "TertiarySkills" VARCHAR(200),
+    "OtherSkills" VARCHAR(200),
+
+    "Branch" VARCHAR(200),
+    "LookUpCode" VARCHAR(200),
+    "OtherId" VARCHAR(200),
+    "LinkedInUrl" VARCHAR(200),
+
+    "UserPic" VARCHAR(100),
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+
+    "SysData" TEXT,
+
+    -- Foreign key
+    CONSTRAINT "FK_UserProfile_User"
+        FOREIGN KEY ("UserId")
+        REFERENCES "User"("Id")
+);
+
+		]]>
+	</sql>
+	<sql name="InitialSetup.AddRolePermission">
+		<![CDATA[
+		CREATE TABLE IF NOT EXISTS "RolePermission" (
+    "Id" VARCHAR(100) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+
+    "RoleId" VARCHAR(100),
+    "PermissionId" VARCHAR(100),
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+
+    "SysData" TEXT,
+
+    -- Unique constraint
+    CONSTRAINT "UC_RolePermission"
+        UNIQUE ("RoleId", "PermissionId"),
+
+    -- Foreign keys (deduplicated)
+    CONSTRAINT "FK_RolePermission_Permission"
+        FOREIGN KEY ("PermissionId")
+        REFERENCES "Permission"("Id"),
+
+    CONSTRAINT "FK_RolePermission_Role"
+        FOREIGN KEY ("RoleId")
+        REFERENCES "Role"("Id")
+);
+
+INSERT INTO "RolePermission"
+(
+    "RoleId",
+    "PermissionId",
+    "CreatedBy",
+    "CreatedDateTime",
+    "UpdatedBy",
+    "UpdatedDateTime",
+    "IsDeleted",
+    "IsActive",
+    "IsApproved",
+    "IsAuthorized"
+)
+SELECT 
+    r."Id",
+    p."Id",
+    NULL,
+    NOW(),
+    NULL,
+    NOW(),
+    FALSE,
+    TRUE,
+    FALSE,
+    TRUE
+FROM "Role" r
+CROSS JOIN "Permission" p
+
+ON CONFLICT ("RoleId", "PermissionId") DO NOTHING;
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddRoleUiPermission">
+		<![CDATA[
+		-- Create Table
+CREATE TABLE IF NOT EXISTS "RoleUiPermission" (
+
+   "RoleId" VARCHAR(100) NOT NULL,
+    "UiPermissionId" VARCHAR(100) NOT NULL,
+
+    "CanView" BOOLEAN DEFAULT FALSE,
+    "CanEdit" BOOLEAN DEFAULT FALSE,
+    "CanCreate" BOOLEAN DEFAULT FALSE,
+    "CanDelete" BOOLEAN DEFAULT FALSE,
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT TRUE,
+
+    "OwnerId" VARCHAR(100),
+
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+
+    "SysData" TEXT,
+
+    -- Unique constraint
+    CONSTRAINT "UC_RoleUiPermission"
+        UNIQUE ("RoleId", "UiPermissionId"),
+
+    -- Foreign key
+    CONSTRAINT "FK_RoleUiPermission_Role"
+        FOREIGN KEY ("RoleId")
+        REFERENCES "Role"("Id")
+);
+
+
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUiPermission">
+		<![CDATA[
+		CREATE TABLE IF NOT EXISTS "UiPermission" (
+
+    "Id" VARCHAR(100) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+
+    "PermissionValue" VARCHAR(200) NOT NULL,
+    "PermissionDisplayName" VARCHAR(200) NOT NULL,
+    "PermissionParentId" VARCHAR(100),
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT NOW(),
+
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+
+    "SysData" TEXT,
+
+    "ModuleId" VARCHAR(100) NOT NULL,
+    "UiPermissionTypeId" VARCHAR(100),
+
+    -- Unique constraint
+    CONSTRAINT "UQ_UiPermission_PermissionValue"
+        UNIQUE ("PermissionValue"),
+
+    -- Foreign keys
+    CONSTRAINT "FK_UiPermission_Type"
+        FOREIGN KEY ("UiPermissionTypeId")
+        REFERENCES "AuthReferenceLookup"("Id"),
+
+    CONSTRAINT "FK_UiPermission_Module"
+        FOREIGN KEY ("ModuleId")
+        REFERENCES "AuthReferenceLookup"("Id")
+);
+
+
+		]]>
+	</sql>
+	<sql name="InitialSetup.AddUiPermissionDenied">
+		<![CDATA[
+		-- Create Table
+CREATE TABLE IF NOT EXISTS "UiPermissionDenied" (
+
+    "UserId" VARCHAR(100) NOT NULL,
+    "UiPermissionId" VARCHAR(100) NOT NULL,
+
+    "CanView" BOOLEAN DEFAULT FALSE,
+    "CanEdit" BOOLEAN DEFAULT FALSE,
+    "CanCreate" BOOLEAN DEFAULT FALSE,
+    "CanDelete" BOOLEAN DEFAULT FALSE,
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+    "SysData" TEXT,
+
+    CONSTRAINT "UiPermissionDenied_pkey"
+        PRIMARY KEY ("UserId", "UiPermissionId")
+
+);
+
+
+		]]>
+	</sql>
+	<sql name="InitialSetup.AddUiPermissionGranted">
+		<![CDATA[
+	  -- Create Table
+CREATE TABLE IF NOT EXISTS "UiPermissionGranted" (
+
+    "UserId" VARCHAR(100) NOT NULL,
+    "UiPermissionId" VARCHAR(100) NOT NULL,
+
+    "CanView" BOOLEAN DEFAULT FALSE,
+    "CanEdit" BOOLEAN DEFAULT FALSE,
+    "CanCreate" BOOLEAN DEFAULT FALSE,
+    "CanDelete" BOOLEAN DEFAULT FALSE,
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+    "SysData" TEXT,
+
+    CONSTRAINT "UiPermissionGranted_pkey"
+        PRIMARY KEY ("UserId", "UiPermissionId")
+
+);
+
+	  ]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUserRole">
+		<![CDATA[
+		-- Create Table
+CREATE TABLE IF NOT EXISTS "UserRole" (
+
+    "Id" VARCHAR(100) NOT NULL DEFAULT gen_random_uuid()::text,
+
+    "UserId" VARCHAR(100) NOT NULL,
+    "RoleId" VARCHAR(100) NOT NULL,
+
+    "CreatedBy" VARCHAR(100),
+    "CreatedDateTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "UpdatedBy" VARCHAR(100),
+    "UpdatedDateTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "UpdateReason" VARCHAR(100),
+
+    "IsDeleted" BOOLEAN DEFAULT FALSE,
+    "IsActive" BOOLEAN DEFAULT FALSE,
+
+    "OwnerId" VARCHAR(100),
+    "IsApproved" BOOLEAN DEFAULT FALSE,
+    "ApproverId" VARCHAR(100),
+    "ApprovedDateTime" TIMESTAMP,
+
+    "IsAuthorized" BOOLEAN DEFAULT FALSE,
+    "AuthorizedById" VARCHAR(100),
+    "AuthorizedDateTime" TIMESTAMP,
+
+    "TenantId" VARCHAR(100),
+    "SubTenantId" VARCHAR(100),
+    "SysData" TEXT,
+
+    "CorrelationId" VARCHAR(50),
+    "AuditableRequestId" VARCHAR(50),
+    "AuditableRequestName" VARCHAR(100),
+    "AuditableSourceEventName" VARCHAR(100),
+
+    CONSTRAINT "UserRole_pkey"
+        PRIMARY KEY ("Id"),
+
+    CONSTRAINT "FK_UserRole_User"
+        FOREIGN KEY ("UserId")
+        REFERENCES "User"("Id"),
+
+    CONSTRAINT "FK_UserRole_Role"
+        FOREIGN KEY ("RoleId")
+        REFERENCES "Role"("Id"),
+
+    CONSTRAINT "UC_UserRole_User_Role"
+        UNIQUE ("UserId", "RoleId")
+);
+
+INSERT INTO "UserRole"
+(
+    "UserId",
+    "RoleId",
+    "CreatedBy",
+    "CreatedDateTime",
+    "UpdatedBy",
+    "UpdatedDateTime",
+    "IsDeleted",
+    "IsActive",
+    "IsApproved",
+    "IsAuthorized"
+)
+SELECT 
+    u."Id",
+    r."Id",
+    NULL,
+    NOW(),
+    NULL,
+    NOW(),
+    FALSE,
+    TRUE,
+    FALSE,
+    TRUE
+FROM "User" u
+JOIN "Role" r 
+    ON r."RoleName" = 'User'
+
+ON CONFLICT ("UserId", "RoleId") DO NOTHING;
+		]]>
+	</sql>
+</sql-set>

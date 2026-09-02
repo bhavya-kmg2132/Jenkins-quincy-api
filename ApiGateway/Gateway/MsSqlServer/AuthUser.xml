@@ -1,0 +1,1688 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+
+	<sql name="Identity.Identity_SelectUser">
+		<![CDATA[
+
+-- 1. User info with manager and profile
+SELECT
+     U.[Id] AS [UserId],
+     U.[EmpId],
+     U.[EmpType],
+     U.[auth_type],
+     U.[UserName],
+     U.[FirstName],
+     U.[LastName],
+     U.[Email],
+     U.[SecondaryEmail],
+     U.[PhoneNumber],
+     U.[Extension],
+     U.[mobile],
+     U.[oid],
+     U.[preferred_username],
+     U.[display_name],
+     U.[given_name],
+     U.[family_name],
+     U.[Position],
+     U.[BusinessUnit],
+     U.[ManagerId],
+     M.[UserName] AS [ManagerUserName],
+     U.[AccessLevel],
+     U.[IsActive],
+     U.[Designation],
+     U.[Department],
+     U.[Location],
+     U.[Organization],
+     U.[CorrelationId],
+     U.[AuditableRequestId],
+     U.[AuditableRequestName],
+     U.[AuditableSourceEventName],
+     U.[CreatedBy],
+     U.[CreatedDateTime],
+     U.[UpdatedBy],
+     U.[UpdatedDateTime],
+     U.[UpdateReason],
+     U.[OwnerId],
+     U.[IsDeleted],
+     U.[IsApproved],
+     U.[ApproverId],
+     U.[ApprovedDateTime],
+     U.[IsAuthorized],
+     U.[AuthorizedById],
+     U.[AuthorizedDateTime],
+     U.[SysData],
+     U.[TenantId],
+     U.[SubTenantId]
+FROM
+     [User] AS U
+LEFT JOIN [User] AS M 
+     ON U.[ManagerId] = M.[Id]
+     AND (M.[IsDeleted] IS NULL OR M.[IsDeleted] = 0)
+LEFT JOIN [UserProfile] AS UP 
+     ON UP.[UserId] = U.[Id]
+WHERE
+     (U.[IsDeleted] IS NULL OR U.[IsDeleted] = 0)
+     AND (U.[Id] = @userId OR U.[oid] = @userId OR U.[UserName] = @userId)
+ORDER BY
+     U.[display_name] ASC;
+
+-- 2. User Roles
+SELECT
+     UR.[Id] AS [UserRoleId],
+     R.[Id] AS [Id],
+     R.[RoleName],
+     R.[RoleValue],
+     R.[DisplayName],
+     U.[UserName],
+     U.[Id] AS [UserId]
+FROM
+     [UserRole] AS UR
+JOIN [Role] AS R 
+     ON (R.[IsDeleted] IS NULL OR R.[IsDeleted] = 0)
+     AND UR.[RoleId] = R.[Id]
+JOIN [User] AS U 
+     ON (U.[IsDeleted] IS NULL OR U.[IsDeleted] = 0)
+     AND UR.[UserId] = U.[Id]
+WHERE
+     (UR.[IsDeleted] IS NULL OR UR.[IsDeleted] = 0)
+     AND (
+          UR.[UserId] = @userId 
+          OR U.[oid] = @userId 
+          OR U.[UserName] = @userId 
+          OR @userId IS NULL 
+          OR @userId = '0'
+     )
+ORDER BY
+     R.[RoleName] ASC;
+
+-- 3. User Permissions Granted
+SELECT
+     P.[Id] AS [PermissionId],
+     PG.[Id] AS [PermissionGrantedId],
+     P.[PermissionValue],
+     P.[PermissionDisplayName],
+     U.[UserName],
+     U.[Id] AS [UserId],
+     P.[PermissionSetId],
+     AR.[DisplayName] AS [PermissionSetName],
+     P.[ModuleId],
+     A.[DisplayName] AS [ModuleName],
+     P.[ApiName],
+     P.[PermissionType],
+	 P.[ActionPermissionEndPoint]
+
+FROM
+     [PermissionGranted] AS PG
+JOIN [Permission] AS P
+     ON P.[Id] = PG.[PermissionId]
+     AND (P.[IsDeleted] IS NULL OR P.[IsDeleted] = 0)
+JOIN [User] AS U
+     ON (U.[IsDeleted] IS NULL OR U.[IsDeleted] = 0)
+     AND PG.[UserId] = U.[Id]
+JOIN [AuthReferenceLookup] AS A
+     ON A.[Id] = P.[ModuleId]
+JOIN [AuthReferenceLookup] AS AR
+     ON AR.[Id] = P.[PermissionSetId]
+WHERE
+     (PG.[IsDeleted] IS NULL OR PG.[IsDeleted] = 0)
+     AND (
+          PG.[UserId] = @userId
+          OR U.[oid] = @userId
+          OR U.[UserName] = @userId
+          OR @userId IS NULL
+          OR @userId = '0'
+     )
+ORDER BY
+     P.[PermissionDisplayName] ASC;
+
+-- 4. User Permissions Denied
+SELECT
+     P.[Id] AS [PermissionId],
+     PD.[Id] AS [PermissionDeniedId],
+     P.[PermissionValue],
+     P.[PermissionDisplayName],
+     U.[UserName],
+     U.[Id] AS [UserId],
+     P.[PermissionSetId],
+     AR.[DisplayName] AS [PermissionSetName],
+     P.[ModuleId],
+     A.[DisplayName] AS [ModuleName],
+     P.[ApiName],
+     P.[PermissionType],
+	 P.[ActionPermissionEndPoint]
+FROM
+     [PermissionDenied] AS PD
+JOIN [Permission] AS P
+     ON P.[Id] = PD.[PermissionId]
+     AND (P.[IsDeleted] IS NULL OR P.[IsDeleted] = 0)
+JOIN [User] AS U
+     ON (U.[IsDeleted] IS NULL OR U.[IsDeleted] = 0)
+     AND PD.[UserId] = U.[Id]
+JOIN [AuthReferenceLookup] AS A
+     ON A.[Id] = P.[ModuleId]
+JOIN [AuthReferenceLookup] AS AR
+     ON AR.[Id] = P.[PermissionSetId]
+WHERE
+     (PD.[IsDeleted] IS NULL OR PD.[IsDeleted] = 0)
+     AND (
+          PD.[UserId] = @userId
+          OR U.[oid] = @userId
+          OR U.[UserName] = @userId
+          OR @userId IS NULL
+          OR @userId = '0'
+     )
+ORDER BY
+     P.[PermissionDisplayName] ASC;
+
+
+]]>
+	</sql>
+
+	<sql name="RolePermissionInfo.Select">
+		<![CDATA[
+
+SELECT
+    RP.[PermissionId] AS [PermissionId],
+    RP.[Id] AS [RolePermissionId],
+    R.[Id] AS [RoleId],
+    P.[PermissionValue],
+    P.[PermissionDisplayName],
+    P.[PermissionSetId],
+	P.[PermissionType],
+	P.[ActionPermissionEndPoint],
+	P.[IsActive],
+    AR.[DisplayName] AS [PermissionSetName],
+    P.[ModuleId],
+    A.[DisplayName] AS [ModuleName],
+    P.[ApiName],
+    R.[RoleName],
+    R.[RoleValue]
+FROM
+    [RolePermission] AS RP
+INNER JOIN [Permission] AS P
+    ON RP.[PermissionId] = P.[Id]
+INNER JOIN [Role] AS R
+    ON RP.[RoleId] = R.[Id]
+INNER JOIN [AuthReferenceLookup] AS A
+    ON A.[Id] = P.[ModuleId]
+INNER JOIN [AuthReferenceLookup] AS AR
+    ON AR.[Id] = P.[PermissionSetId]
+WHERE
+    RP.[RoleId] = @RoleId;
+
+]]>
+	</sql>
+
+	<sql name="RoleUiPermissionsInfo.Select">
+		<![CDATA[
+
+SELECT
+    RP.[UiPermissionId] AS [PermissionId],
+    R.[Id] AS [RoleId],
+    R.[RoleName],
+    R.[RoleValue],
+    P.[PermissionValue],
+    P.[PermissionDisplayName],
+    P.[UiPermissionTypeId] AS [PermissionTypeId],
+    A.[DisplayName] AS [PermissionTypeName],
+    P.[PermissionParentId],
+    UP.[PermissionDisplayName] AS [PermissionParentName],
+    P.[ModuleId],
+    AR.[DisplayName] AS [ModuleName]
+FROM
+    [RoleUiPermission] AS RP
+INNER JOIN [UiPermission] AS P
+    ON RP.[UiPermissionId] = P.[Id]
+    AND P.[IsActive] = 1
+INNER JOIN [AuthReferenceLookup] AS A
+    ON A.[Id] = P.[UiPermissionTypeId]
+INNER JOIN [AuthReferenceLookup] AS AR
+    ON AR.[Id] = P.[ModuleId]
+LEFT JOIN [UiPermission] AS UP
+    ON UP.[Id] = P.[PermissionParentId]
+INNER JOIN [Role] AS R
+    ON RP.[RoleId] = R.[Id]
+WHERE
+    (@RoleId = '0' OR RP.[RoleId] = @RoleId);
+
+]]>
+	</sql>
+
+	<sql name="UserInfo.Select">
+		<![CDATA[
+
+-- 1. User info with manager and profile
+SELECT
+     U.[Id] AS [Id],
+     U.[EmpId],
+     U.[EmpType],
+     U.[UserName],
+     U.[FirstName],
+     U.[LastName],
+     U.[Email],
+     U.[SecondaryEmail],
+     U.[PhoneNumber],
+     U.[Extension],
+     U.[mobile],
+     U.[oid],
+     U.[preferred_username],
+     U.[display_name],
+     U.[given_name],
+     U.[family_name],
+     U.[Position],
+     U.[BusinessUnit],
+     U.[ManagerId],
+     M.[UserName] AS [ManagerUserName],
+     U.[AccessLevel],
+     U.[IsActive],
+     U.[Designation],
+     U.[Department],
+     U.[Location],
+     U.[Organization],
+     U.[CorrelationId],
+     U.[AuditableRequestId],
+     U.[AuditableRequestName],
+     U.[AuditableSourceEventName],
+     U.[CreatedBy],
+     U.[CreatedDateTime],
+     U.[UpdatedBy],
+     U.[UpdatedDateTime],
+     U.[UpdateReason],
+     U.[OwnerId],
+     U.[IsDeleted],
+     U.[IsApproved],
+     U.[ApproverId],
+     U.[ApprovedDateTime],
+     U.[IsAuthorized],
+     U.[AuthorizedById],
+     U.[AuthorizedDateTime],
+     U.[SysData],
+     U.[TenantId],
+     U.[SubTenantId],
+     U.[auth_type]
+FROM
+     [User] AS U
+LEFT JOIN [User] AS M 
+     ON U.[ManagerId] = M.[Id]
+     AND (M.[IsDeleted] IS NULL OR M.[IsDeleted] = 0)
+LEFT JOIN [UserProfile] AS UP 
+     ON UP.[UserId] = U.[Id]
+WHERE
+     (U.[IsDeleted] IS NULL OR U.[IsDeleted] = 0)
+     AND (
+          U.[Id] = @userId
+          OR U.[oid] = @userId
+          OR U.[UserName] = @userId
+          OR @userId IS NULL
+          OR @userId = '0'
+     )
+ORDER BY
+     U.[display_name] ASC;
+
+-- 2. User Roles
+SELECT
+     UR.[Id] AS [UserRoleId],
+     R.[Id] AS [Id],
+     R.[RoleName],
+     R.[RoleValue],
+     R.[DisplayName],
+     U.[UserName],
+     U.[Id] AS [UserId]
+FROM
+     [UserRole] AS UR
+JOIN [Role] AS R 
+     ON (R.[IsDeleted] IS NULL OR R.[IsDeleted] = 0)
+     AND UR.[RoleId] = R.[Id]
+JOIN [User] AS U 
+     ON (U.[IsDeleted] IS NULL OR U.[IsDeleted] = 0)
+     AND UR.[UserId] = U.[Id]
+WHERE
+     (UR.[IsDeleted] IS NULL OR UR.[IsDeleted] = 0)
+     AND (
+          UR.[UserId] = @userId
+          OR U.[oid] = @userId
+          OR U.[UserName] = @userId
+          OR @userId IS NULL
+          OR @userId = '0'
+     )
+ORDER BY
+     R.[RoleName] ASC;
+
+-- 3. User Permissions Granted
+SELECT
+     P.[Id] AS [PermissionId],
+     PG.[Id] AS [PermissionGrantedId],
+     P.[PermissionValue],
+     P.[PermissionDisplayName],
+     U.[UserName],
+     U.[Id] AS [UserId],
+     P.[PermissionSetId],
+     AR.[DisplayName] AS [PermissionSetName],
+     P.[ModuleId],
+     A.[DisplayName] AS [ModuleName],
+     P.[ApiName],
+     P.[PermissionType],
+	 P.[IsActive],
+	 P.[ActionPermissionEndPoint]
+FROM
+     [PermissionGranted] AS PG
+JOIN [Permission] AS P
+     ON P.[Id] = PG.[PermissionId]
+     AND (P.[IsDeleted] IS NULL OR P.[IsDeleted] = 0)
+JOIN [User] AS U
+     ON (U.[IsDeleted] IS NULL OR U.[IsDeleted] = 0)
+     AND PG.[UserId] = U.[Id]
+JOIN [AuthReferenceLookup] AS A
+     ON A.[Id] = P.[ModuleId]
+JOIN [AuthReferenceLookup] AS AR
+     ON AR.[Id] = P.[PermissionSetId]
+WHERE
+     (PG.[IsDeleted] IS NULL OR PG.[IsDeleted] = 0)
+     AND (
+          PG.[UserId] = @userId
+          OR U.[oid] = @userId
+          OR U.[UserName] = @userId
+          OR @userId IS NULL
+          OR @userId = '0'
+     )
+ORDER BY
+     P.[PermissionDisplayName] ASC;
+
+-- 4. User Permissions Denied
+SELECT
+     P.[Id] AS [PermissionId],
+     PD.[Id] AS [PermissionDeniedId],
+     P.[PermissionValue],
+     P.[PermissionDisplayName],
+     U.[UserName],
+     U.[Id] AS [UserId],
+     P.[PermissionSetId],
+     AR.[DisplayName] AS [PermissionSetName],
+     P.[ModuleId],
+     A.[DisplayName] AS [ModuleName],
+     P.[ApiName],
+     P.[PermissionType],
+	 P.[IsActive],
+	 P.[ActionPermissionEndPoint]
+
+FROM
+     [PermissionDenied] AS PD
+JOIN [Permission] AS P
+     ON P.[Id] = PD.[PermissionId]
+     AND (P.[IsDeleted] IS NULL OR P.[IsDeleted] = 0)
+JOIN [User] AS U
+     ON (U.[IsDeleted] IS NULL OR U.[IsDeleted] = 0)
+     AND PD.[UserId] = U.[Id]
+JOIN [AuthReferenceLookup] AS A
+     ON A.[Id] = P.[ModuleId]
+JOIN [AuthReferenceLookup] AS AR
+     ON AR.[Id] = P.[PermissionSetId]
+WHERE
+     (PD.[IsDeleted] IS NULL OR PD.[IsDeleted] = 0)
+     AND (
+          PD.[UserId] = @userId
+          OR U.[oid] = @userId
+          OR U.[UserName] = @userId
+          OR @userId IS NULL
+          OR @userId = '0'
+     )
+ORDER BY
+     P.[PermissionDisplayName] ASC;
+
+-- 5. User UI Permissions (from Role assignments only)
+WITH role_id_list AS (
+    SELECT
+        STRING_AGG(CAST([RoleId] AS VARCHAR(MAX)), ',') AS [RoleIdList]
+    FROM [UserRole]
+    INNER JOIN [User] AS U
+        ON U.[Id] = [UserRole].[UserId]
+    WHERE
+        [UserId] = @userId
+        OR U.[UserName] = @userId
+        OR @userId IS NULL
+        OR @userId = '0'
+),
+role_id_array AS (
+    SELECT value AS [RoleId]
+    FROM role_id_list
+    CROSS APPLY STRING_SPLIT([RoleIdList], ',')
+    WHERE [RoleIdList] IS NOT NULL
+)
+
+SELECT
+    U.[UserId],
+    RP.[UiPermissionId] AS [PermissionId],
+    P.[PermissionValue],
+    P.[PermissionDisplayName],
+    P.[UiPermissionTypeId] AS [PermissionTypeId],
+    A.[DisplayName] AS [PermissionTypeName],
+    P.[PermissionParentId],
+    UP.[PermissionDisplayName] AS [PermissionParentName],
+    P.[ModuleId],
+    AR.[DisplayName] AS [ModuleName]
+FROM [RoleUiPermission] RP
+INNER JOIN [UiPermission] AS P
+    ON RP.[UiPermissionId] = P.[Id]
+    AND P.[IsActive] = 1
+INNER JOIN [AuthReferenceLookup] AS A
+    ON A.[Id] = P.[UiPermissionTypeId]
+INNER JOIN [AuthReferenceLookup] AS AR
+    ON AR.[Id] = P.[ModuleId]
+LEFT JOIN [UiPermission] AS UP
+    ON UP.[Id] = P.[PermissionParentId]
+INNER JOIN [UserRole] AS U
+    ON U.[RoleId] = RP.[RoleId]
+WHERE RP.[RoleId] IN (SELECT [RoleId] FROM role_id_array)
+AND (
+    U.[UserId] = (SELECT TOP 1 [Id] FROM [User] WHERE [Id] = @userId OR [UserName] = @userId)
+    OR @userId IS NULL
+    OR @userId = '0'
+)
+GROUP BY
+    U.[UserId],
+    RP.[UiPermissionId],
+    P.[PermissionValue],
+    P.[PermissionDisplayName],
+    P.[UiPermissionTypeId],
+    A.[DisplayName],
+    P.[PermissionParentId],
+    UP.[PermissionDisplayName],
+    P.[ModuleId],
+    AR.[DisplayName];
+
+-- 6. User Teams
+SELECT
+    UT.[TeamId] AS [Id],
+    UT.[MemberId],
+    T.[TeamName],
+    T.[TeamShortName],
+    T.[Description],
+    T.[TeamOwnerId],
+    T.[TeamCaptainId]
+FROM [TeamMember] AS UT
+INNER JOIN [Team] AS T ON T.[Id] = UT.[TeamId]
+INNER JOIN [User] AS U ON U.[Id] = UT.[MemberId]
+WHERE (T.[IsDeleted] IS NULL OR T.[IsDeleted] = 0)
+AND (UT.[IsDeleted] IS NULL OR UT.[IsDeleted] = 0)
+AND (U.[IsDeleted] IS NULL OR U.[IsDeleted] = 0)
+AND (UT.[MemberId] = (SELECT TOP 1 [Id] FROM [User] WHERE [Id] = @userId OR [UserName] = @userId OR [oid] = @userId)
+     OR @userId IS NULL OR @userId = '0');
+
+
+]]>
+	</sql>
+
+	<sql name="Permission.Save">
+		<![CDATA[
+
+INSERT INTO [Permission](
+    [PermissionValue],
+    [PermissionDisplayName],
+    [PermissionSetId],
+    [PermissionType],
+    [ModuleId],
+    [CreatedBy],
+    [IsAuthorized],
+    [OwnerId],
+    [SysData],
+    [TenantId],
+    [SubTenantId],
+    [IsDeleted],
+    [IsActive],
+    [CreatedDateTime],
+	[ActionPermissionEndPoint]
+)
+VALUES (
+    @PermissionValue,
+    @PermissionDisplayName,
+    @PermissionSetId,
+    @PermissionType,
+    @ModuleId,
+    @CreatedBy,
+    @IsAuthorized,
+    @OwnerId,
+    @SysData,
+    @TenantId,
+    @SubTenantId,
+    0,
+    1,
+    GETUTCDATE(),
+	@ActionPermissionEndPoint
+);
+
+SELECT SCOPE_IDENTITY();
+
+]]>
+	</sql>
+
+	<sql name="Permission.Select">
+		<![CDATA[
+
+SELECT
+    P.[Id] AS [PermissionId],
+    P.[PermissionValue],
+    P.[PermissionDisplayName],
+    P.[PermissionSetId],
+    ar.[DisplayName] AS [PermissionSetName],
+    P.[PermissionType],
+    P.[ModuleId],
+    a.[DisplayName] AS [ModuleName],
+    P.[ApiName],
+    P.[ActionPermissionEndPoint]
+FROM
+    [Permission] AS P
+INNER JOIN [AuthReferenceLookup] a
+    ON a.[Id] = P.[ModuleId]
+INNER JOIN [AuthReferenceLookup] ar
+    ON ar.[Id] = P.[PermissionSetId]
+WHERE
+    P.[IsActive] = 1
+    AND P.[IsDeleted] = 0
+ORDER BY
+    P.[PermissionDisplayName] DESC;
+
+]]>
+	</sql>
+
+	<sql name="Permission.Update">
+		<![CDATA[
+
+UPDATE [Permission]
+SET
+    [PermissionValue] = @PermissionValue,
+    [PermissionDisplayName] = @PermissionDisplayName,
+    [PermissionSetId] = @PermissionSetId,
+	[PermissionType] = @PermissionType,
+    [ModuleId] = @ModuleId,
+    [IsActive] = @IsActive,
+    [IsDeleted] = @IsDeleted,
+    [IsApproved] = @IsApproved,
+    [ApproverId] = @ApproverId,
+    [ApprovedDateTime] = @ApprovedDateTime,
+    [IsAuthorized] = @IsAuthorized,
+    [AuthorizedById] = @AuthorizedById,
+    [AuthorizedDateTime] = @AuthorizedDateTime,
+    [UpdatedDateTime] = GETUTCDATE(),
+    [UpdatedBy] = @UpdatedBy
+WHERE
+    [Id] = @Id;
+
+]]>
+	</sql>
+
+	<sql name="RolePermission.Save">
+		<![CDATA[
+
+-- Delete all permissions for the Role
+DELETE FROM [RolePermission]
+WHERE [RoleId] = @RoleId;
+
+-- If Permission exists
+INSERT INTO [RolePermission](
+    [RoleId],
+    [CreatedDateTime],
+    [CreatedBy],
+    [UpdatedDateTime],
+    [UpdatedBy],
+    [IsDeleted],
+    [IsActive],
+    [IsAuthorized],
+    [OwnerId],
+    [SysData],
+    [TenantId],
+    [SubTenantId],
+    [PermissionId]
+)
+SELECT
+    @RoleId,
+    GETUTCDATE(),
+    @CreatedBy,
+    GETUTCDATE(),
+    @CreatedBy,
+    0,
+    1,
+    @IsAuthorized,
+    @OwnerId,
+    @SysData,
+    @TenantId,
+    @SubTenantId,
+    value AS [PermissionId]
+FROM STRING_SPLIT(@PermissionIds, ',')
+WHERE @PermissionIds IS NOT NULL
+  AND @PermissionIds <> '';
+
+]]>
+	</sql>
+
+	<sql name="RoleUIPermission.Save">
+		<![CDATA[
+
+INSERT INTO [RoleUiPermission](
+    [RoleId],
+    [UiPermissionId],
+    [CreatedBy],
+    [CreatedDateTime]
+)
+VALUES (
+    @RoleId,
+    @UiPermissionId,
+    @CreatedBy,
+    GETUTCDATE()
+);
+
+]]>
+	</sql>
+
+	<sql name="RoleInfo.Select">
+		<![CDATA[
+
+SELECT
+    R.[Id],
+    R.[RoleName],
+    R.[RoleValue]
+FROM
+    [Role] AS R
+WHERE
+    (R.[IsDeleted] IS NULL OR R.[IsDeleted] = 0)
+    AND (
+        (@RoleId IS NULL OR @RoleId = '0')
+        OR R.[Id] = @RoleId
+    );
+
+-- Permission
+SELECT
+    RP.[PermissionId] AS [PermissionId],
+    P.[PermissionDisplayName],
+    P.[PermissionValue],
+    P.[PermissionSetId],
+    AR.[DisplayName] AS [PermissionSetName],
+    RP.[RoleId] AS [Id],
+    P.[PermissionType],
+    P.[ModuleId],
+    A.[DisplayName] AS [ModuleName]
+FROM
+    [RolePermission] AS RP
+JOIN [Permission] AS P
+    ON P.[Id] = RP.[PermissionId]
+    AND (P.[IsDeleted] IS NULL OR P.[IsDeleted] = 0)
+INNER JOIN [AuthReferenceLookup] AS A
+    ON A.[Id] = P.[ModuleId]
+INNER JOIN [AuthReferenceLookup] AS AR
+    ON AR.[Id] = P.[PermissionSetId]
+WHERE
+    (RP.[IsDeleted] IS NULL OR RP.[IsDeleted] = 0)
+    AND (
+        (@RoleId IS NULL OR @RoleId = '0')
+        OR RP.[RoleId] = @RoleId
+    );
+
+]]>
+	</sql>
+
+	<sql name="RoleInfo.SelectPermissionsData">
+		<![CDATA[
+           ]]>
+	</sql>
+
+	<sql name="UIPermission.Activate">
+		<![CDATA[
+
+UPDATE [UiPermission]
+SET
+    [IsActive] = @IsActive,
+    [PermissionDisplayName] = @PermissionDisplayName,
+    [UpdatedDateTime] = @UpdatedDateTime,
+    [UpdatedBy] = @UpdatedBy
+WHERE
+    [Id] = @PermissionId;
+
+]]>
+	</sql>
+
+	<sql name="UIPermission.Save">
+		<![CDATA[
+
+INSERT INTO [UiPermission](
+    [PermissionValue],
+    [PermissionDisplayName],
+    [UiPermissionTypeId],
+    [PermissionParentId],
+    [ModuleId],
+    [CreatedBy],
+    [IsAuthorized],
+    [OwnerId],
+    [SysData],
+    [TenantId],
+    [SubTenantId],
+    [IsDeleted],
+    [IsActive],
+    [CreatedDateTime]
+)
+VALUES (
+    @PermissionValue,
+    @PermissionDisplayName,
+    @PermissionTypeId,
+    @PermissionParentId,
+    @ModuleId,
+    @CreatedBy,
+    @IsAuthorized,
+    @OwnerId,
+    @SysData,
+    @TenantId,
+    @SubTenantId,
+    0,
+    0,
+    GETUTCDATE()
+);
+
+SELECT SCOPE_IDENTITY();
+
+]]>
+	</sql>
+
+	<sql name="UIPermission.Select">
+		<![CDATA[
+
+SELECT
+    P.[Id] AS [PermissionId],
+    P.[PermissionValue],
+    P.[PermissionDisplayName],
+    P.[UiPermissionTypeId] AS [PermissionTypeId],
+    A.[DisplayName] AS [PermissionTypeName],
+    P.[ModuleId],
+    AR.[DisplayName] AS [ModuleName],
+    P.[PermissionParentId],
+    UI.[PermissionDisplayName] AS [PermissionParentName],
+    P.[IsActive]
+FROM
+    [UiPermission] AS P
+INNER JOIN [AuthReferenceLookup] AS A
+    ON A.[Id] = P.[UiPermissionTypeId]
+INNER JOIN [AuthReferenceLookup] AS AR
+    ON AR.[Id] = P.[ModuleId]
+LEFT JOIN [UiPermission] AS UI
+    ON UI.[Id] = P.[PermissionParentId]
+ORDER BY
+    P.[PermissionDisplayName] DESC;
+
+]]>
+	</sql>
+
+	<sql name="User.AddRole">
+		<![CDATA[
+
+INSERT INTO [UserRole](
+    [UserId],
+    [CreatedDateTime],
+    [CreatedBy],
+    [UpdatedDateTime],
+    [UpdatedBy],
+    [IsDeleted],
+    [IsActive],
+    [IsAuthorized],
+    [OwnerId],
+    [SysData],
+    [TenantId],
+    [SubTenantId],
+    [RoleId]
+)
+SELECT DISTINCT
+    @UserId,
+    GETUTCDATE(),
+    @CreatedBy,
+    GETUTCDATE(),
+    @CreatedBy,
+    0,
+    1,
+    @IsAuthorized,
+    @OwnerId,
+    @SysData,
+    @TenantId,
+    @SubTenantId,
+    @RoleId
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM [UserRole]
+    WHERE [UserId] = @UserId
+      AND [RoleId] = @RoleId
+);
+
+]]>
+	</sql>
+
+	<sql name="User.AddRoles">
+		<![CDATA[
+
+DELETE FROM [UserRole]
+WHERE [UserId] = @UserId;
+
+INSERT INTO [UserRole](
+    [UserId],
+    [CreatedDateTime],
+    [CreatedBy],
+    [UpdatedDateTime],
+    [UpdatedBy],
+    [IsDeleted],
+    [IsActive],
+    [IsAuthorized],
+    [OwnerId],
+    [SysData],
+    [TenantId],
+    [SubTenantId],
+    [RoleId]
+)
+SELECT DISTINCT
+    @UserId,
+    GETUTCDATE(),
+    @CreatedBy,
+    GETUTCDATE(),
+    @CreatedBy,
+    0,
+    1,
+    @IsAuthorized,
+    @OwnerId,
+    @SysData,
+    @TenantId,
+    @SubTenantId,
+    T.[RoleId]
+FROM (
+    SELECT value AS [RoleId]
+    FROM STRING_SPLIT(@RoleIds, ',')
+    WHERE @RoleIds IS NOT NULL
+      AND @RoleIds <> ''
+
+    UNION ALL
+
+    SELECT [Id]
+    FROM [Role]
+    WHERE [RoleName] = 'User'
+
+) AS T;
+
+]]>
+	</sql>
+
+	<sql name="User.DeleteRole">
+		<![CDATA[
+
+DELETE FROM [UserRole]
+WHERE [UserId] = @UserId
+  AND [RoleId] = @RoleId;
+
+]]>
+	</sql>
+
+	<sql name="User.PermissionDenied.Save">
+		<![CDATA[
+
+-- NOTE: This query expects @Id1, @Id2, @Id3, @Id4
+-- (for protected users) and @PermissionIds
+-- (comma-separated string) to be resolved in C#.
+
+DELETE FROM [PermissionDenied]
+WHERE [UserId] = @UserId;
+
+INSERT INTO [PermissionDenied](
+    [UserId],
+    [CreatedDateTime],
+    [CreatedBy],
+    [UpdatedDateTime],
+    [UpdatedBy],
+    [IsDeleted],
+    [IsActive],
+    [IsAuthorized],
+    [OwnerId],
+    [SysData],
+    [TenantId],
+    [SubTenantId],
+    [PermissionId]
+)
+SELECT DISTINCT
+    @UserId,
+    GETUTCDATE(),
+    @CreatedBy,
+    GETUTCDATE(),
+    @CreatedBy,
+    0,
+    1,
+    @IsAuthorized,
+    @OwnerId,
+    @SysData,
+    @TenantId,
+    @SubTenantId,
+    value AS [PermissionId]
+FROM STRING_SPLIT(@PermissionIds, ',')
+WHERE @PermissionIds IS NOT NULL
+  AND @PermissionIds <> '';
+
+]]>
+	</sql>
+
+	<sql name="User.PermissionGranted.Save">
+		<![CDATA[
+
+DELETE FROM [PermissionGranted]
+WHERE [UserId] = @UserId;
+
+INSERT INTO [PermissionGranted](
+    [UserId],
+    [CreatedDateTime],
+    [CreatedBy],
+    [UpdatedDateTime],
+    [UpdatedBy],
+    [IsDeleted],
+    [IsActive],
+    [IsAuthorized],
+    [OwnerId],
+    [SysData],
+    [TenantId],
+    [SubTenantId],
+    [PermissionId]
+)
+SELECT DISTINCT
+    @UserId,
+    GETUTCDATE(),
+    @CreatedBy,
+    GETUTCDATE(),
+    @CreatedBy,
+    0,
+    1,
+    @IsAuthorized,
+    @OwnerId,
+    @SysData,
+    @TenantId,
+    @SubTenantId,
+    value AS [PermissionId]
+FROM STRING_SPLIT(@PermissionIds, ',')
+WHERE @PermissionIds IS NOT NULL
+  AND @PermissionIds <> '';
+
+]]>
+	</sql>
+
+	<sql name="User.Save">
+		<![CDATA[
+
+INSERT INTO [User] (
+    [Id],
+    [UserName],
+    [auth_type],
+    [EmpId],
+    [EmpType],
+    [mobile],
+    [Email],
+    [Position],
+    [BusinessUnit],
+    [oid],
+    [given_name],
+    [family_name],
+    [preferred_username],
+    [FirstName],
+    [LastName],
+    [SecondaryEmail],
+    [PhoneNumber],
+    [Extension],
+    [display_name],
+    [ManagerId],
+    [Designation],
+    [Department],
+    [Location],
+    [Organization],
+    [CreatedDateTime],
+    [UpdatedDateTime],
+    [IsDeleted],
+    [IsActive],
+    [IsAuthorized],
+    [OwnerId],
+    [CreatedBy],
+    [UpdatedBy],
+    [SysData],
+    [TenantId],
+    [SubTenantId],
+    [AccessLevel]
+)
+VALUES (
+    @Id,
+    @UserName,
+    @auth_type,
+    @EmpId,
+    @EmpType,
+    @mobile,
+    @Email,
+    @Position,
+    @BusinessUnit,
+    @OID,
+    @given_name,
+    @family_name,
+    @preferred_username,
+    @FirstName,
+    @LastName,
+    @SecondaryEmail,
+    @PhoneNumber,
+    @Extension,
+    @display_name,
+    @ManagerId,
+    @Designation,
+    @Department,
+    @Location,
+    @Organization,
+    GETUTCDATE(),
+    GETUTCDATE(),
+    0,
+    1,
+    @IsAuthorized,
+    @OwnerId,
+    @CreatedBy,
+    @CreatedBy,
+    @SysData,
+    @TenantId,
+    @SubTenantId,
+    @AccessLevel
+);
+
+SELECT @Id AS [Id];
+
+INSERT INTO [UserRole] (
+    [UserId],
+    [RoleId]
+)
+SELECT
+    @Id,
+    [Id]
+FROM [Role]
+WHERE [RoleName] = 'User';
+
+INSERT INTO [UserPasswordHash] (
+    [UserId],
+    [PasswordHash],
+    [UpdatedBy],
+    [UpdatedDateTime]
+)
+VALUES (
+    @Id,
+    @PasswordHash,
+    @CreatedBy,
+    GETUTCDATE()
+);
+
+]]>
+	</sql>
+
+	<sql name="UserPasswordHash.Update">
+		<![CDATA[
+UPDATE [UserPasswordHash]
+SET
+    [PasswordHash]    = @PasswordHash,
+    [UpdatedBy]       = @UpdatedBy,
+    [UpdatedDateTime] = @UpdatedDateTime,
+    [UpdateReason]    = @UpdateReason
+WHERE [UserId] = @UserId;
+		]]>
+	</sql>
+
+	<sql name="UserPasswordHash.SelectByUserId">
+		<![CDATA[
+SELECT
+    [UserId],
+    [PasswordHash],
+    [UpdatedBy],
+    [UpdatedDateTime],
+    [UpdateReason]
+FROM [UserPasswordHash]
+WHERE [UserId] = @UserId;
+		]]>
+	</sql>
+
+	<sql name="User.UpdateAccessLevel">
+		<![CDATA[
+
+UPDATE [User]
+SET
+    [AccessLevel] = @AccessLevel,
+    [UpdatedBy] = @UpdatedBy
+WHERE
+    [Id] = @UserId;
+
+]]>
+	</sql>
+
+	<sql name="User.UpdateUserDetail">
+		<![CDATA[
+
+-- NOTE: This query contains two UPDATE statements.
+-- For Dapper, both can be executed in a single command.
+-- Use transaction handling in C# if atomic operation is required.
+
+UPDATE [User]
+SET
+    [PhoneNumber] = @PhoneNumber,
+    [Extension] = @Extension,
+    [Email] = @Email,
+    [AccessLevel] = @AccessLevel,
+    [UpdatedBy] = @UpdatedBy,
+    [UpdatedDateTime] = @UpdatedDateTime
+WHERE
+    [Id] = @Id;
+
+UPDATE [UserRole]
+SET
+    [RoleId] = @UserRoleId,
+    [UpdatedBy] = @UpdatedBy,
+    [UpdatedDateTime] = @UpdatedDateTime
+WHERE
+    [UserId] = @Id;
+
+]]>
+	</sql>
+
+	<sql name="UserAccessLevel.Select">
+		<![CDATA[
+
+SELECT
+    [AccessLevel] AS [UserAccessLevelName],
+    [DisplayName] AS [UserAccessLevelValue]
+FROM
+    [UserAccessLevel];
+
+]]>
+	</sql>
+
+	<sql name="UserProfile.Upsert">
+		<![CDATA[
+
+UPDATE [User]
+SET
+    [EmpId] = @EmpId,
+    [EmpType] = @EmpType,
+    [FirstName] = @FirstName,
+    [LastName] = @LastName,
+    [SecondaryEmail] = @SecondaryEmail,
+    [PhoneNumber] = @PhoneNumber,
+    [Extension] = @Extension,
+    [mobile] = @mobile,
+    [preferred_username] = @preferred_username,
+    [display_name] = @display_name,
+    [given_name] = @given_name,
+    [family_name] = @family_name,
+    [Position] = @Position,
+    [BusinessUnit] = @BusinessUnit,
+    [ManagerId] = @ManagerId,
+    [AccessLevel] = @AccessLevel,
+    [Designation] = @Designation,
+    [Department] = @Department,
+    [Location] = @Location,
+    [Organization] = @Organization,
+    [IsActive] = @IsActive,
+    [UpdatedBy] = @UpdatedBy,
+    [UpdatedDateTime] = @UpdatedDateTime
+WHERE
+    [Id] = @UserId;
+
+]]>
+	</sql>
+
+	<sql name="UserProfile.Upsert.InsertUserProfile">
+		<![CDATA[
+
+INSERT INTO [UserProfile] (
+    [UserId],
+    [DateOfJoining],
+    [PrimarySkills],
+    [SecondarySkills],
+    [TertiarySkills],
+    [OtherSkills]
+)
+VALUES (
+    @UserId,
+    @DateOfJoining,
+    @PrimarySkills,
+    @SecondarySkills,
+    @TertiarySkills,
+    @OtherSkills
+);
+
+]]>
+	</sql>
+
+	<sql name="UserProfile.UpdateUserProfile">
+		<![CDATA[
+
+UPDATE [UserProfile]
+SET
+    [DateOfJoining] = @DateOfJoining,
+    [PrimarySkills] = @PrimarySkills,
+    [SecondarySkills] = @SecondarySkills,
+    [TertiarySkills] = @TertiarySkills,
+    [OtherSkills] = @OtherSkills,
+    [UpdatedBy] = @UpdatedBy,
+    [UpdatedDateTime] = @UpdatedDateTime
+WHERE
+    [UserId] = @UserId;
+
+]]>
+	</sql>
+
+	<sql name="UserRole.Select">
+		<![CDATA[
+
+SELECT
+    R.[Id],
+    R.[RoleName],
+    R.[RoleValue]
+FROM
+    [Role] AS R
+WHERE
+    (R.[IsDeleted] IS NULL OR R.[IsDeleted] = 0)
+    AND (
+        (@RoleId IS NULL OR @RoleId = '0')
+        OR R.[Id] = @RoleId
+    );
+
+]]>
+	</sql>
+
+	<sql name="UserProfile.SelectByUserId">
+		<![CDATA[
+
+SELECT
+    UP.[UserId],
+    -- UP.[UserPic], -- Uncomment if this column exists and is needed
+    UP.[DOB],
+    UP.[Gender],
+    UP.[BloodGroup],
+    UP.[PersonalEmail],
+    UP.[DateOfJoining],
+    UP.[PassportNumber],
+    UP.[FatherName],
+    UP.[MotherName],
+    UP.[MaritalStatus],
+    UP.[WeddingAnniversaryDate],
+    UP.[SpouseName],
+    UP.[SpouseDOB],
+    UP.[HomeAddress1],
+    UP.[HomeAddress2],
+    UP.[City],
+    UP.[State],
+    UP.[HomeAddressCity],
+    UP.[HomeAddressState],
+    UP.[HomeAddressCountry],
+    UP.[HomePhoneNumber],
+    UP.[EmergencyContactNumber],
+    UP.[EmergencyContactName],
+    UP.[PrimarySkills],
+    UP.[SecondarySkills],
+    UP.[TertiarySkills],
+    UP.[OtherSkills],
+    UP.[Branch],
+    UP.[LookUpCode],
+    UP.[LinkedInUrl],
+    U.[display_name]
+FROM [User] AS U
+INNER JOIN [UserProfile] AS UP
+    ON UP.[UserId] = U.[Id]
+WHERE
+    UP.[UserId] = @UserId;
+
+]]>
+	</sql>
+
+	<sql name="UserActivity.GetUserActivities">
+		<![CDATA[
+
+SELECT
+[Id], 
+[UserId], 
+[LastLoginDateTime],
+[LastLogoutDateTime], 
+[LastActivityDateTime],	
+[LastActivityModule],
+[LastActionType],
+[LastActivityDetail],
+[CreatedBy],
+[CreatedDateTime], 
+[UpdatedBy], 
+[UpdatedDateTime], 
+[UpdateReason],
+[OwnerId],
+[IsActive],
+[IsDeleted],
+[IsApproved],
+[ApproverId],
+[ApprovedDateTime],
+[IsAuthorized],
+[AuthorizedById], 
+[AuthorizedDateTime], 
+[TenantId],
+[SubTenantId],
+[SysData],
+[CustomFields]
+FROM [UserActivity]
+WHERE (@UserId IS NULL OR [UserId] = @UserId)
+ORDER BY [LastActivityDateTime] DESC
+OFFSET (@PageNumber - 1) * @PageSize ROWS
+FETCH NEXT @PageSize ROWS ONLY
+
+]]>
+	</sql>
+
+	<sql name="UserActivity.Add">
+		<![CDATA[
+        INSERT INTO [UserActivity] (
+            [UserId],
+            [LastLoginDateTime],
+            [LastLogoutDateTime],
+            [LastActivityDateTime],
+            [LastActivityModule],
+            [LastActionType],
+            [LastActivityDetail],
+            [CreatedBy],
+            [CreatedDateTime]
+        )
+        OUTPUT INSERTED.[Id]
+        VALUES (
+            @UserId,
+            @LastLoginDateTime,
+            @LastLogoutDateTime,
+            @LastActivityDateTime,
+            @LastActivityModule,
+            @LastActionType,
+            @LastActivityDetail,
+            @CreatedBy,
+            @CreatedDateTime
+        )
+	]]>
+	</sql>
+
+	<sql name="RoleUIPermission.Delete">
+		<![CDATA[
+DELETE FROM RoleUiPermission WHERE RoleId = @RoleId;
+	]]>
+	</sql>
+
+	<sql name="User.GetUsersAndRoles">
+		<![CDATA[
+
+-- User Details
+SELECT
+    u.[Id] AS [UserId],
+    u.[Email],
+    u.[IsActive],
+    u.[display_name]
+FROM [User] u
+WHERE u.[IsDeleted] IS NULL 
+   OR u.[IsDeleted] = 0;
+
+-- User Role Details
+SELECT 
+    ur.[Id] AS [UserRoleId],
+    r.[RoleName],
+    u.[UserName],
+    u.[Id] AS [UserId]
+FROM [UserRole] ur
+JOIN [Role] r 
+    ON (r.[IsDeleted] IS NULL OR r.[IsDeleted] = 0)
+    AND ur.[RoleId] = r.[Id]
+JOIN [User] u 
+    ON (u.[IsDeleted] IS NULL OR u.[IsDeleted] = 0)
+    AND ur.[UserId] = u.[Id]
+WHERE ur.[IsDeleted] IS NULL 
+   OR ur.[IsDeleted] = 0
+ORDER BY r.[RoleName] ASC;
+
+	]]>
+	</sql>
+
+	<sql name="Team.Select">
+		<![CDATA[
+SELECT
+    T.[Id], T.[TeamName], T.[TeamShortName], T.[Description], T.[TeamOwnerId], T.[TeamCaptainId]
+FROM [Team] AS T
+WHERE T.[IsDeleted] IS NULL OR T.[IsDeleted] = 0;
+		]]>
+	</sql>
+
+	<sql name="Team.SelectById">
+		<![CDATA[
+SELECT
+    T.[Id], T.[TeamName], T.[TeamShortName], T.[Description], T.[TeamOwnerId], T.[TeamCaptainId]
+FROM [Team] AS T
+WHERE (T.[IsDeleted] IS NULL OR T.[IsDeleted] = 0) AND T.[Id] = @TeamId;
+
+SELECT UT.[MemberId]
+FROM [TeamMember] AS UT
+WHERE (UT.[IsDeleted] IS NULL OR UT.[IsDeleted] = 0)
+AND UT.[TeamId] = @TeamId;
+		]]>
+	</sql>
+
+	<sql name="Team.SelectByUserId">
+		<![CDATA[
+SELECT DISTINCT
+    T.[Id], T.[TeamName], T.[TeamShortName], T.[Description], T.[TeamOwnerId], T.[TeamCaptainId]
+FROM [Team] AS T
+INNER JOIN [TeamMember] AS UT ON UT.[TeamId] = T.[Id]
+WHERE (T.[IsDeleted] IS NULL OR T.[IsDeleted] = 0)
+AND (UT.[IsDeleted] IS NULL OR UT.[IsDeleted] = 0)
+AND UT.[MemberId] = @UserId;
+		]]>
+	</sql>
+
+	<sql name="Team.Save">
+		<![CDATA[
+INSERT INTO [Team](
+    [TeamName], [TeamShortName], [Description], [TeamOwnerId], [TeamCaptainId],
+    [CreatedBy], [CreatedDateTime], [IsDeleted], [IsActive]
+)
+OUTPUT INSERTED.[Id]
+VALUES(
+    @TeamName, @TeamShortName, @Description, @TeamOwnerId, @TeamCaptainId,
+    @CreatedBy, GETUTCDATE(), 0, 1
+);
+		]]>
+	</sql>
+
+	<sql name="TeamMember.Save">
+		<![CDATA[
+INSERT INTO [TeamMember]([MemberId], [TeamId], [CreatedBy], [CreatedDateTime], [IsDeleted])
+SELECT
+    CAST(value AS UNIQUEIDENTIFIER) AS [MemberId],
+    @TeamId AS [TeamId],
+    @CreatedBy,
+    GETUTCDATE(),
+    0
+FROM STRING_SPLIT(@MemberIds, ',')
+WHERE @MemberIds IS NOT NULL AND @MemberIds <> '';
+		]]>
+	</sql>
+
+	<sql name="TeamMember.Delete">
+		<![CDATA[
+DELETE FROM [TeamMember] WHERE [TeamId] = @TeamId AND [MemberId] = @MemberId;
+		]]>
+	</sql>
+
+
+	<sql name="TeamMember.SelectByTeamId">
+		<![CDATA[
+SELECT
+    UT.[MemberId],
+    U.[Email],
+    U.[UserName],
+    U.[FirstName],
+    U.[LastName],
+    U.[mobile] AS [Mobile],
+    U.[preferred_username],
+    U.[Designation],
+    U.[Department],
+    U.[AccessLevel]
+FROM [TeamMember] AS UT
+INNER JOIN [User] AS U ON U.[Id] = UT.[MemberId] AND (U.[IsDeleted] IS NULL OR U.[IsDeleted] = 0)
+WHERE (UT.[IsDeleted] IS NULL OR UT.[IsDeleted] = 0) AND UT.[TeamId] = @TeamId;
+		]]>
+	</sql>
+
+	<sql name="User.GetIdByOid">
+		<![CDATA[
+
+SELECT TOP 1 [Id]
+FROM [User]
+WHERE [oid] = @Oid
+  AND (IsDeleted IS NULL OR IsDeleted = 0);
+
+]]>
+	</sql>
+
+	<sql name="UserProfile.SelectByProfileId">
+		<![CDATA[
+
+SELECT
+    UP.[UserId],
+    UP.[DOB],
+    UP.[Gender],
+    UP.[BloodGroup],
+    UP.[PersonalEmail],
+    UP.[DateOfJoining],
+    UP.[PassportNumber],
+    UP.[FatherName],
+    UP.[MotherName],
+    UP.[MaritalStatus],
+    UP.[WeddingAnniversaryDate],
+    UP.[SpouseName],
+    UP.[SpouseDOB],
+    UP.[HomeAddress1],
+    UP.[HomeAddress2],
+    UP.[City],
+    UP.[State],
+    UP.[HomeAddressCity],
+    UP.[HomeAddressState],
+    UP.[HomeAddressCountry],
+    UP.[HomePhoneNumber],
+    UP.[EmergencyContactNumber],
+    UP.[EmergencyContactName],
+    UP.[PrimarySkills],
+    UP.[SecondarySkills],
+    UP.[TertiarySkills],
+    UP.[OtherSkills],
+    UP.[Branch],
+    UP.[LookUpCode],
+    UP.[LinkedInUrl],
+    U.[display_name]
+FROM [UserProfile] AS UP
+INNER JOIN [User] AS U ON U.[Id] = UP.[UserId]
+WHERE UP.[UserId] = @ProfileId;
+
+]]>
+	</sql>
+
+	<sql name="UserProfile.Select">
+		<![CDATA[
+
+SELECT
+    UP.[UserId],
+    UP.[DOB],
+    UP.[Gender],
+    UP.[BloodGroup],
+    UP.[PersonalEmail],
+    UP.[DateOfJoining],
+    UP.[PassportNumber],
+    UP.[FatherName],
+    UP.[MotherName],
+    UP.[MaritalStatus],
+    UP.[WeddingAnniversaryDate],
+    UP.[SpouseName],
+    UP.[SpouseDOB],
+    UP.[HomeAddress1],
+    UP.[HomeAddress2],
+    UP.[City],
+    UP.[State],
+    UP.[HomeAddressCity],
+    UP.[HomeAddressState],
+    UP.[HomeAddressCountry],
+    UP.[HomePhoneNumber],
+    UP.[EmergencyContactNumber],
+    UP.[EmergencyContactName],
+    UP.[PrimarySkills],
+    UP.[SecondarySkills],
+    UP.[TertiarySkills],
+    UP.[OtherSkills],
+    UP.[Branch],
+    UP.[LookUpCode],
+    UP.[LinkedInUrl]
+FROM [UserProfile] AS UP;
+
+]]>
+	</sql>
+
+	<sql name="AuthReferenceLookup.SelectByType">
+		<![CDATA[
+
+SELECT *
+FROM [AuthReferenceLookup]
+WHERE [Type] = @Type
+ORDER BY [Name] ASC;
+
+]]>
+	</sql>
+
+	<sql name="User.SetActiveStatus">
+		<![CDATA[
+
+UPDATE [User]
+SET
+    [IsActive] = @IsActive,
+    [UpdatedDateTime] = GETUTCDATE()
+WHERE [Id] = @UserId;
+
+]]>
+	</sql>
+
+	<sql name="UserActivity.GetLatestByUserIds">
+		<![CDATA[
+
+WITH ranked_activity AS (
+    SELECT
+        ROW_NUMBER() OVER (PARTITION BY [UserId] ORDER BY [LastActivityDateTime] DESC) AS [rank],
+        [Id], [UserId], [LastLoginDateTime], [LastLogoutDateTime],
+        [LastActivityDateTime], [LastActivityModule], [LastActionType],
+        [LastActivityDetail], [CreatedBy], [CreatedDateTime],
+        [UpdatedBy], [UpdatedDateTime], [UpdateReason], [OwnerId],
+        [IsActive], [IsDeleted], [IsApproved], [ApproverId],
+        [ApprovedDateTime], [IsAuthorized], [AuthorizedById],
+        [AuthorizedDateTime], [TenantId], [SubTenantId],
+        [SysData], [CustomFields]
+    FROM [UserActivity]
+    WHERE @UserIds IS NOT NULL
+      AND @UserIds <> ''
+      AND [UserId] IN (SELECT value FROM STRING_SPLIT(@UserIds, ','))
+)
+SELECT
+    [Id], [UserId], [LastLoginDateTime], [LastLogoutDateTime],
+    [LastActivityDateTime], [LastActivityModule], [LastActionType],
+    [LastActivityDetail], [CreatedBy], [CreatedDateTime],
+    [UpdatedBy], [UpdatedDateTime], [UpdateReason], [OwnerId],
+    [IsActive], [IsDeleted], [IsApproved], [ApproverId],
+    [ApprovedDateTime], [IsAuthorized], [AuthorizedById],
+    [AuthorizedDateTime], [TenantId], [SubTenantId],
+    [SysData], [CustomFields]
+FROM ranked_activity
+WHERE [rank] = 1;
+
+]]>
+	</sql>
+
+	<sql name="User.UpdateBasicInfo">
+		<![CDATA[
+
+UPDATE [User]
+SET
+    [Email] = @Email,
+    [PhoneNumber] = @PhoneNumber,
+    [EmpId] = @EmpId,
+    [UpdatedDateTime] = GETUTCDATE()
+WHERE [Id] = @UserId;
+
+]]>
+	</sql>
+
+
+</sql-set>

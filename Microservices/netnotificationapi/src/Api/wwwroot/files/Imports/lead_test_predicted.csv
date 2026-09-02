@@ -1,0 +1,50 @@
+City,State,AnnualRevenue,HasOptedOutOfEmail,Title,Product__c,Carrier__c,LeadSource,Industry,NumberOfEmployees,Has_had_insurance_in_last_5_years__c,Has_had_a_claim_in_last_5_years__c,Currently_carries_EPL_insurance__c,Entity_Type__c,Professionals__c,State_Society_Member__c,Agency__c,Uninsured_Firm__c,Non_Owner_CPA_s__c,Owners_CPAs__c
+Little Silver,NJ,,0,,WC,Hartford,Former Customer,,,0,0,0,,,0,0,0,,
+Anderson,IN,100000,0,President,PL,CMI,Agency,,,0,0,0,Corporation,,0,1,1,,1
+,,194256,0,,PL,BDP,Agency,,19,0,0,0,,,0,1,0,,
+Charlotte,NC,,0,,PL,BDP,Agency,,,0,0,0,,,0,1,0,,
+Greensboro,NC,7540000,0,,PL,BDP,Agency,,,0,0,0,,,0,1,0,,10
+Hickory,NC,3800000,0,,PL,BDP,Agency,,,0,0,0,LLC,,0,1,0,,4
+Durham,NC,810000,0,,PL,BDP,Agency,,,0,0,0,Partnership,,0,1,0,,1
+,,26393,0,,PL,,,,1,0,0,0,,,0,0,0,,
+Charlotte,NC,5200000,0,,PL,BDP,Agency,,,0,0,0,,,0,1,0,,9
+Charlotte,NC,5200000,0,,PL,BDP,Agency,,,0,0,0,,,0,1,0,,9
+Rochester,MN,48313,0,President,PL,CMI,Agency,,,0,0,0,Corporation,,0,1,0,,
+,VA,84853,0,Owner,PL,CMI,Cold Call,,2,0,0,0,,,0,0,0,,1
+Newport News,VA,203948,0,President / CEO,PL,CMI,Book of Business Purchase,,2,0,0,0,,0,0,0,0,,
+Kearney,NE,2870000,0,Shareholder,PL,BDP,Agency,,,0,0,0,Corporation,,0,1,1,,2
+Fairfax,VA,25000,0,,PL,,Cold Call,,,0,0,0,LLC,,0,0,0,,1
+Brooklyn,NY,100000,0,,PL,CMI,2017 CAMICO Tax Resources:2017 CAMICO Tax Resources,,1,0,0,0,,,0,0,1,,
+Chatsworth,CA,3000,0,,PL,,,,0,0,0,0,Sole Proprietorship,,0,0,0,,1
+Lyndhurst,NJ,50000,0,,,,Bing,,,0,0,0,,,0,0,0,1,
+St Petersburg,FL,350000,0,,,,Google,,,1,0,1,,,0,0,0,0,
+ENGLEWOOD CLIFFS,NJ,3000000,0,,,,Google,,,1,0,1,,,0,0,0,8,
+Danville,CA,40000,0,,,,2017 CAMICO Tax Resources:2017 CAMICO Tax Resources,,,0,0,0,,,0,0,1,,
+OLdenburg,IN,150000,0,,,,Google,,,1,0,0,,,0,0,0,1,
+Bensalem,PA,19000,0,Owner,PL,BDP,Agency,,,0,0,0,Sole Proprietorship,,0,1,0,,1
+Bloomfield Hills,MI,,0,,PL,CMI,Agency,,,0,0,0,,,0,1,0,,
+Philadelphia,PA,10500000,0,,PL,BDP,Agency,,,0,0,0,Partnership,,0,1,0,,9
+Dallas,TX,1500000,0,"CPA, Partner",PL,BDP,,,10,0,0,0,LLC,,0,0,0,,
+Dallas,TX,14500000,0,Office Manager,PL,BDP,,,60,0,0,0,Corporation,,0,0,0,,
+Chandler,AZ,1250000,0,President,PL,CMI,Agency,,,0,0,0,Corporation,,0,1,0,,
+Highland,UT,600000,0,,PL,,,,,0,0,0,,,0,0,1,,1
+Santa Rosa,CA,,0,member,PL,,Agency,,,0,0,0,Partnership,,0,1,1,,2
+Naperville,IL,,0,COO,PL,BDP,Trade Show,,,0,0,0,Partnership,,0,1,0,,
+Essex Fells,NJ,900000,0,Owner,PL,,,,,0,0,0,Sole Proprietorship,,0,0,0,,1
+Los Angeles,CA,2700000,0,,PL,BDP,Agency,,,0,0,0,LLC,,0,1,0,,3
+Chico,CA,240000,0,,PL,CMI,Referral,,,0,0,0,Partnership,,0,0,1,,1
+Tehachapi,CA,176010,0,,,,Bing,,3,0,0,0,,,0,0,1,0,
+escondido,ca,175057,0,,PL,CMI,,,,0,0,0,,,0,0,0,,1
+Portland,OR,,0,,PL,CMI,,,,0,0,0,LLC,,0,0,0,,
+El Segundo,CA,2400000,0,Owner,PL,CMI,,,,0,0,0,Sole Proprietorship,,0,0,0,,1
+Ocala,FL,35000,0,,PL,CMI,,,,0,0,0,LLC,,0,1,1,,1
+Columbus,OH,749016,0,,PL,,Trade Show,,10,0,0,0,,,0,0,0,,
+Dublin,OH,4670103,0,,PL,,Trade Show,,43,0,0,0,,,0,0,0,,
+Gahanna,OH,907691,0,,PL,,Trade Show,,15,0,0,0,,,0,0,0,,
+,,73000,0,,PL,,Trade Show,,1,0,0,0,,,0,0,0,,
+Mansfield,OH,,0,,PL,,Trade Show,,0,0,0,0,,,0,0,0,,
+Cincinnati,OH,1758243,0,,PL,,Trade Show,,12,0,0,0,,,0,0,0,,
+Delaware,OH,,0,,PL,,Trade Show,,,0,0,0,,,0,0,0,,
+Findlay,OH,22331,0,,PL,,Trade Show,,2,0,0,0,,,0,0,0,,
+Mt Vernon,OH,300000,0,,PL,,Trade Show,,4,0,0,0,,,0,0,0,,
+,,45000,0,,PL,,Trade Show,,1,0,0,0,,,0,0,0,,

@@ -1,0 +1,131 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="AWSSDK.S3" Version="4.0.11" />
+		<PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
+		<PackageReference Include="Community.Microsoft.Extensions.Caching.PostgreSql" Version="5.0.1" />
+		<PackageReference Include="Dapper" Version="2.1.66" />
+		<PackageReference Include="DapperExtensions" Version="1.7.0" />
+		<PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+		<PackageReference Include="MediatR" Version="13.1.0" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.2" />
+		<PackageReference Include="Dapper.Extensions.Caching.Memory" Version="5.3.3" />
+		<PackageReference Include="Dapper.Extensions.MSSQL" Version="5.3.3" />
+		<PackageReference Include="dbup-postgresql" Version="6.1.5" />
+		<PackageReference Include="dbup-sqlserver" Version="6.0.16" />
+		<PackageReference Include="FluentValidation" Version="12.1.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Caching.SqlServer" Version="9.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.10" />
+		<PackageReference Include="Hangfire" Version="1.8.22" />
+		<PackageReference Include="Hangfire.PostgreSql" Version="1.20.13" />
+		<PackageReference Include="Hangfire.SqlServer" Version="1.8.22" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.10" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.10">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Caching.Hybrid" Version="9.10.0" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
+		<PackageReference Include="Microsoft.Graph" Version="6.1.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="Npgsql" Version="10.0.0" />
+		<PackageReference Include="System.CodeDom" Version="9.0.10" />
+		<PackageReference Include="Microsoft.Identity.Web" Version="4.0.1" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.10" />
+		<PackageReference Include="System.Drawing.Common" Version="9.0.10" />
+		<PackageReference Include="System.Runtime.Caching" Version="9.0.10" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="CsvHelper" Version="33.1.0" />
+		<PackageReference Include="MailKit" Version="4.17.0" />
+		<PackageReference Include="OpenPop.Core" Version="1.0.0" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+		<PackageReference Include="System.ServiceModel.Http" Version="8.1.2" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\Auth\netauthlib\NetAuth.Lib.csproj" />
+		<ProjectReference Include="..\..\..\..\Messaging.Contract\Messaging.Contract.csproj" />
+		<ProjectReference Include="..\Application\Application.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Update="ContactDataSet1.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ContactDataSet1.xsd</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="ContactDataset.xsd">
+			<Generator>MSDataSetGenerator</Generator>
+			<LastGenOutput>ContactDataset.Designer.cs</LastGenOutput>
+		</None>
+		<None Update="ContactDataSet1.xsd">
+			<Generator>MSDataSetGenerator</Generator>
+			<LastGenOutput>ContactDataSet1.Designer.cs</LastGenOutput>
+		</None>
+		<None Update="Persistence\BuildScripts\NetAuth\Scripts\MsSqlServer\260121-1-InitialSetUpScripts.sql">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\NetAuth\Scripts\PostgreSql\260121-1-InitialSetUpScripts.sql">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\250320-1-CreatePublishEventDataTable.sql">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\MsSqlServer\250320-1-CreatePublishEventDataTable.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\MsSqlServer\251111-1-CreateVersionTrackTable.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\PostgreSql\251120-1-CreateAcmeOrderDetailTable.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\PostgreSql\251120-1-CreateAcmeOrderTable.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\PostgreSql\251125-1-CreateReferenceCustomFieldTable.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\PostgreSql\251120-1-CreateAcmeProductTable.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\PostgreSql\250320-1-CreatePublishEventDataTable.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\PostgreSql\251111-1-CreateVersionTrackTable.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\MsSqlServer\260826-1-CreateTransactionActionMatrixTable.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\MsSqlServer\260826-2-SeedTransactionActionMatrixData.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\PostgreSql\260826-1-CreateTransactionActionMatrixTable.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\PostgreSql\260826-2-SeedTransactionActionMatrixData.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\MsSqlServer\260826-3-AddActionDisplayNameToTransactionActionMatrix.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Persistence\BuildScripts\Scripts\PostgreSql\260826-3-AddActionDisplayNameToTransactionActionMatrix.sql">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+
+		<None Update="MsSqlServer\*.*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="PostgreSql\*.*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+</Project>

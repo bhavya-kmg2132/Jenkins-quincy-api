@@ -1,0 +1,8 @@
+ *A7nrf*3iOVdrqB9ef5o
+ eyJ2ZXIiOiI4LjkuMiIsImFkciI6WyIxOTIuMTY4LjEuMTI6OTIwMCJdLCJmZ3IiOiIxZTNmMGZkYmQxMWRjMTg0NzM0NzM4NGFmYTMzN2IzZGI2MjkzNGU2ZDUyODQ1YzFjYjk4NzZjYjYyN2RhZmQ0Iiwia2V5IjoiV2drX2lJb0JCblpUQndMYXRrbnM6aXAwNGk2OXZTaHFhalVmcWdpaTd4QSJ9
+
+{
+  "to": "leeladhar.kumawat@kmgin.com",
+  "subject": "Email Notification",
+  "body": "Testing"
+}

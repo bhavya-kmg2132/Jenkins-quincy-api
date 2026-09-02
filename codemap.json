@@ -1,0 +1,417 @@
+{
+  "generated_at": "2026-05-20T00:00:00Z",
+  "version": "1.0.0",
+  "components": [
+    {
+      "id": "gateway",
+      "type": "gateway",
+      "technology": ".NET 10.0 / ASP.NET Core / Ocelot 24.0.1 / MediatR 13.1.0",
+      "entry_point": "ApiGateway/Gateway/Program.cs",
+      "responsibilities": [
+        "Routes all inbound traffic to downstream microservices using Ocelot reverse proxy with route rules in ocelot.json",
+        "Enforces dual-scheme authentication: Azure AD (Entra ID) via Microsoft.Identity.Web and symmetric-key JWT for database users",
+        "Applies policy-based authorization (AzureUsersOnly / DbUsersOnly) before forwarding requests",
+        "Provides pluggable response caching backends: In-Memory, Redis, SQL Server, or PostgreSQL (runtime-switchable)",
+        "Integrates NetAuth.Lib for field-level and UI-level permission enforcement on downstream responses"
+      ],
+      "dependencies": ["netauthlib"],
+      "consumed_by": [],
+      "messaging": {
+        "publishes": [],
+        "subscribes": []
+      },
+      "api_surface": [
+        { "method": "POST|PUT|GET", "path": "/gateway/heartbeat", "description": "Proxied heartbeat to netcoreapi /api/heartbeat" },
+        { "method": "GET", "path": "/gateway/WeatherForecast", "description": "Proxied sample endpoint to netcoreapi" },
+        { "method": "*", "path": "/netcore/{everything}", "description": "Catch-all proxy to netcoreapi (systemdesign-api.azurewebsites.net:443/api/{everything})" }
+      ],
+      "config_keys": [
+        "Api__CheckApiPermission",
+        "UseNetAuthLib",
+        "CacheSettings__UseInMemoryCache",
+        "CacheSettings__UseSqlCache",
+        "CacheSettings__UsePostgreSqlCache",
+        "AzureAd__TenantId",
+        "AzureAd__ClientId",
+        "AzureAd__Instance",
+        "JwtSettings__Issuer",
+        "JwtSettings__Audience",
+        "JwtSettings__SecretKey",
+        "ConnectionStrings__SqlDBConnection",
+        "ConnectionStrings__PostgreSqlDBConnection",
+        "ConnectionStrings__NetAuthDBConnection",
+        "ConnectionStrings__RedisConnection"
+      ],
+      "data_stores": [
+        { "name": "api-design8", "type": "SQL Server (111.93.220.178) — gateway permission/cache records" },
+        { "name": "EventDB", "type": "PostgreSQL (pg-server-1.postgres.database.azure.com) — distributed cache" }
+      ],
+      "health_check": null,
+      "notes": [
+        "Symmetric JWT secret (9FJ2k@P1s#L0vA8rX!eQ7ZcM2WbY6HnT) is stored in appsettings.json — MUST migrate to Azure Key Vault before production",
+        "NetAuth.Lib is referenced as an embedded binary (InternalDll/netauthlib/NetAuth.Lib.dll) — binary coupling risk; version drift possible without CI enforcement",
+        "ocelot.json hardcodes localhost:44358 for heartbeat and WeatherForecast routes — needs environment-specific override files",
+        "Only one cache backend should be active at runtime; multiple true flags may cause undefined behavior",
+        "CacheSyncService background service runs on a 5-minute interval to synchronize identity user cache"
+      ]
+    },
+    {
+      "id": "netauthlib",
+      "type": "library",
+      "technology": ".NET 10.0 / Class Library / Dapper / PostgreSQL / SQL Server",
+      "entry_point": "Auth/netauthlib/NetAuth.Lib.csproj",
+      "responsibilities": [
+        "Provides centralized identity management (IIdentityManager) for user loading and session resolution",
+        "Enforces field-level permissions (FieldPermissionService, FieldPermissionAttribute) and UI-level access (UiPermissionDataAccess)",
+        "Abstracts database access for user/role data via IUserDataAccess, UserLoader, and SQLHelper",
+        "Exposes typed DTOs: IdentityUserDto, UserDto, UserRoleDto, RoleDto, UserActivityDto for consuming services"
+      ],
+      "dependencies": [],
+      "consumed_by": ["gateway", "netcoreapi"],
+      "messaging": {
+        "publishes": [],
+        "subscribes": []
+      },
+      "api_surface": [],
+      "config_keys": [
+        "ConnectionStrings__NetAuthDBConnection",
+        "ConnectionStrings__PostgreSqlDBConnection"
+      ],
+      "data_stores": [
+        { "name": "UserPool", "type": "SQL Server (14.194.34.44) — user and role records" },
+        { "name": "AuthUser", "type": "PostgreSQL — user auth records (queries in PostgreSql/AuthUser.xml)" }
+      ],
+      "health_check": null,
+      "notes": [
+        "SQL queries are externalized to XML files (e.g. PostgreSql/AuthUser.xml) — allows DB-agnostic query swapping without recompile",
+        "Deployed as a compiled DLL into gateway (InternalDll/netauthlib/) — any update requires manual DLL replacement and redeployment",
+        "Consider publishing as a NuGet package or converting to a project reference to enforce consistent versioning"
+      ]
+    },
+    {
+      "id": "messaging-contract",
+      "type": "contract",
+      "technology": ".NET 10.0 / Class Library",
+      "entry_point": "Messaging.Contract/Messaging.Contract.csproj",
+      "responsibilities": [
+        "Defines the generic MessageEnvelope<T> wrapper with distributed tracing metadata: MessageId, CorrelationId, CausationId, Source, Environment, RetryCount",
+        "Defines CreateNotificationMessage — the primary inter-service event contract between netcoreapi and netnotificationapi",
+        "Provides a versioned, strongly-typed contract surface to decouple message producers from consumers"
+      ],
+      "dependencies": [],
+      "consumed_by": ["netcoreapi", "netnotificationapi", "networker"],
+      "messaging": {
+        "publishes": [],
+        "subscribes": []
+      },
+      "api_surface": [],
+      "config_keys": [],
+      "data_stores": [],
+      "health_check": null,
+      "notes": [
+        "No schema registry integration observed (Protobuf/Avro/Confluent Schema Registry) — contracts are plain C# classes serialized as JSON; schema evolution is a breaking-change risk",
+        "MessageEnvelope lacks dead-letter or poison-message metadata fields — consider adding for resilience and observability",
+        "All three services must reference the same version of this library to avoid deserialization failures on contract changes"
+      ]
+    },
+    {
+      "id": "netcoreapi",
+      "type": "service",
+      "technology": ".NET 10.0 / ASP.NET Core / Clean Architecture / MediatR 13.1.0 / Dapper / MassTransit / Hangfire / Autofac / Confluent.Kafka / NLog 6.0.5",
+      "entry_point": "Microservices/netcoreapi/src/Api/Program.cs",
+      "responsibilities": [
+        "Core business domain service: manages AcmeProduct, AcmeOrder, Policy, TodoItem, TodoList, and Master data entities via CQRS handlers",
+        "Publishes domain events (Created, Updated, Deleted, Completed) through MediatR to event handlers that persist to EventDB and forward to MassTransit",
+        "Optionally produces events to Confluent Kafka topics (topic_0, topic_elastic_search) for streaming analytics and Elasticsearch indexing",
+        "Runs a rule engine using JSON-defined rule sets (P&C, Discount, AcmeProduct, AcmeOrder, Policy, TodoItem, TodoList) for business logic evaluation",
+        "Schedules and executes background jobs via Hangfire with PostgreSQL backing store; runs ApiWorkerService for recurring tasks",
+        "Provides REST API (versioned v1.0 / v2.0) with Swagger documentation, response compression (Brotli + Gzip), and configurable self-authentication"
+      ],
+      "dependencies": ["netauthlib", "messaging-contract"],
+      "consumed_by": ["gateway"],
+      "messaging": {
+        "publishes": [
+          "CreateNotificationMessage (MassTransit → netnotificationapi) on AcmeProduct, AcmeOrder, Policy, TodoItem, TodoList domain events",
+          "topic_0 (Confluent Kafka) — general domain event stream",
+          "topic_elastic_search (Confluent Kafka) — Elasticsearch indexing stream"
+        ],
+        "subscribes": []
+      },
+      "api_surface": [
+        { "method": "GET|POST|PUT|DELETE", "path": "/api/v1.0/AcmeProduct", "description": "CRUD operations for AcmeProduct domain entity" },
+        { "method": "GET|POST|PUT|DELETE", "path": "/api/v1.0/AcmeOrder", "description": "CRUD operations for AcmeOrder domain entity" },
+        { "method": "GET|POST|PUT|DELETE", "path": "/api/v1.0/Policy", "description": "Policy management endpoints" },
+        { "method": "GET|POST|PUT|DELETE", "path": "/api/v1.0/TodoItem", "description": "Todo item management" },
+        { "method": "GET|POST|PUT|DELETE", "path": "/api/v1.0/TodoList", "description": "Todo list management" },
+        { "method": "POST", "path": "/api/v1.0/Auth", "description": "Authentication endpoint (when SelfAuthentication=true)" },
+        { "method": "GET|POST", "path": "/api/v1.0/CronJobRule", "description": "Cron job rule CRUD and trigger management" },
+        { "method": "POST", "path": "/api/v1.0/FireForget", "description": "Fire-and-forget async task trigger" },
+        { "method": "GET", "path": "/api/v1.0/HeartBeat", "description": "Service liveness probe" },
+        { "method": "POST", "path": "/api/v1.0/InitialSetUp", "description": "Initial database schema and seed data setup" },
+        { "method": "GET|POST|PUT|DELETE", "path": "/api/v1.0/Master", "description": "Master/lookup data management" },
+        { "method": "GET|POST", "path": "/api/v1.0/NetAuth", "description": "NetAuth proxy and user-management integration endpoints" },
+        { "method": "POST", "path": "/api/v1.0/PublishEventData", "description": "Manual trigger for event publishing to MassTransit/Kafka" },
+        { "method": "POST", "path": "/api/v1.0/RuleEngine", "description": "Rule engine evaluation endpoint" },
+        { "method": "GET|POST", "path": "/api/v1.0/SystemManager", "description": "System administration and configuration management" },
+        { "method": "GET", "path": "/api/v1.0/VersionTrack", "description": "API version tracking and changelog" },
+        { "method": "GET", "path": "/api/health", "description": "Structured health check (JSON) for SQL Server and dependency URLs" },
+        { "method": "GET", "path": "/health-ui", "description": "Health check dashboard UI" },
+        { "method": "GET", "path": "/WeatherForecast", "description": "Sample/demo endpoint" }
+      ],
+      "config_keys": [
+        "Api__internal_name",
+        "Api__SelfAuthentication",
+        "Api__CheckApiPermission",
+        "ConnectionStrings__SqlDBConnection",
+        "ConnectionStrings__PostgreSqlDBConnection",
+        "ConnectionStrings__MongoDBConnection",
+        "EventConfiguration__AddEventDataForAuditLog",
+        "EventConfiguration__AddEventInEventStore_EventDB",
+        "EventConfiguration__AllowProduceEvent",
+        "EventConfiguration__AllowConsumeEvent",
+        "MassTransit__MassTransitTransportType",
+        "MassTransit__MassTransitTransportConnection__PostgreSQL",
+        "MassTransit__MassTransitTransportConnection__RabbitMQ",
+        "MassTransit__MassTransitTransportConnection__AzureServiceBus",
+        "MassTransit__MassTransitTransportConnection__AmazonSQS",
+        "MassTransit__MassTransitTransportConnection__Kafka",
+        "MassTransit__MassTransitTransportConnection__MSSQL",
+        "Kafka__BootstrapServers",
+        "Kafka__SaslUsername",
+        "Kafka__SaslPassword",
+        "Kafka__Topic",
+        "Kafka__ElasticSearchTopic",
+        "CacheSettings__UseInMemoryCache",
+        "CacheSettings__UseRedisCache",
+        "CacheSettings__UsePostgreSqlCache",
+        "CacheSettings__IdentityUserCacheSyncIntervalTimeInMinutes",
+        "RuleEngine__P&C",
+        "RuleEngine__Discount",
+        "Hangfire__Transport",
+        "Hangfire__ConnectionString"
+      ],
+      "data_stores": [
+        { "name": "api-design-10", "type": "SQL Server (14.194.34.44) — primary application data (AcmeProduct, Orders, Policy, etc.); queries in MsSqlServer/*.xml" },
+        { "name": "EventDB", "type": "PostgreSQL (pg-server-1.postgres.database.azure.com:5432) — event store, MassTransit outbox, Hangfire jobs; queries in PostgreSql/*.xml" },
+        { "name": "MongoDB (cluster0.w9m3hlk)", "type": "MongoDB Atlas — document storage" }
+      ],
+      "health_check": "/api/health",
+      "notes": [
+        "SelfAuthentication=false means the service trusts the gateway for auth — direct access bypasses all security; never expose port publicly",
+        "MassTransit transport is runtime-configurable across 6 providers (PostgreSQL, Kafka, RabbitMQ, Azure Service Bus, Amazon SQS, MSSQL) — high flexibility but adds operational complexity; enforce a single transport per environment via CI",
+        "Kafka credentials (SASL/PLAIN) and DB passwords stored in appsettings.json — migrate to Azure Key Vault / Managed Identity",
+        "Rule engine uses file-based JSON configs with no hot-reload; rule changes require service restart",
+        "DBUp handles schema migrations — verify migrations are idempotent and tracked to prevent re-execution",
+        "Multiple email provider event handlers (ZeptoMail, MSGraph, Brevo) in Application layer — ensure MassTransit consumer idempotency to prevent duplicate notifications on retry"
+      ]
+    },
+    {
+      "id": "netnotificationapi",
+      "type": "service",
+      "technology": ".NET 10.0 / ASP.NET Core / MassTransit / MongoDB / Microsoft Graph SDK",
+      "entry_point": "Microservices/netnotificationapi/src/Api/Program.cs",
+      "responsibilities": [
+        "Consumes CreateNotificationMessage events from MassTransit and routes delivery to the correct provider based on notification Type field",
+        "Supports five notification providers: ZeptoMail (transactional email), Microsoft Graph API (M365 mail), Brevo (email + SMS), Zoho Campaigns (bulk email), IONOS SMTP",
+        "Manages multi-tenant notification settings via ApiKey-keyed configuration arrays, enabling per-product/per-tenant provider selection",
+        "Loads email templates from MongoDB (datapulse0/EmailTemplate) for transactional and batch email composition",
+        "Exposes direct REST endpoints for programmatic notification triggering (batch, transactional, MS Graph, Brevo)"
+      ],
+      "dependencies": ["messaging-contract"],
+      "consumed_by": ["netcoreapi", "networker"],
+      "messaging": {
+        "publishes": [],
+        "subscribes": [
+          "CreateNotificationMessage (MassTransit, PostgreSQL transport — published by netcoreapi)"
+        ]
+      },
+      "api_surface": [
+        { "method": "POST", "path": "/api/v1.0/Notification/SendEmailNotification", "description": "Send a single transactional email notification" },
+        { "method": "POST", "path": "/api/v1.0/Notification/SendBatchEmailNotification", "description": "Send batch email notifications" },
+        { "method": "POST", "path": "/api/v1.0/Notification/SendBatchTransactionalEmail", "description": "Send batch transactional emails (template-based)" },
+        { "method": "POST", "path": "/api/v1.0/Notification/SendBatchEmailUsingMicrosoftGraph", "description": "Send emails via Microsoft Graph API (M365)" },
+        { "method": "POST", "path": "/api/v1.0/BrevoNotification/SendEmailNotificationUsingBrevo", "description": "Send single email via Brevo API" },
+        { "method": "POST", "path": "/api/v1.0/BrevoNotification/SendBatchEmailNotificationUsingBrevo", "description": "Send batch emails via Brevo API" },
+        { "method": "GET", "path": "/api/v1.0/ZohoCampaignNotification/GetAccessTokenFromZohAsync", "description": "Refresh Zoho Campaigns OAuth2 access token" }
+      ],
+      "config_keys": [
+        "Api__internal_name",
+        "Api__SelfAuthentication",
+        "Api__CheckApiPermission",
+        "ConnectionStrings__SqlDBConnection",
+        "ConnectionStrings__CrmSqlDBConnection",
+        "ConnectionStrings__PostgreSqlDBConnection",
+        "ConnectionStrings__MongoDBConnection",
+        "NotificationSettings__[n]__ApiKey",
+        "NotificationSettings__[n]__SenderName",
+        "NotificationSettings__[n]__SenderEmail",
+        "NotificationSettings__[n]__AuthToken",
+        "NotificationSettings__[n]__AgentName",
+        "NotificationSettings__[n]__BrevoApiKey",
+        "NotificationSettings__[n]__SMSApiKey",
+        "NotificationSettings__[n]__EmailSmtpServer",
+        "NotificationSettings__[n]__SmtpUsername",
+        "NotificationSettings__[n]__SmtpPassword",
+        "MSGraphSettings__[n]__TenantId",
+        "MSGraphSettings__[n]__ClientId",
+        "MSGraphSettings__[n]__Thumbprint",
+        "MSGraphSettings__[n]__M365AppCert",
+        "ZohoSettings__AccessToken",
+        "ZohoSettings__RefreshToken",
+        "ZohoSettings__ClientId",
+        "ZohoSettings__ClientSecret",
+        "MassTransit__MassTransitTransportType",
+        "MassTransit__MassTransitTransportConnection"
+      ],
+      "data_stores": [
+        { "name": "api-design8", "type": "SQL Server (125.20.10.50) — notification delivery records" },
+        { "name": "crm-qa", "type": "SQL Server (stai-sql-server.database.windows.net) — CRM integration data" },
+        { "name": "EventDB (PostgreSQL)", "type": "PostgreSQL (9.169.253.231) — MassTransit consumer queues and event store" },
+        { "name": "datapulse0", "type": "MongoDB (111.93.220.178:27017) — EmailTemplate collection for transactional email templates" }
+      ],
+      "health_check": null,
+      "notes": [
+        "High secret sprawl: ZeptoMail auth tokens, Brevo API keys, MS Graph certificates, Zoho OAuth tokens, and SMTP passwords all in appsettings.json — requires immediate Key Vault migration",
+        "Zoho OAuth access tokens are short-lived; the refresh endpoint is a REST GET call which is non-idiomatic — consider a background token-refresh service",
+        "CRM SQL Server connection (Azure PaaS) suggests multi-tenant notification routing — document which ApiKey maps to which tenant",
+        "Per RecommendedPractices.txt: prefer one contract → multiple focused consumers → independent queues; avoid a single giant consumer switch(type)",
+        "No health endpoint configured — add /health for container orchestration readiness/liveness probes",
+        "M365AppCert (certificate thumbprint) in config requires the certificate to be installed in the host cert store — document deployment dependency"
+      ]
+    },
+    {
+      "id": "networker",
+      "type": "worker",
+      "technology": ".NET 10.0 / ASP.NET Core / Confluent.Kafka / Microsoft.Identity.Web",
+      "entry_point": "Microservices/networker/src/Api/Program.cs",
+      "responsibilities": [
+        "Consumes events from Confluent Kafka topic (topic_0, consumer group_0) for background processing and orchestration",
+        "Calls netnotificationapi via HTTP REST to trigger email notifications from processed Kafka events",
+        "Performs network-level data integration and orchestration across SQL Server and MongoDB stores",
+        "Uses Azure AD (Entra ID) credentials for authenticated service-to-service calls"
+      ],
+      "dependencies": ["messaging-contract"],
+      "consumed_by": [],
+      "messaging": {
+        "publishes": [],
+        "subscribes": [
+          "topic_0 (Confluent Kafka, consumer group: group_0 — events produced by netcoreapi)"
+        ]
+      },
+      "api_surface": [],
+      "config_keys": [
+        "Api__internal_name",
+        "Kafka__UseKafka",
+        "Kafka__BootstrapServers",
+        "Kafka__Topic",
+        "Kafka__GroupId",
+        "Kafka__SaslUsername",
+        "Kafka__SaslPassword",
+        "ConnectionStrings__SqlDBConnection",
+        "ConnectionStrings__MongoDBConnection",
+        "NotificationServer__BaseUrl",
+        "NotificationServer__SendEmailNotificationPath",
+        "AzureAd__TenantId",
+        "AzureAd__ClientId"
+      ],
+      "data_stores": [
+        { "name": "api-design8", "type": "SQL Server (125.20.10.50)" },
+        { "name": "MongoDB (cluster0.w9m3hlk)", "type": "MongoDB Atlas" }
+      ],
+      "health_check": null,
+      "notes": [
+        "No health check endpoint observed — add /health for container orchestration liveness and readiness probes",
+        "Azure AD client credentials in appsettings.json — should use Azure Managed Identity to eliminate secret management overhead",
+        "Kafka consumer group offsets must be monitored for consumer lag; no dead-letter queue (DLQ) configuration observed",
+        "Only outbound integration to netnotificationapi is via HTTP (not MassTransit) — creates a synchronous coupling point; consider MassTransit for consistency",
+        "No retry/circuit-breaker policy observed for the HTTP call to netnotificationapi — add Polly policies for resilience"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from": "gateway",
+      "to": "netcoreapi",
+      "type": "http",
+      "description": "Ocelot routes /netcore/{everything} to netcoreapi downstream at systemdesign-api.azurewebsites.net:443/api/{everything} after authentication and authorization"
+    },
+    {
+      "from": "gateway",
+      "to": "netauthlib",
+      "type": "dependency",
+      "description": "Gateway loads NetAuth.Lib.dll (embedded binary) for identity resolution and permission enforcement on every authenticated request"
+    },
+    {
+      "from": "netcoreapi",
+      "to": "netauthlib",
+      "type": "dependency",
+      "description": "netcoreapi uses NetAuth.Lib for user identity loading, field-level permission checks, and UI permission resolution"
+    },
+    {
+      "from": "netcoreapi",
+      "to": "messaging-contract",
+      "type": "dependency",
+      "description": "netcoreapi references Messaging.Contract to construct and publish typed CreateNotificationMessage and MessageEnvelope<T> instances"
+    },
+    {
+      "from": "netnotificationapi",
+      "to": "messaging-contract",
+      "type": "dependency",
+      "description": "netnotificationapi references Messaging.Contract to deserialize consumed CreateNotificationMessage events from MassTransit"
+    },
+    {
+      "from": "networker",
+      "to": "messaging-contract",
+      "type": "dependency",
+      "description": "networker uses Messaging.Contract MessageEnvelope<T> for typed Kafka message deserialization"
+    },
+    {
+      "from": "netcoreapi",
+      "to": "netnotificationapi",
+      "type": "amqp",
+      "description": "netcoreapi publishes CreateNotificationMessage via MassTransit (PostgreSQL transport); netnotificationapi is the MassTransit consumer"
+    },
+    {
+      "from": "netcoreapi",
+      "to": "networker",
+      "type": "event",
+      "description": "netcoreapi produces domain events to Confluent Kafka topic_0; networker subscribes as consumer group_0 for background processing"
+    },
+    {
+      "from": "networker",
+      "to": "netnotificationapi",
+      "type": "http",
+      "description": "networker calls netnotificationapi REST endpoint (SendEmailNotification) directly via HTTP for triggered email notifications from Kafka-processed events"
+    }
+  ],
+  "message_bus": {
+    "broker": "MassTransit (PostgreSQL transport, primary) + Confluent Kafka on Azure (pkc-56d1g.eastus.azure.confluent.cloud:9092, secondary)",
+    "topics_or_queues": [
+      {
+        "name": "CreateNotificationMessage (MassTransit / PostgreSQL queue_subscription table)",
+        "publisher": "netcoreapi",
+        "subscribers": ["netnotificationapi"]
+      },
+      {
+        "name": "topic_0 (Confluent Kafka)",
+        "publisher": "netcoreapi",
+        "subscribers": ["networker"]
+      },
+      {
+        "name": "topic_elastic_search (Confluent Kafka)",
+        "publisher": "netcoreapi",
+        "subscribers": ["(external Elasticsearch indexer — consumer not present in this repository)"]
+      }
+    ]
+  },
+  "shared_libraries": [
+    {
+      "id": "netauthlib",
+      "purpose": "Centralized authentication, user identity loading, field-level and UI-level permission enforcement — shared across gateway and netcoreapi; currently distributed as a compiled DLL rather than a NuGet package"
+    },
+    {
+      "id": "messaging-contract",
+      "purpose": "Shared typed message contracts (MessageEnvelope<T>, CreateNotificationMessage) enabling decoupled async pub/sub between netcoreapi (publisher), netnotificationapi (consumer), and networker (consumer)"
+    }
+  ]
+}

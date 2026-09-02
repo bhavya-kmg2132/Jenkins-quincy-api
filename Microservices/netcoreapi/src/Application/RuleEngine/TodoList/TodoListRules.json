@@ -1,0 +1,30 @@
+[
+  {
+    "WorkflowName": "TodoList",
+    "Rules": [
+      {
+        "RuleName": "TitleMustHaveMoreThanTwoLetters",
+        "SuccessEvent": "Title OK",
+        "ErrorMessage": "Title must contain more than two letters.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.Title != null && input1.Title.Length > 2"
+      },
+      {
+        "RuleName": "DescMustHaveMinLength",
+        "SuccessEvent": "Desc OK",
+        "ErrorMessage": "Description must be at least 2 characters long.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.Desc != null && input1.Desc.Length >= 2"
+      },
+      {
+        "RuleName": "TitleMustBeUnique",
+        "SuccessEvent": "Title is unique",
+        "ErrorMessage": "Title already exists.",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.Title != null && !TitleExists(input1.Title)"
+      }
+    ]
+  }
+]

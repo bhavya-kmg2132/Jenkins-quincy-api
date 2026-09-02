@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+
+	<!--CronJobRule.InsertCronJobRule-->
+	<sql name="CronJobRule.InsertCronJobRule">
+		<![CDATA[		
+          INSERT INTO "NotificationRule"
+          (
+		  "Id"
+          ,"NotificationName"
+          ,"LastExecutionDate"
+          ,"Frequency"
+          ,"ExecutionTime"
+          ,"Role"
+          ,"ExecutionDay"
+		  ,"ExecutionMonth"
+		  ,"IsNotificationPaused"
+		  )
+          VALUES 
+          (
+		   @Id
+          ,@NotificationName
+          ,@LastExecutionDate
+          ,@Frequency
+          ,@ExecutionTime
+          ,@Role
+          ,@ExecutionDay
+		  ,@ExecutionMonth
+		  ,@IsNotificationPaused
+		  )
+		RETURNING "Id"; 
+]]>
+	</sql>
+
+	<!--CronJobRule.UpdateCronJobRule-->
+	<sql name="CronJobRule.UpdateCronJobRule">
+		<![CDATA[
+	UPDATE "NotificationRule"
+      SET 
+            "NotificationName" = @NotificationName,
+            "LastExecutionDate" = @LastExecutionDate,
+            "Frequency" = @Frequency,
+            "ExecutionTime" = @ExecutionTime,
+            "Role" = @Role,
+            "ExecutionDay" = @ExecutionDay,
+			"ExecutionMonth" = @ExecutionMonth,
+			"IsNotificationPaused" = @IsNotificationPaused
+      WHERE "Id" = @Id;
+]]>
+	</sql>
+
+	<!--CronJobRule.GetCronJobRules-->
+	<sql name="CronJobRule.GetCronJobRules">
+		<![CDATA[
+      SELECT 
+	   "Id",
+	   "NotificationName",
+	   "LastExecutionDate",
+	   "Frequency",
+	   "ExecutionTime"::interval AS "ExecutionTime",
+	   "Role",
+	   "ExecutionDay",
+	   "IsNotificationPaused",
+	   "ExecutionMonth"
+	  FROM "NotificationRule"
+	]]>
+	</sql>
+
+	<!--CronJobRule.GetCronJobRuleById-->
+	<sql name="CronJobRule.GetCronJobRuleById">
+		<![CDATA[
+      SELECT 
+	   "Id",
+	   "NotificationName",
+	   "LastExecutionDate",
+	   "Frequency",
+	   "ExecutionTime"::interval AS "ExecutionTime",
+	   "Role",
+	   "ExecutionDay",
+	   "IsNotificationPaused",
+	   "ExecutionMonth"
+	  FROM "NotificationRule"
+	  WHERE "Id" = @Id;
+	]]>
+	</sql>
+
+	<!--CronJobRule.DeleteCronJobRule-->
+	<sql name="CronJobRule.DeleteCronJobRule">
+		<![CDATA[
+	  DELETE FROM "NotificationRule" where "Id" = @Id;
+		]]>
+	</sql>
+
+	<!--CronJobRule.GetNotificationUserSubscriptions-->
+	<sql name="CronJobRule.GetNotificationUserSubscriptions">
+		<![CDATA[
+      SELECT "NotificationId", "OptOut" FROM "NotificationUserSubscription" WHERE "UserId" = @UserId;
+	]]>
+	</sql>
+
+	<!--CronJobRule.UpdateNotificationUserSubscriptionByUserId-->
+	<sql name="CronJobRule.UpdateNotificationUserSubscriptionByUserId">
+		<![CDATA[
+		INSERT INTO "NotificationUserSubscription"
+("UserId", "NotificationId", "OptOut", "CreatedBy", "UpdatedBy")
+VALUES (@UserId, @NotificationId, @OptOut, @CreatedBy, @UpdatedBy)
+
+ON CONFLICT ("UserId", "NotificationId")
+DO UPDATE SET
+    "OptOut" = EXCLUDED."OptOut",
+    "UpdatedBy" = EXCLUDED."UpdatedBy",
+    "UpdatedAt" = CURRENT_TIMESTAMP
+WHERE 
+    "NotificationUserSubscription"."OptOut" IS DISTINCT FROM EXCLUDED."OptOut";
+	  ]]>
+	</sql>
+
+</sql-set>

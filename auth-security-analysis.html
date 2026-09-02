@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Authentication &amp; Security Analysis — api-design-10</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #242838;
+      --border: #2e3348;
+      --accent: #6c8ef5;
+      --accent2: #a78bfa;
+      --green: #4ade80;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --orange: #fb923c;
+      --teal: #2dd4bf;
+      --text: #e2e8f0;
+      --text-muted: #8892a4;
+      --code-bg: #0d1117;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 40px 48px 32px;
+    }
+    .header-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--text-muted);
+    }
+    .badge.green  { border-color: #166534; background: #052e16; color: var(--green); }
+    .badge.blue   { border-color: #1e3a5f; background: #0c1f3f; color: var(--accent); }
+    .badge.purple { border-color: #3b1f6e; background: #1a0b3a; color: var(--accent2); }
+    .badge.teal   { border-color: #0f4f4a; background: #052e2a; color: var(--teal); }
+    .header h1    { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .header h1 span { color: var(--accent); }
+    .header p     { color: var(--text-muted); max-width: 760px; }
+
+    /* ── Layout ── */
+    .container { max-width: 1280px; margin: 0 auto; padding: 40px 48px; }
+    .grid-2    { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3    { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .card-header h3 { font-size: 14px; font-weight: 600; }
+    .card-body  { padding: 20px; }
+    .card-icon  {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .icon-blue   { background: #0c1f3f; }
+    .icon-green  { background: #052e16; }
+    .icon-purple { background: #1a0b3a; }
+    .icon-orange { background: #1c0f00; }
+    .icon-red    { background: #1c0505; }
+    .icon-yellow { background: #1c1500; }
+    .icon-teal   { background: #052e2a; }
+
+    /* ── Section headers ── */
+    .section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--text-muted);
+      margin: 40px 0 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* ── Architecture flow diagram ── */
+    .flow {
+      display: flex; align-items: center; gap: 0;
+      overflow-x: auto; padding: 24px 20px; flex-wrap: nowrap;
+    }
+    .flow-node {
+      flex-shrink: 0; text-align: center; min-width: 110px;
+    }
+    .flow-box {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; font-size: 12px; font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .flow-box.primary   { border-color: var(--accent); color: var(--accent); }
+    .flow-box.secondary { border-color: var(--accent2); color: var(--accent2); }
+    .flow-box.green     { border-color: var(--green); color: var(--green); }
+    .flow-box.teal      { border-color: var(--teal); color: var(--teal); }
+    .flow-sub { font-size: 10px; color: var(--text-muted); }
+    .flow-arrow {
+      flex-shrink: 0; width: 48px; text-align: center;
+      font-size: 18px; color: var(--text-muted); padding-bottom: 20px;
+    }
+    .flow-arrow.down { font-size: 11px; color: var(--accent); }
+
+    /* ── Auth scheme boxes ── */
+    .scheme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .scheme-card {
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; position: relative; overflow: hidden;
+    }
+    .scheme-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .scheme-card.azure::before  { background: var(--accent); }
+    .scheme-card.db::before     { background: var(--green); }
+    .scheme-card.apikey::before { background: var(--yellow); }
+    .scheme-card.multi::before  { background: var(--accent2); }
+    .scheme-title    { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .scheme-subtitle { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; }
+    .scheme-detail   { font-size: 12px; color: var(--text-muted); }
+    .scheme-detail strong { color: var(--text); }
+
+    /* ── Code blocks ── */
+    pre {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 16px; overflow-x: auto;
+      font-size: 12px; font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      line-height: 1.6; color: #c9d1d9;
+    }
+    .kw  { color: #ff7b72; }
+    .str { color: #a5d6ff; }
+    .cmt { color: #8b949e; font-style: italic; }
+    .cls { color: #d2a8ff; }
+    .num { color: #79c0ff; }
+    .prop{ color: #e3b341; }
+    .val { color: #a5d6ff; }
+    .attr{ color: #ffa657; }
+
+    /* ── Tables ── */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      background: var(--surface2); padding: 10px 14px;
+      text-align: left; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ── Tags / Pills ── */
+    .tag {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;
+      margin: 2px;
+    }
+    .tag-blue   { background: #0c1f3f; color: var(--accent);  border: 1px solid #1e3a5f; }
+    .tag-green  { background: #052e16; color: var(--green);   border: 1px solid #166534; }
+    .tag-yellow { background: #1c1500; color: var(--yellow);  border: 1px solid #92400e; }
+    .tag-purple { background: #1a0b3a; color: var(--accent2); border: 1px solid #3b1f6e; }
+    .tag-red    { background: #1c0505; color: var(--red);     border: 1px solid #7f1d1d; }
+    .tag-orange { background: #1c0f00; color: var(--orange);  border: 1px solid #7c2d12; }
+    .tag-teal   { background: #052e2a; color: var(--teal);    border: 1px solid #0f4f4a; }
+
+    /* ── List items ── */
+    .check-list { list-style: none; }
+    .check-list li {
+      padding: 6px 0; font-size: 13px; color: var(--text-muted);
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .check-list li::before { content: '●'; color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+    .check-list li strong  { color: var(--text); }
+
+    /* ── Security findings ── */
+    .finding {
+      display: flex; gap: 14px; padding: 14px;
+      border-radius: 8px; margin-bottom: 10px;
+      border: 1px solid var(--border);
+    }
+    .finding-icon  { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+    .finding-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .finding-desc  { font-size: 12px; color: var(--text-muted); }
+    .finding.good  { background: #052e16; border-color: #166534; }
+    .finding.info  { background: #0c1f3f; border-color: #1e3a5f; }
+    .finding.note  { background: #1a1200; border-color: #3d2e00; }
+
+    /* ── Pipeline visualization ── */
+    .pipeline { display: flex; flex-direction: column; gap: 0; }
+    .pipeline-step {
+      display: flex; align-items: center; gap: 14px;
+      padding: 10px 16px; border: 1px solid var(--border);
+      background: var(--surface2); font-size: 13px;
+    }
+    .pipeline-step:first-child { border-radius: 8px 8px 0 0; }
+    .pipeline-step:last-child  { border-radius: 0 0 8px 8px; }
+    .pipeline-step + .pipeline-step { border-top: none; }
+    .pipeline-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .pipeline-name { font-weight: 600; min-width: 240px; }
+    .pipeline-desc { color: var(--text-muted); font-size: 12px; }
+
+    /* ── Token lifecycle ── */
+    .token-lifecycle { display: flex; flex-direction: column; gap: 8px; }
+    .token-step {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .token-step-icon { font-size: 18px; }
+    .token-step-text strong { font-size: 13px; display: block; margin-bottom: 2px; }
+    .token-step-text span   { color: var(--text-muted); }
+
+    /* ── Permission matrix ── */
+    .perm-matrix { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 4px; }
+    .perm-cell {
+      border-radius: 8px; padding: 12px 14px;
+      border: 1px solid var(--border); font-size: 12px;
+    }
+    .perm-cell .perm-flags  { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; font-family: 'Consolas', monospace; }
+    .perm-cell .perm-result { font-size: 12px; font-weight: 600; }
+    .perm-cell.allow  { background: #052e16; border-color: #166534; }
+    .perm-cell.deny   { background: #1c0505; border-color: #7f1d1d; }
+    .perm-cell.silent { background: #1c1500; border-color: #92400e; }
+    .perm-cell.caution{ background: #1a0b3a; border-color: #3b1f6e; }
+
+    /* ── Phase cards ── */
+    .phase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 4px; }
+    .phase-card {
+      border: 1px solid var(--border); border-radius: 10px; padding: 16px;
+      position: relative; overflow: hidden;
+    }
+    .phase-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .phase-card.edit-phase::before  { background: var(--yellow); }
+    .phase-card.view-phase::before  { background: var(--teal); }
+    .phase-title    { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .phase-subtitle { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 48px;
+      display: flex; justify-content: space-between; align-items: center;
+      color: var(--text-muted); font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════ HEADER ══════════════════════════════════════════════ -->
+<div class="header">
+  <div class="header-meta">
+    <span class="badge blue">🏗️ api-design-10</span>
+    <span class="badge green">✅ .NET 10 / C#</span>
+    <span class="badge purple">🔐 Multi-Auth</span>
+    <span class="badge teal">🔏 Field Permissions</span>
+    <span class="badge">📅 June 2026</span>
+  </div>
+  <h1>Authentication &amp; Security <span>Analysis</span></h1>
+  <p>Comprehensive breakdown of the multi-layered authentication architecture, authorization patterns, field-level permission enforcement, token lifecycle, MediatR pipeline security behaviors, and security analysis across the microservices platform.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════ BODY ══════════════════════════════════════════════ -->
+<div class="container">
+
+  <!-- ─── 1. ARCHITECTURE OVERVIEW ─── -->
+  <div class="section-title">01 — Authentication Architecture Overview</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-blue">🌐</div>
+      <h3>End-to-End Request Auth Flow</h3>
+    </div>
+    <div class="flow">
+      <div class="flow-node">
+        <div class="flow-box">Client</div>
+        <div class="flow-sub">Bearer / API Key</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="flow-box primary">API Gateway</div>
+        <div class="flow-sub">Ocelot + Azure AD JWT</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="flow-box secondary">Auth Middleware</div>
+        <div class="flow-sub">AddClaimsToRequest</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="flow-box secondary">Authz Middleware</div>
+        <div class="flow-sub">HasPermission check</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="flow-box primary">Microservice</div>
+        <div class="flow-sub">MultiAuth Scheme</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="flow-box secondary">MediatR Pipeline</div>
+        <div class="flow-sub">ApiKey · AuthZ · FieldPerm</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="flow-box green">Handler</div>
+        <div class="flow-sub">Business Logic</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 2. AUTH SCHEMES ─── -->
+  <div class="section-title">02 — Authentication Schemes</div>
+
+  <div class="scheme-grid">
+
+    <div class="scheme-card azure">
+      <div class="scheme-title">🏢 Azure AD / Entra ID</div>
+      <div class="scheme-subtitle">Microsoft Identity Web — External IdP</div>
+      <div class="scheme-detail">
+        <strong>Scheme name:</strong> <code>AzureAd</code><br/>
+        <strong>Library:</strong> <code>Microsoft.Identity.Web</code><br/>
+        <strong>Tenant:</strong> <code>stai09.onmicrosoft.com</code><br/>
+        <strong>Audience:</strong> <code>api://0f9846e5-.../access_as_user</code><br/>
+        <strong>Issuer prefix:</strong> <code>https://sts.windows.net/</code><br/>
+        <strong>ACL mode:</strong> <code>AllowWebApiToBeAuthorizedByACL: true</code><br/>
+        <strong>Policy:</strong> <code>AzureUsersOnly</code> — requires <code>iss</code> claim
+      </div>
+    </div>
+
+    <div class="scheme-card db">
+      <div class="scheme-title">🗄️ Database JWT</div>
+      <div class="scheme-subtitle">Custom HMAC-SHA256 tokens — Internal IdP</div>
+      <div class="scheme-detail">
+        <strong>Scheme name:</strong> <code>DbAuth</code><br/>
+        <strong>Algorithm:</strong> <code>HmacSha256</code><br/>
+        <strong>Issuer:</strong> <code>netapi</code><br/>
+        <strong>Audience:</strong> <code>netapi</code><br/>
+        <strong>Expiry:</strong> 1 hour<br/>
+        <strong>Policy:</strong> <code>DbUsersOnly</code> — requires <code>auth_type: "db"</code> claim<br/>
+        <strong>Validation:</strong> Issuer + Audience + Lifetime + Key
+      </div>
+    </div>
+
+    <div class="scheme-card apikey">
+      <div class="scheme-title">🔑 API Key</div>
+      <div class="scheme-subtitle">Header-based service-to-service auth</div>
+      <div class="scheme-detail">
+        <strong>Header:</strong> <code>X-Api-Key</code><br/>
+        <strong>Enforcement:</strong> MediatR <code>ApiKeyAuthBehaviour</code><br/>
+        <strong>Config key:</strong> <code>Api:api-key</code><br/>
+        <strong>Scope:</strong> All CQRS requests (when configured)<br/>
+        <strong>Error:</strong> Throws <code>UnauthorizedAccessException</code> on missing/invalid key
+      </div>
+    </div>
+
+    <div class="scheme-card multi">
+      <div class="scheme-title">🔀 MultiAuth Policy Scheme</div>
+      <div class="scheme-subtitle">Dynamic scheme routing — default scheme</div>
+      <div class="scheme-detail">
+        <strong>Scheme name:</strong> <code>MultiAuth</code> (registered as default)<br/>
+        <strong>Logic:</strong> Decodes JWT → checks issuer<br/>
+        <strong>→ Azure AD:</strong> issuer starts with <code>https://sts.windows.net</code><br/>
+        <strong>→ DbAuth:</strong> all other issuers (internal tokens)<br/>
+        <strong>File:</strong> <code>Infrastructure/DependencyInjection.cs</code> L62–84
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── 3. MULTI-AUTH SCHEME CODE ─── -->
+  <div class="section-title">03 — MultiAuth Scheme Selector Logic</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-purple">🔀</div>
+      <h3>DependencyInjection.cs — ForwardDefaultSelector (Lines 62–84)</h3>
+    </div>
+    <div class="card-body">
+<pre><span class="cmt">// Registered as the default authentication scheme</span>
+services.AddAuthentication(<span class="str">"MultiAuth"</span>)
+  .AddPolicyScheme(<span class="str">"MultiAuth"</span>, <span class="str">"MultiAuth"</span>, options =>
+  {
+      options.ForwardDefaultSelector = context =>
+      {
+          <span class="kw">string</span> authorization = context.Request.Headers[HeaderNames.Authorization];
+
+          <span class="kw">if</span> (!<span class="cls">string</span>.IsNullOrEmpty(authorization) &amp;&amp; authorization.StartsWith(<span class="str">"Bearer "</span>))
+          {
+              <span class="kw">var</span> token = authorization.Substring(<span class="str">"Bearer "</span>.Length).Trim();
+              <span class="kw">var</span> jwtHandler = <span class="kw">new</span> <span class="cls">JwtSecurityTokenHandler</span>();
+              <span class="kw">var</span> jwt = jwtHandler.ReadJwtToken(token);
+
+              <span class="cmt">// Route to Azure AD if Microsoft STS issuer detected</span>
+              <span class="kw">if</span> (jwt.Issuer.StartsWith(<span class="str">"https://sts.windows.net"</span>))
+                  <span class="kw">return</span> <span class="str">"AzureAd"</span>;
+          }
+          <span class="cmt">// Fall through to database JWT validation</span>
+          <span class="kw">return</span> <span class="str">"DbAuth"</span>;
+      };
+  })
+  .AddMicrosoftIdentityWebApi(Configuration, <span class="str">"AzureAd"</span>, jwtBearerScheme: <span class="str">"AzureAd"</span>)
+  .EnableTokenAcquisitionToCallDownstreamApi()
+  .AddInMemoryTokenCaches();
+
+services.AddJwtBearer(<span class="str">"DbAuth"</span>, options => {
+    options.TokenValidationParameters = <span class="kw">new</span> <span class="cls">TokenValidationParameters</span> {
+        <span class="prop">ValidateIssuerSigningKey</span> = <span class="kw">true</span>,
+        <span class="prop">ValidateIssuer</span>          = <span class="kw">true</span>,
+        <span class="prop">ValidateAudience</span>        = <span class="kw">true</span>,
+        <span class="prop">ValidateLifetime</span>        = <span class="kw">true</span>,
+        <span class="prop">IssuerSigningKey</span>        = <span class="kw">new</span> <span class="cls">SymmetricSecurityKey</span>(<span class="cls">Encoding</span>.UTF8.GetBytes(jwtKey))
+    };
+});</pre>
+    </div>
+  </div>
+
+  <!-- ─── 4. JWT CLAIMS ─── -->
+  <div class="section-title">04 — JWT Token Structure &amp; Claims</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-green">📋</div>
+        <h3>DB JWT Claims (JwtService.cs)</h3>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead><tr><th>Claim</th><th>Value Source</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>ClaimTypes.NameIdentifier</code></td><td><code>user.UserName</code></td><td>Identity</td></tr>
+            <tr><td><code>ClaimTypes.Role</code></td><td><code>user.UserRoles[0].RoleValue</code></td><td>RBAC</td></tr>
+            <tr><td><code>JwtRegisteredClaimNames.Iat</code></td><td>Unix timestamp</td><td>Issued-at</td></tr>
+            <tr><td><code>auth_type</code></td><td><code>"db"</code></td><td>Scheme routing</td></tr>
+            <tr><td><code>username</code></td><td><code>user.UserName</code></td><td>Display</td></tr>
+            <tr><td><code>unique_name</code></td><td><code>user.UserName</code></td><td>Header forwarding</td></tr>
+            <tr><td><code>email</code></td><td><code>user.Email</code></td><td>Contact info</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-blue">⚙️</div>
+        <h3>Token Configuration (appsettings.json)</h3>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Algorithm</td><td><span class="tag tag-purple">HMAC SHA-256</span></td></tr>
+            <tr><td>Access Token Expiry</td><td><span class="tag tag-yellow">1 hour</span></td></tr>
+            <tr><td>Refresh Token Expiry</td><td><span class="tag tag-yellow">7 days</span></td></tr>
+            <tr><td>Issuer</td><td><code>netapi</code></td></tr>
+            <tr><td>Audience</td><td><code>netapi</code></td></tr>
+            <tr><td>Validate Lifetime</td><td><span class="tag tag-green">✓ Enabled</span></td></tr>
+            <tr><td>Validate Issuer</td><td><span class="tag tag-green">✓ Enabled</span></td></tr>
+            <tr><td>Validate Audience</td><td><span class="tag tag-green">✓ Enabled</span></td></tr>
+            <tr><td>Azure AD ACL mode</td><td><span class="tag tag-green">✓ Enabled</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 5. REFRESH TOKEN LIFECYCLE ─── -->
+  <div class="section-title">05 — Refresh Token Lifecycle</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-green">🔄</div>
+        <h3>Token Lifecycle Flow</h3>
+      </div>
+      <div class="card-body">
+        <div class="token-lifecycle">
+          <div class="token-step">
+            <div class="token-step-icon">🔐</div>
+            <div class="token-step-text">
+              <strong>Login — POST /api/v{version}/Auth/login</strong>
+              <span>Issues access token (1h) + refresh token (7d, stored in DB)</span>
+            </div>
+          </div>
+          <div class="token-step">
+            <div class="token-step-icon">⏱️</div>
+            <div class="token-step-text">
+              <strong>Access Token Expires</strong>
+              <span>Client detects 401 and uses refresh token to get new credentials</span>
+            </div>
+          </div>
+          <div class="token-step">
+            <div class="token-step-icon">♻️</div>
+            <div class="token-step-text">
+              <strong>Refresh — POST /api/v{version}/Auth/refreshToken</strong>
+              <span>Validates stored token → rotates: revokes old, issues new pair</span>
+            </div>
+          </div>
+          <div class="token-step">
+            <div class="token-step-icon">🚫</div>
+            <div class="token-step-text">
+              <strong>Revoke — RevokeAsync() / RevokeAllAsync()</strong>
+              <span>Sets <code>IsRevoked = true</code>; <code>RevokeAllAsync</code> invalidates all user sessions</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-purple">🗄️</div>
+        <h3>RefreshToken Model (Domain/Common/RefreshToken.cs)</h3>
+      </div>
+      <div class="card-body">
+<pre><span class="kw">public class</span> <span class="cls">RefreshToken</span>
+{
+    <span class="cmt">// 64-byte cryptographic random token</span>
+    <span class="kw">public string</span>   <span class="prop">Token</span>       { <span class="kw">get</span>; <span class="kw">set</span>; }  <span class="cmt">// Base64</span>
+    <span class="kw">public string</span>   <span class="prop">UserId</span>      { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public DateTime</span> <span class="prop">ExpiryDate</span>  { <span class="kw">get</span>; <span class="kw">set</span>; }  <span class="cmt">// UtcNow + 7 days</span>
+    <span class="kw">public bool</span>     <span class="prop">IsRevoked</span>   { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public DateTime</span> <span class="prop">CreatedDate</span> { <span class="kw">get</span>; <span class="kw">set</span>; }
+}
+
+<span class="cmt">// Token rotation in RefreshTokenDataAccess.cs</span>
+<span class="kw">await</span> RevokeAsync(oldToken);       <span class="cmt">// Invalidate previous</span>
+<span class="kw">var</span> newToken = <span class="kw">await</span> GenerateRefreshToken(userId);
+<span class="kw">return</span> newToken;</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 6. PIPELINE BEHAVIORS ─── -->
+  <div class="section-title">06 — MediatR Security Pipeline Behaviors</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-blue">⛓️</div>
+      <h3>Request Pipeline — Execution Order (Application/DependencyInjection.cs)</h3>
+    </div>
+    <div class="card-body">
+      <div class="pipeline">
+        <div class="pipeline-step">
+          <div class="pipeline-num">1</div>
+          <div class="pipeline-name">LoggingBehaviour&lt;TRequest, TResponse&gt;</div>
+          <div class="pipeline-desc">Logs every inbound request with correlation ID</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-num">2</div>
+          <div class="pipeline-name">UnhandledExceptionBehaviour&lt;,&gt;</div>
+          <div class="pipeline-desc">Catches and logs exceptions; prevents stack traces leaking to clients</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-num" style="background: var(--yellow); color: #000;">3</div>
+          <div class="pipeline-name">ApiKeyAuthBehaviour&lt;,&gt;</div>
+          <div class="pipeline-desc">Validates <code>X-Api-Key</code> header against <code>Api:api-key</code> config — throws 401 if invalid</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-num" style="background: var(--red);">4</div>
+          <div class="pipeline-name">AuthorizationBehaviour&lt;,&gt;</div>
+          <div class="pipeline-desc">Checks user authentication status; validates ACL permissions via <code>IIdentityService</code></div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-num">5</div>
+          <div class="pipeline-name">ValidationBehaviour&lt;,&gt;</div>
+          <div class="pipeline-desc">FluentValidation — validates all request DTOs before handler executes</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-num" style="background: var(--teal); color: #000;">6</div>
+          <div class="pipeline-name">FieldPermissionBehaviour&lt;,&gt;</div>
+          <div class="pipeline-desc">Pre-handler: validates field-level edit permissions on request properties. Post-handler: masks view-restricted fields on response before returning to client</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-num">7</div>
+          <div class="pipeline-name">PerformanceBehaviour&lt;,&gt;</div>
+          <div class="pipeline-desc">Monitors slow requests (&gt; threshold) and logs warnings</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-num" style="background: var(--green); color: #000;">8</div>
+          <div class="pipeline-name">CachingBehaviour&lt;,&gt;</div>
+          <div class="pipeline-desc">Caches query results; invalidation on writes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 7. API KEY BEHAVIOR CODE ─── -->
+  <div class="section-title">07 — API Key &amp; Authorization Logic</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-yellow">🔑</div>
+        <h3>ApiKeyAuthBehaviour.cs (Lines 35–54)</h3>
+      </div>
+      <div class="card-body">
+<pre><span class="kw">string</span> apiKey = _configuration[<span class="str">"Api:api-key"</span>];
+
+<span class="kw">if</span> (!<span class="cls">string</span>.IsNullOrEmpty(apiKey))
+{
+    <span class="cmt">// 1. Check header presence</span>
+    <span class="kw">if</span> (!_httpContextAccessor.HttpContext.Request.Headers
+            .TryGetValue(<span class="str">"X-Api-Key"</span>, <span class="kw">out var</span> extractedApiKey))
+    {
+        <span class="kw">throw new</span> <span class="cls">UnauthorizedAccessException</span>(
+            <span class="str">"Valid API key is missing in request!"</span>);
+    }
+
+    <span class="cmt">// 2. Validate key value</span>
+    <span class="kw">if</span> (!apiKey.Equals(extractedApiKey))
+    {
+        <span class="kw">throw new</span> <span class="cls">UnauthorizedAccessException</span>(
+            <span class="str">"Unauthorized client! Invalid Api Key!"</span>);
+    }
+}</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-blue">👤</div>
+        <h3>AuthorizationBehaviour.cs (Lines 52–58)</h3>
+      </div>
+      <div class="card-body">
+<pre><span class="cmt">// Check 1: Is user authenticated?</span>
+<span class="kw">if</span> (!_currentUserService.IsAuthenticated)
+    <span class="kw">throw new</span> <span class="cls">UnauthorizedAccessException</span>();
+
+<span class="cmt">// Check 2: Does request require ACL permission?</span>
+<span class="kw">if</span> (request <span class="kw">is</span> <span class="cls">IRequirePermission</span> permRequest)
+{
+    <span class="kw">bool</span> hasPermission = <span class="kw">await</span> _identityService
+        .HasPermissionAsync(
+            _currentUserService.UserId,
+            permRequest.RequiredPermission);
+
+    <span class="kw">if</span> (!hasPermission)
+        <span class="kw">throw new</span> <span class="cls">ForbiddenAccessException</span>();
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 8. GATEWAY SECURITY ─── -->
+  <div class="section-title">08 — API Gateway Security (Ocelot)</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-blue">🌐</div>
+        <h3>Ocelot Route Auth (ocelot.json)</h3>
+      </div>
+      <div class="card-body">
+<pre><span class="cmt">// Every upstream route requires Bearer auth</span>
+{
+  <span class="prop">"UpstreamPathTemplate"</span>: <span class="str">"/gateway/netcore/{everything}"</span>,
+  <span class="prop">"AuthenticationOptions"</span>: {
+    <span class="prop">"AuthenticationProviderKey"</span>: <span class="str">"Bearer"</span>,
+    <span class="prop">"AllowedScopes"</span>: []
+  },
+  <span class="cmt">// Forward JWT claims as downstream headers</span>
+  <span class="prop">"AddHeadersToRequest"</span>: {
+    <span class="prop">"name"</span>: <span class="str">"Claims[name] > value[0] > |"</span>
+  },
+  <span class="prop">"RouteClaimsRequirement"</span>: {}
+}</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-purple">🔗</div>
+        <h3>AddClaimsToRequestMiddleware.cs (Lines 40–74)</h3>
+      </div>
+      <div class="card-body">
+<pre><span class="cmt">// Extracts JWT claims → sets custom request headers</span>
+<span class="cmt">// These headers travel downstream to microservices</span>
+
+<span class="kw">var</span> token   = ExtractBearerToken(context);
+<span class="kw">var</span> jwt     = _jwtHandler.ReadJwtToken(token);
+
+<span class="cmt">// DB JWT claim → X-Request-Uid</span>
+<span class="kw">var</span> uid = jwt.Claims
+    .FirstOrDefault(c => c.Type == <span class="str">"unique_name"</span>)?.Value;
+context.Request.Headers[<span class="str">"X-Request-Uid"</span>] = uid;
+
+<span class="cmt">// Azure AD claim → X-Request-Oid</span>
+<span class="kw">var</span> oid = jwt.Claims
+    .FirstOrDefault(c => c.Type == <span class="str">"oid"</span>)?.Value;
+context.Request.Headers[<span class="str">"X-Request-Oid"</span>] = oid;</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gateway Authorization Middleware -->
+  <div class="card" style="margin-top: 20px;">
+    <div class="card-header">
+      <div class="card-icon icon-orange">🛡️</div>
+      <h3>Gateway AuthorizationMiddleware.cs — ACL Check (Lines 16–38)</h3>
+    </div>
+    <div class="card-body">
+<pre><span class="kw">public async Task</span> InvokeAsync(<span class="cls">HttpContext</span> context, <span class="cls">RequestDelegate</span> next)
+{
+    <span class="cmt">// Only enforce on /gateway/* routes</span>
+    <span class="kw">if</span> (!context.Request.Path.Value.Contains(<span class="str">"gateway"</span>))
+    {
+        <span class="kw">await</span> next(context);
+        <span class="kw">return</span>;
+    }
+
+    <span class="cmt">// Require X-Request-Uid to be present</span>
+    <span class="kw">var</span> uid = context.Request.Headers[<span class="str">"X-Request-Uid"</span>].ToString();
+    <span class="kw">if</span> (<span class="cls">string</span>.IsNullOrEmpty(uid))
+    {
+        context.Response.StatusCode = <span class="num">401</span>;
+        <span class="kw">return</span>;
+    }
+
+    <span class="cmt">// Check permission via cached NetAuth service</span>
+    <span class="kw">var</span> hasPermission = <span class="kw">await</span> _authorizationService
+        .HasPermissionAsync(uid, context.Request.Path);
+
+    <span class="kw">if</span> (!hasPermission) { context.Response.StatusCode = <span class="num">403</span>; <span class="kw">return</span>; }
+
+    <span class="kw">await</span> next(context);
+}</pre>
+    </div>
+  </div>
+
+  <!-- ─── 9. AUTHORIZATION PATTERNS ─── -->
+  <div class="section-title">09 — Authorization Patterns</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-red">🎛️</div>
+      <h3>Authorization Model Overview</h3>
+    </div>
+    <div class="card-body">
+      <table>
+        <thead>
+          <tr><th>Pattern</th><th>Implementation</th><th>Where Enforced</th><th>Scope</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-blue">RBAC</span></td>
+            <td>User → Role → Permissions hierarchy via <code>INetAuthUser</code></td>
+            <td>netauthlib / IdentityService</td>
+            <td>All services</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-purple">ACL</span></td>
+            <td><code>HasPermissionAsync(userId, apiPath)</code></td>
+            <td>Gateway AuthorizationMiddleware + AuthorizationBehaviour</td>
+            <td>Per-route</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-green">Policy</span></td>
+            <td><code>AzureUsersOnly</code> — requires <code>iss</code> claim<br/><code>DbUsersOnly</code> — requires <code>auth_type: "db"</code></td>
+            <td>ASP.NET Core Authorization</td>
+            <td>Per-controller</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-yellow">API Key</span></td>
+            <td>Config-driven <code>X-Api-Key</code> comparison</td>
+            <td>MediatR ApiKeyAuthBehaviour</td>
+            <td>All CQRS commands/queries</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-teal">Field Permissions</span></td>
+            <td><code>[FieldPermission(view, edit, throwError)]</code> attribute on entity properties; enforced by <code>FieldPermissionBehaviour</code> + <code>IFieldPermissionService</code></td>
+            <td>MediatR pipeline (pre/post handler) + manual handler calls</td>
+            <td>Per-property on domain entities</td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-orange">UI Permissions</span></td>
+            <td>Separate <code>IUiPermissionDataAccess</code> system</td>
+            <td>netauthlib</td>
+            <td>Frontend feature flags</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─── 10. FIELD PERMISSION SYSTEM ─── -->
+  <div class="section-title">10 — Field-Level Permission System</div>
+
+  <!-- Overview -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-teal">🔏</div>
+      <h3>Field Permission Architecture — FieldPermissionBehaviour&lt;TRequest, TResponse&gt;</h3>
+    </div>
+    <div class="card-body">
+      <p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">
+        Field-level access control enforces view and edit permissions at individual entity property granularity.
+        The system is <strong style="color:var(--text);">attribute-driven</strong>: properties decorated with
+        <code>[FieldPermission]</code> are intercepted by the MediatR pipeline behavior in two phases —
+        edit validation before the handler runs, and view masking after it returns.
+        A concurrent reflection cache ensures type scanning is paid only once per type at startup.
+      </p>
+      <div class="flow" style="padding: 16px;">
+        <div class="flow-node" style="min-width: 120px;">
+          <div class="flow-box primary">TRequest</div>
+          <div class="flow-sub">Command / Query</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="min-width: 140px;">
+          <div class="flow-box" style="border-color: var(--yellow); color: var(--yellow);">Phase 1: Edit Check</div>
+          <div class="flow-sub">Pre-handler enforcement</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="min-width: 120px;">
+          <div class="flow-box green">Handler</div>
+          <div class="flow-sub">Business Logic</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="min-width: 140px;">
+          <div class="flow-box teal">Phase 2: View Mask</div>
+          <div class="flow-sub">Post-handler masking</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node" style="min-width: 120px;">
+          <div class="flow-box secondary">TResponse</div>
+          <div class="flow-sub">Masked DTO to client</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attribute & Phases -->
+  <div class="grid-2" style="margin-top:20px;">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-teal">🏷️</div>
+        <h3>FieldPermissionAttribute.cs</h3>
+      </div>
+      <div class="card-body">
+<pre><span class="cmt">// Domain/Common/FieldPermissionAttribute.cs</span>
+[<span class="cls">AttributeUsage</span>(AttributeTargets.Property,
+    AllowMultiple = <span class="kw">false</span>, Inherited = <span class="kw">true</span>)]
+<span class="kw">public class</span> <span class="cls">FieldPermissionAttribute</span> : <span class="cls">Attribute</span>
+{
+    <span class="kw">public string?</span> <span class="prop">ViewPermission</span> { <span class="kw">get</span>; }
+    <span class="kw">public string?</span> <span class="prop">EditPermission</span> { <span class="kw">get</span>; }
+
+    <span class="cmt">// true  → throw ValidationException on edit denial</span>
+    <span class="cmt">// false → silently revert to original DB value</span>
+    <span class="kw">public bool</span>    <span class="prop">ThrowError</span>      { <span class="kw">get</span>; }
+
+    <span class="kw">public</span> <span class="cls">FieldPermissionAttribute</span>(
+        <span class="kw">string?</span> view      = <span class="kw">null</span>,
+        <span class="kw">string?</span> edit      = <span class="kw">null</span>,
+        <span class="kw">bool</span>    throwError = <span class="kw">false</span>) { ... }
+}
+
+<span class="cmt">// Usage on a domain entity property</span>
+[<span class="attr">FieldPermission</span>(
+    view: <span class="str">"Core.Policy.TotalPremium.View"</span>,
+    edit: <span class="str">"Core.Policy.TotalPremium.Edit"</span>,
+    throwError: <span class="kw">false</span>)]
+<span class="kw">public decimal?</span> <span class="prop">TotalPremium</span> { <span class="kw">get</span>; <span class="kw">set</span>; }</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-yellow">✏️</div>
+        <h3>Phase 1 — Edit Enforcement (Pre-Handler)</h3>
+      </div>
+      <div class="card-body">
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+          Scans <code>TRequest</code> properties for <code>[FieldPermission(edit:...)]</code>, fetches the user's granted permissions, then applies the following logic matrix:
+        </p>
+        <div class="perm-matrix">
+          <div class="perm-cell allow">
+            <div class="perm-flags">View ✔ &amp; Edit ✔</div>
+            <div class="perm-result" style="color:var(--green);">Allow — field accepted</div>
+          </div>
+          <div class="perm-cell silent">
+            <div class="perm-flags">View ✗ &amp; Edit ✗</div>
+            <div class="perm-result" style="color:var(--yellow);">Silent ignore — field invisible to user</div>
+          </div>
+          <div class="perm-cell deny">
+            <div class="perm-flags">View ✔ &amp; Edit ✗</div>
+            <div class="perm-result" style="color:var(--red);">Error / revert — controlled by <code>throwError</code></div>
+          </div>
+          <div class="perm-cell caution">
+            <div class="perm-flags">View ✗ &amp; Edit ✔</div>
+            <div class="perm-result" style="color:var(--accent2);">Throw — suspicious permission state</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2 + Code -->
+  <div class="grid-2" style="margin-top:20px;">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-teal">👁️</div>
+        <h3>Phase 2 — View Masking (Post-Handler)</h3>
+      </div>
+      <div class="card-body">
+<pre><span class="cmt">// FieldPermissionBehaviour.cs — post-handler phase</span>
+<span class="kw">private async Task</span> MaskViewPermissions(<span class="cls">TResponse</span> response)
+{
+    <span class="kw">var</span> props = GetViewProperties(<span class="kw">typeof</span>(<span class="cls">TResponse</span>));
+
+    <span class="kw">foreach</span> (<span class="kw">var</span> descriptor <span class="kw">in</span> props)
+    {
+        <span class="kw">bool</span> canView = <span class="kw">await</span> _currentUser
+            .HasPermissionAsync(descriptor.ViewPermission);
+
+        <span class="kw">if</span> (!canView)
+        {
+            <span class="cmt">// Null out the property — field hidden from client</span>
+            descriptor.PropertyInfo.SetValue(response, <span class="kw">null</span>);
+        }
+    }
+
+    <span class="cmt">// Recursive masking for collection properties</span>
+    MaskCollectionItems(response, props);
+}</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-purple">🔧</div>
+        <h3>Manual Service Enforcement Pattern</h3>
+      </div>
+      <div class="card-body">
+<pre><span class="cmt">// Handler using IFieldPermissionService directly</span>
+<span class="kw">public async Task</span>&lt;<span class="cls">PolicyDto</span>&gt; Handle(<span class="cls">GetPolicyByIdQuery</span> request, ...)
+{
+    <span class="kw">var</span> entity = <span class="kw">await</span> _policyData.GetPolicyById(request.Id);
+
+    <span class="cmt">// Mask view-restricted fields before mapping to DTO</span>
+    <span class="kw">if</span> (entity != <span class="kw">null</span>)
+        <span class="kw">await</span> _fieldPermissions.ApplyViewPermissionsAsync(entity);
+
+    <span class="kw">return</span> _mapper.Map&lt;<span class="cls">PolicyDto</span>&gt;(entity);
+}
+
+<span class="cmt">// Update handler — enforce edit permissions</span>
+<span class="kw">public async Task</span>&lt;<span class="cls">Unit</span>&gt; Handle(<span class="cls">UpdatePolicyRequest</span> request, ...)
+{
+    <span class="kw">var</span> original = <span class="kw">await</span> _policyData.GetPolicyById(request.Policy.Id);
+
+    <span class="cmt">// Compare original vs proposed; revert or throw per ThrowError</span>
+    <span class="kw">await</span> _fieldPermissions.ApplyEditPermissionsAsync(original, request.Policy);
+
+    <span class="kw">await</span> _policyData.Update(request.Policy);
+    <span class="kw">return</span> <span class="cls">Unit</span>.Value;
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enforcement Matrix Table -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-icon icon-teal">🧪</div>
+      <h3>Integration Test Scenarios — PolicyTotalPremiumFieldPermissionTest.cs</h3>
+    </div>
+    <div class="card-body">
+      <table>
+        <thead>
+          <tr><th>Operation</th><th>View Permission</th><th>Edit Permission</th><th>throwError</th><th>Result</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GET</td>
+            <td><span class="tag tag-green">✓ Granted</span></td>
+            <td>N/A</td>
+            <td>—</td>
+            <td>TotalPremium visible in response DTO</td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><span class="tag tag-red">✗ Denied</span></td>
+            <td>N/A</td>
+            <td>—</td>
+            <td>TotalPremium nulled before mapping</td>
+          </tr>
+          <tr>
+            <td>CREATE</td>
+            <td><span class="tag tag-green">✓ Granted</span></td>
+            <td><span class="tag tag-green">✓ Granted</span></td>
+            <td>any</td>
+            <td>TotalPremium persisted as supplied</td>
+          </tr>
+          <tr>
+            <td>CREATE</td>
+            <td><span class="tag tag-green">✓ Granted</span></td>
+            <td><span class="tag tag-red">✗ Denied</span></td>
+            <td>true</td>
+            <td><code>ValidationException</code> thrown (400)</td>
+          </tr>
+          <tr>
+            <td>CREATE</td>
+            <td><span class="tag tag-red">✗ Denied</span></td>
+            <td><span class="tag tag-red">✗ Denied</span></td>
+            <td>false</td>
+            <td>TotalPremium silently cleared to null</td>
+          </tr>
+          <tr>
+            <td>UPDATE</td>
+            <td><span class="tag tag-green">✓ Granted</span></td>
+            <td><span class="tag tag-green">✓ Granted</span></td>
+            <td>any</td>
+            <td>TotalPremium updated to new value</td>
+          </tr>
+          <tr>
+            <td>UPDATE</td>
+            <td><span class="tag tag-green">✓ Granted</span></td>
+            <td><span class="tag tag-red">✗ Denied</span></td>
+            <td>false</td>
+            <td>TotalPremium silently reverted to DB value</td>
+          </tr>
+          <tr>
+            <td>UPDATE</td>
+            <td><span class="tag tag-red">✗ Denied</span></td>
+            <td><span class="tag tag-red">✗ Denied</span></td>
+            <td>false</td>
+            <td>DB value preserved (invisible to user)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Performance note -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <div class="card-icon icon-green">⚡</div>
+      <h3>Reflection Cache Architecture</h3>
+    </div>
+    <div class="card-body">
+      <div class="grid-3">
+        <div style="padding:14px; background:var(--surface2); border-radius:8px; border:1px solid var(--border);">
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.8px;">Cache Store</div>
+          <div style="font-size:13px;"><code>ConcurrentDictionary&lt;Type, List&lt;FieldPermissionDescriptor&gt;&gt;</code></div>
+        </div>
+        <div style="padding:14px; background:var(--surface2); border-radius:8px; border:1px solid var(--border);">
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.8px;">Cost Model</div>
+          <div style="font-size:13px;">O(n) reflection scan on first request per type → O(1) on all subsequent calls</div>
+        </div>
+        <div style="padding:14px; background:var(--surface2); border-radius:8px; border:1px solid var(--border);">
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.8px;">Permission Naming</div>
+          <div style="font-size:13px;">Hierarchical: <code>Domain.Entity.Field.Operation</code><br/><span style="color:var(--text-muted);">e.g. <code>Core.Policy.TotalPremium.View</code></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 11. SECURITY HEADERS ─── -->
+  <div class="section-title">11 — Security Headers &amp; Context Propagation</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-blue">📨</div>
+      <h3>Custom Headers — Full Reference</h3>
+    </div>
+    <div class="card-body">
+      <table>
+        <thead>
+          <tr><th>Header</th><th>Set By</th><th>Read By</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>X-Api-Key</code></td>
+            <td>Client</td>
+            <td><code>ApiKeyAuthBehaviour</code>, <code>CurrentUserService</code></td>
+            <td>Service-to-service authentication</td>
+          </tr>
+          <tr>
+            <td><code>X-Request-Uid</code></td>
+            <td>Gateway middleware (<code>unique_name</code> claim)</td>
+            <td><code>CurrentUserService</code>, <code>AuthorizationMiddleware</code></td>
+            <td>User identity propagation (DB users)</td>
+          </tr>
+          <tr>
+            <td><code>X-Request-Oid</code></td>
+            <td>Gateway middleware (<code>oid</code> claim)</td>
+            <td><code>CurrentUserService</code></td>
+            <td>Azure AD Object ID propagation</td>
+          </tr>
+          <tr>
+            <td><code>X-Correlation-Id</code></td>
+            <td>Gateway / client</td>
+            <td><code>CurrentUserService</code>, logging</td>
+            <td>Distributed request tracing</td>
+          </tr>
+          <tr>
+            <td><code>X-Request-Id</code></td>
+            <td>Gateway / client</td>
+            <td><code>CurrentUserService</code></td>
+            <td>Individual request tracking</td>
+          </tr>
+          <tr>
+            <td><code>Authorization</code></td>
+            <td>Client (<code>Bearer &lt;token&gt;</code>)</td>
+            <td>MultiAuth scheme, Ocelot</td>
+            <td>Primary auth — JWT or Azure AD token</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─── 12. CACHING STRATEGY ─── -->
+  <div class="section-title">12 — Auth Caching Strategy</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-green">⚡</div>
+      <h3>Multi-Level Permission Cache (Gateway/Services/AuthorizationService.cs)</h3>
+    </div>
+    <div class="card-body">
+      <div class="flow" style="padding: 16px;">
+        <div class="flow-node">
+          <div class="flow-box primary">Request</div>
+          <div class="flow-sub">Permission check</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="flow-box">L1: In-Memory</div>
+          <div class="flow-sub">0.5 hr expiry</div>
+        </div>
+        <div class="flow-arrow down">MISS ↓</div>
+        <div class="flow-node">
+          <div class="flow-box secondary">L2: Redis</div>
+          <div class="flow-sub">Distributed</div>
+        </div>
+        <div class="flow-arrow down">MISS ↓</div>
+        <div class="flow-node">
+          <div class="flow-box secondary">L3: SQL Server</div>
+          <div class="flow-sub">Persistent</div>
+        </div>
+        <div class="flow-arrow down">MISS ↓</div>
+        <div class="flow-node">
+          <div class="flow-box green">NetAuth API</div>
+          <div class="flow-sub">Source of truth</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <span class="tag tag-blue">In-Memory: 30 min</span>
+        <span class="tag tag-purple">Redis: distributed</span>
+        <span class="tag tag-green">SQL: persistent</span>
+        <span class="tag tag-yellow">Sync interval: 5 min</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 13. CORS & HTTPS ─── -->
+  <div class="section-title">13 — CORS &amp; Transport Security</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-orange">🌍</div>
+        <h3>CORS Policy (Api/Startup.cs Lines 61–70)</h3>
+      </div>
+      <div class="card-body">
+<pre><span class="cmt">// Policy: "allowSpecificOrigin"</span>
+services.AddCors(options => {
+    options.AddPolicy(<span class="str">"allowSpecificOrigin"</span>, builder => {
+        builder
+            .WithOrigins(alloworiginapis)  <span class="cmt">// whitelist</span>
+            .AllowAnyOrigin()              <span class="cmt">// overrides WithOrigins</span>
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+<span class="cmt">// Allowed origins (appsettings.json)</span>
+<span class="cmt">// "https://msb.azurewebsites.net"</span>
+<span class="cmt">// "https://stai.azurewebsites.net"</span></pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-green">🔒</div>
+        <h3>Transport &amp; Infra Security</h3>
+      </div>
+      <div class="card-body">
+        <ul class="check-list">
+          <li><strong>HTTPS Redirection</strong> — <code>app.UseHttpsRedirection()</code> enforced</li>
+          <li><strong>HSTS</strong> — Enforced in production environments</li>
+          <li><strong>Azure AD TLS</strong> — All Azure AD tokens issued over HTTPS</li>
+          <li><strong>JWT over HTTPS</strong> — Token transmission encrypted in transit</li>
+          <li><strong>Ocelot TLS</strong> — Upstream routes proxied over HTTPS</li>
+          <li><strong>Health checks</strong> — Built-in health check endpoints + UI</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 14. CONFIGURATION FLAGS ─── -->
+  <div class="section-title">14 — Security Configuration Flags</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-yellow">⚙️</div>
+      <h3>Feature Flags (appsettings.json)</h3>
+    </div>
+    <div class="card-body">
+      <table>
+        <thead>
+          <tr><th>Config Key</th><th>Type</th><th>Effect When Enabled</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Api:SelfAuthentication</code></td><td><span class="tag tag-blue">bool</span></td><td>Enables JWT Bearer auth on all endpoints</td></tr>
+          <tr><td><code>Api:api-key</code></td><td><span class="tag tag-yellow">string</span></td><td>Activates API key enforcement in MediatR pipeline</td></tr>
+          <tr><td><code>Api:Behavior:CheckApiPermission</code></td><td><span class="tag tag-blue">bool</span></td><td>Enables per-request ACL permission validation</td></tr>
+          <tr><td><code>UseNetAuthLib</code></td><td><span class="tag tag-blue">bool</span></td><td>Loads auth library services (IUserLoader, IIdentityManager, etc.)</td></tr>
+          <tr><td><code>CacheSettings:UseInMemoryCache</code></td><td><span class="tag tag-blue">bool</span></td><td>L1 permission cache (30 min)</td></tr>
+          <tr><td><code>CacheSettings:UseRedisCache</code></td><td><span class="tag tag-blue">bool</span></td><td>L2 distributed Redis permission cache</td></tr>
+          <tr><td><code>CacheSettings:UseSqlCache</code></td><td><span class="tag tag-blue">bool</span></td><td>L3 SQL Server permission cache</td></tr>
+          <tr><td><code>AzureAd:AllowWebApiToBeAuthorizedByACL</code></td><td><span class="tag tag-blue">bool</span></td><td>ACL-based auth for Azure AD (no roles required)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─── 15. SECURITY FINDINGS ─── -->
+  <div class="section-title">15 — Security Findings &amp; Recommendations</div>
+
+  <div class="finding good">
+    <div class="finding-icon">✅</div>
+    <div>
+      <div class="finding-title">Multi-scheme authentication with smart routing</div>
+      <div class="finding-desc">The <code>MultiAuth</code> policy scheme correctly routes tokens to either Azure AD or DbAuth without exposing scheme selection to clients. The selector reads the JWT issuer field before forwarding — a solid pattern for hybrid auth environments.</div>
+    </div>
+  </div>
+
+  <div class="finding good">
+    <div class="finding-icon">✅</div>
+    <div>
+      <div class="finding-title">Refresh token rotation implemented</div>
+      <div class="finding-desc"><code>RefreshTokenDataAccess.RotateAsync()</code> revokes the previous token before issuing a new one. This prevents refresh token reuse attacks and limits exposure if a token is stolen.</div>
+    </div>
+  </div>
+
+  <div class="finding good">
+    <div class="finding-icon">✅</div>
+    <div>
+      <div class="finding-title">Defense-in-depth via layered pipeline</div>
+      <div class="finding-desc">Security is enforced at three independent layers: Ocelot gateway (route-level), Gateway AuthorizationMiddleware (ACL), and MediatR pipeline behaviors (ApiKey + AuthZ + FieldPermission). No single bypass point compromises all layers.</div>
+    </div>
+  </div>
+
+  <div class="finding good">
+    <div class="finding-icon">✅</div>
+    <div>
+      <div class="finding-title">JWT validation parameters fully enabled</div>
+      <div class="finding-desc">All four critical JWT validation flags are enabled: <code>ValidateIssuerSigningKey</code>, <code>ValidateIssuer</code>, <code>ValidateAudience</code>, <code>ValidateLifetime</code>. No weak validation configurations detected.</div>
+    </div>
+  </div>
+
+  <div class="finding good">
+    <div class="finding-icon">✅</div>
+    <div>
+      <div class="finding-title">Field-level access control with dual-phase enforcement</div>
+      <div class="finding-desc">The <code>FieldPermissionBehaviour</code> provides fine-grained property-level security. Edit permissions are checked pre-handler; view masking is applied post-handler. The <code>throwError</code> flag gives per-field control over whether denial is explicit or silent, covering both visible-field and hidden-field scenarios correctly.</div>
+    </div>
+  </div>
+
+  <div class="finding good">
+    <div class="finding-icon">✅</div>
+    <div>
+      <div class="finding-title">Field permissions covered by integration test suite</div>
+      <div class="finding-desc"><code>PolicyTotalPremiumFieldPermissionTest.cs</code> covers all eight enforcement paths (GET/CREATE/UPDATE × view-granted / view-denied / edit-granted / edit-denied combinations), providing confidence that permission logic is correct across all scenarios.</div>
+    </div>
+  </div>
+
+  <div class="finding info">
+    <div class="finding-icon">ℹ️</div>
+    <div>
+      <div class="finding-title">CORS — AllowAnyOrigin() is present alongside WithOrigins() whitelist</div>
+      <div class="finding-desc">In <code>Api/Startup.cs</code> the CORS policy calls <code>.WithOrigins(alloworiginapis)</code> and then <code>.AllowAnyOrigin()</code>. In production, removing <code>.AllowAnyOrigin()</code> tightens the origin restriction to the configured whitelist (<code>msb.azurewebsites.net</code>, <code>stai.azurewebsites.net</code>).</div>
+    </div>
+  </div>
+
+  <div class="finding info">
+    <div class="finding-icon">ℹ️</div>
+    <div>
+      <div class="finding-title">JWT signing key in appsettings.json — move to secrets management for production</div>
+      <div class="finding-desc">The HMAC-SHA256 signing key is currently in <code>appsettings.json</code>. For production deployments, loading it from Azure Key Vault or environment variables (rather than source-controlled config) is the recommended hardening step.</div>
+    </div>
+  </div>
+
+  <div class="finding info">
+    <div class="finding-icon">ℹ️</div>
+    <div>
+      <div class="finding-title">Rate limiting — Ocelot supports it natively if needed</div>
+      <div class="finding-desc">No rate limiting middleware was observed at gateway or microservice level. Ocelot has built-in rate limiting configuration via <code>RateLimitOptions</code> in <code>ocelot.json</code>, and ASP.NET Core 7+ provides <code>Microsoft.AspNetCore.RateLimiting</code> as an in-process option if login/refresh endpoints require protection.</div>
+    </div>
+  </div>
+
+  <div class="finding info">
+    <div class="finding-icon">ℹ️</div>
+    <div>
+      <div class="finding-title">API key comparison — consider constant-time equality for hardened environments</div>
+      <div class="finding-desc"><code>apiKey.Equals(extractedApiKey)</code> in <code>ApiKeyAuthBehaviour.cs</code> is not constant-time. <code>CryptographicOperations.FixedTimeEquals()</code> is available in .NET for environments where timing-side-channel hardening is required.</div>
+    </div>
+  </div>
+
+  <div class="finding info">
+    <div class="finding-icon">ℹ️</div>
+    <div>
+      <div class="finding-title">Azure AD ACL mode — verify app registration access controls</div>
+      <div class="finding-desc"><code>AllowWebApiToBeAuthorizedByACL: true</code> means any valid Azure AD token can call the API without specific app role assignments. Ensure the Entra ID app registration has appropriate access controls configured for the intended audience.</div>
+    </div>
+  </div>
+
+  <div class="finding info">
+    <div class="finding-icon">ℹ️</div>
+    <div>
+      <div class="finding-title">Azure AD ClientId and TenantId in appsettings</div>
+      <div class="finding-desc">The Azure AD <code>ClientId</code> (<code>0f9846e5-...</code>) and <code>TenantId</code> are in <code>appsettings.json</code>. While these are not secrets, environment-specific config (e.g., per-slot app settings in Azure App Service) avoids exposing tenant topology in source control.</div>
+    </div>
+  </div>
+
+  <!-- ─── 16. KEY FILES ─── -->
+  <div class="section-title">16 — Key Files Reference</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-blue">📁</div>
+        <h3>Authentication Core</h3>
+      </div>
+      <div class="card-body">
+        <ul class="check-list">
+          <li><strong>Infrastructure/Identity/JwtService.cs</strong> — DB JWT generation (HMAC-SHA256)</li>
+          <li><strong>Infrastructure/Identity/IdentityService.cs</strong> — Identity + ACL operations</li>
+          <li><strong>Infrastructure/DependencyInjection.cs</strong> — MultiAuth scheme + policy setup (L62–135)</li>
+          <li><strong>Auth/netauthlib/NetAuthUser.cs</strong> — Auth library user/role/permission impl</li>
+          <li><strong>Auth/netauthlib/INetAuthUser.cs</strong> — Core auth interface</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-purple">📁</div>
+        <h3>Authorization &amp; Gateway</h3>
+      </div>
+      <div class="card-body">
+        <ul class="check-list">
+          <li><strong>Application/Common/Behaviours/ApiKeyAuthBehaviour.cs</strong> — API key pipeline</li>
+          <li><strong>Application/Common/Behaviours/AuthorizationBehaviour.cs</strong> — Request-level ACL</li>
+          <li><strong>ApiGateway/Gateway/Startup.cs</strong> — Gateway auth config (L32–95)</li>
+          <li><strong>ApiGateway/Gateway/ocelot.json</strong> — Route-level auth rules</li>
+          <li><strong>ApiGateway/Gateway/Middleware/AddClaimsToRequestMiddleware.cs</strong> — JWT → header mapping</li>
+          <li><strong>ApiGateway/Gateway/Middleware/AuthorizationMiddleware.cs</strong> — Gateway ACL check</li>
+          <li><strong>ApiGateway/Gateway/Services/Authorization/AuthorizationService.cs</strong> — Cached permission checks</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-teal">📁</div>
+        <h3>Field Permission System</h3>
+      </div>
+      <div class="card-body">
+        <ul class="check-list">
+          <li><strong>Domain/Common/FieldPermissionAttribute.cs</strong> — Attribute definition (<code>view</code>, <code>edit</code>, <code>throwError</code>)</li>
+          <li><strong>Application/Common/Behaviours/FieldPermissionBehaviour.cs</strong> — MediatR pipeline behavior (pre/post handler)</li>
+          <li><strong>Application/Common/Interfaces/IFieldPermissionService.cs</strong> — Service interface</li>
+          <li><strong>Application/Common/Services/FieldPermissionService.cs</strong> — Service implementation</li>
+          <li><strong>Auth/netauthlib/DataAccess/FieldPermissionService.cs</strong> — Auth lib implementation</li>
+          <li><strong>Auth/netauthlib/Interfaces/IFieldPermissionService.cs</strong> — Auth lib interface</li>
+          <li><strong>Domain/Entities/Policy.cs</strong> — Real entity with <code>[FieldPermission]</code> on <code>TotalPremium</code></li>
+          <li><strong>tests/.../Policy/FieldPermission/PolicyTotalPremiumFieldPermissionTest.cs</strong> — Integration tests</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-green">📁</div>
+        <h3>Refresh Token &amp; Session</h3>
+      </div>
+      <div class="card-body">
+        <ul class="check-list">
+          <li><strong>Domain/Common/RefreshToken.cs</strong> — Token model (7d expiry)</li>
+          <li><strong>Domain/Entities/TokenModel.cs</strong> — Access + refresh response DTO</li>
+          <li><strong>Infrastructure/DataAccess/RefreshTokenDataAccess.cs</strong> — Rotation, revoke, all-revoke</li>
+          <li><strong>Application/Users/Queries/RefreshAndRevoke/RefreshTokenRequest.cs</strong> — Refresh endpoint handler</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-yellow">📁</div>
+        <h3>Domain &amp; Config</h3>
+      </div>
+      <div class="card-body">
+        <ul class="check-list">
+          <li><strong>Domain/Enums/AuthType.cs</strong> — <code>azure_entra</code> | <code>db</code></li>
+          <li><strong>Api/Services/CurrentUserService.cs</strong> — Reads all auth headers; exposes <code>HasPermissionAsync()</code></li>
+          <li><strong>appsettings.json</strong> — Jwt, AzureAd, Api, CacheSettings blocks</li>
+          <li><strong>Auth/netauthlib/NetAuthLibServices.cs</strong> — DI registration for auth lib</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════ FOOTER ══════════════════════════════════════════════ -->
+<footer>
+  <div>api-design-10 · Authentication &amp; Security Analysis</div>
+  <div>Updated June 2026 · .NET 10 / ASP.NET Core / Ocelot / Microsoft.Identity.Web</div>
+</footer>
+
+</body>
+</html>

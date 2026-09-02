@@ -1,0 +1,44 @@
+[
+  {
+    "WorkflowName": "Policy",
+    "Rules": [
+      {
+        "RuleName": "InsuredNameIsRequired",
+        "SuccessEvent": "Insured Name is valid",
+        "ErrorMessage": "Insured Name is required.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.InsuredName != null && input1.InsuredName.Trim() != \"\""
+      },
+      {
+        "RuleName": "ExpirationAfterEffective",
+        "SuccessEvent": "Dates are valid",
+        "ErrorMessage": "Expiration Date must be after Effective Date.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.ExpirationDate > input1.EffectiveDate"
+      },
+      {
+        "RuleName": "PolicyTypeIsValid",
+        "SuccessEvent": "Policy Type is valid",
+        "ErrorMessage": "Policy Type must be Marine, Cargo, or Aviation.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.PolicyType == \"Marine\" || input1.PolicyType == \"Cargo\" || input1.PolicyType == \"Aviation\""
+      }
+    ]
+  },
+  {
+    "WorkflowName": "PolicyDelete",
+    "Rules": [
+      {
+        "RuleName": "PolicyIsEligibleForDeletion",
+        "SuccessEvent": "Policy is eligible for deletion",
+        "ErrorMessage": "A Cancelled policy cannot be deleted.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.StatusCode == null || input1.StatusCode.ToLower() != \"cancelled\""
+      }
+    ]
+  }
+]

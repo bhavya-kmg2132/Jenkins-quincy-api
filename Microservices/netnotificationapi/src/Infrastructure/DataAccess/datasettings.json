@@ -1,0 +1,9 @@
+﻿{
+  "SqlServerConnectionString": "",
+  "NoSqlDBConnectionString": "",
+  "MongoDBConnection": {
+    "Server": "http://localhost:8090/movies/",
+    "requiresAuthentication": "true",
+    "Password": "abcd"
+  }
+}

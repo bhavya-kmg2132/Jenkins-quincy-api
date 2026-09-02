@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+	<sql name="RefreshToken.Create">
+		<![CDATA[
+            INSERT INTO RefreshToken
+            (
+                UserId,
+                Token,
+                ExpiryDate,
+                IsRevoked,
+                CreatedDate
+            )
+            VALUES
+            (
+                @UserId,
+                @Token,
+                @ExpiryDate,
+                @IsRevoked,
+                @CreatedDate
+            )
+        ]]>
+	</sql>
+
+	<sql name="RefreshToken.GetByToken">
+		<![CDATA[
+            SELECT
+                Id,
+                UserId,
+                Token,
+                ExpiryDate,
+                IsRevoked,
+                CreatedDate,
+                RevokedDate
+            FROM RefreshToken
+            WHERE Token = @Token
+        ]]>
+	</sql>
+
+	<sql name="RefreshToken.Revoke">
+		<![CDATA[
+            UPDATE RefreshToken
+            SET
+                IsRevoked = 1,
+                RevokedDate = @Now
+            WHERE Token = @Token
+        ]]>
+	</sql>
+
+	<sql name="RefreshToken.RevokeAll">
+		<![CDATA[
+            UPDATE RefreshToken
+            SET
+                IsRevoked = 1,
+                RevokedDate = @Now
+            WHERE UserId = @UserId
+              AND IsRevoked = 0
+        ]]>
+	</sql>
+
+	<sql name="RefreshToken.RevokeById">
+		<![CDATA[
+            UPDATE RefreshToken
+            SET
+                IsRevoked = 1,
+                RevokedDate = @Now
+            WHERE Id = @Id
+        ]]>
+	</sql>
+
+	<sql name="RefreshToken.RotateRevoke">
+		<![CDATA[
+           UPDATE 
+		   RefreshToken
+		   SET IsRevoked = 1,
+		   RevokedDate = @Now 
+		   WHERE Id = @Id
+        ]]>
+	</sql>
+	</sql-set>
+

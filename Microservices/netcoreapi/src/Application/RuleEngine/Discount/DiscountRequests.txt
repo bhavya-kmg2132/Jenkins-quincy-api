@@ -1,0 +1,318 @@
+JSON Payload - 
+
+######################################################################################################
+
+GiveDiscount5 - 
+
+{
+  "BasicInfo": {
+    "Name": "SampleUser",
+    "Email": "sampleuser@example.com",
+    "CreditHistory": "good",
+    "Country": "india",
+    "LoyaltyFactor": 1,
+    "TotalPurchasesToDate": 6000
+  },
+  "OrderInfo": {
+    "TotalOrders": 3,
+    "RecurringItems": 1
+  },
+  "TelemetryInfo": {
+    "NoOfVisitsPerMonth": 5,
+    "PercentageOfBuyingToVisit": 20
+  }
+}
+
+######################################################################################################
+
+GiveDiscount10 - 
+
+{
+  "BasicInfo": {
+    "name": "hello",
+    "email": "abcy@xyz.com",
+    "creditHistory": "good",
+    "country": "india",
+    "loyaltyFactor": 1,
+    "totalPurchasesToDate": 10000
+  },
+  "OrderInfo": {
+    "totalOrders": 5,
+    "recurringItems": 2
+  },
+  "TelemetryInfo": {
+    "noOfVisitsPerMonth": 10,
+    "percentageOfBuyingToVisit": 15
+  }
+}
+
+######################################################################################################
+
+GiveDiscount20 - 
+This rule requires:
+• input1.country is "india"
+• input1.loyaltyFactor equals 3
+• input1.totalPurchasesToDate is at least 10000
+• input2.totalOrders is greater than 2
+• input3.noOfVisitsPerMonth is greater than 2
+
+{
+  "BasicInfo": {
+    "name": "hello",
+    "email": "abcy@xyz.com",
+    "creditHistory": "good",
+    "country": "india",
+    "loyaltyFactor": 3,
+    "totalPurchasesToDate": 15000
+  },
+  "OrderInfo": {
+    "totalOrders": 5,
+    "recurringItems": 2
+  },
+  "TelemetryInfo": {
+    "noOfVisitsPerMonth": 10,
+    "percentageOfBuyingToVisit": 15
+  }
+}
+
+######################################################################################################
+
+GiveDiscount25 - 
+This rule requires:
+• input1.country is not "india" (for example, "usa")
+• input1.loyaltyFactor is at least 2
+• input1.totalPurchasesToDate is at least 10000
+• input2.totalOrders is greater than 2
+• input3.noOfVisitsPerMonth is greater than 5
+
+{
+  "BasicInfo": {
+    "name": "hello",
+    "email": "abcy@xyz.com",
+    "creditHistory": "good",
+    "country": "usa",
+    "loyaltyFactor": 2,
+    "totalPurchasesToDate": 12000
+  },
+  "OrderInfo": {
+    "totalOrders": 5,
+    "recurringItems": 2
+  },
+  "TelemetryInfo": {
+    "noOfVisitsPerMonth": 10,
+    "percentageOfBuyingToVisit": 15
+  }
+}
+
+######################################################################################################
+
+GiveDiscount30 - 
+This rule requires:
+• input1.loyaltyFactor is greater than 3
+• input1.totalPurchasesToDate is between 50000 and 100000
+• input2.totalOrders is greater than 5
+• input3.noOfVisitsPerMonth is greater than 15
+
+{
+  "BasicInfo": {
+    "name": "hello",
+    "email": "abcy@xyz.com",
+    "creditHistory": "good",
+    "country": "india",
+    "loyaltyFactor": 4,
+    "totalPurchasesToDate": 60000
+  },
+  "OrderInfo": {
+    "totalOrders": 6,
+    "recurringItems": 2
+  },
+  "TelemetryInfo": {
+    "noOfVisitsPerMonth": 20,
+    "percentageOfBuyingToVisit": 15
+  }
+}
+
+######################################################################################################
+
+GiveDiscount30NestedOrExample - 
+This rule uses an OrElse operator, so it succeeds if either of its nested conditions is true. For example, you can satisfy both: 
+• "IsLoyalAndHasGoodSpend": input1.loyaltyFactor > 3 and totalPurchasesToDate is between 50000 and 100000
+• "OrHasHighNumberOfTotalOrders": input2.totalOrders > 15
+
+{
+  "BasicInfo": {
+    "name": "hello",
+    "email": "abcy@xyz.com",
+    "creditHistory": "good",
+    "country": "india",
+    "loyaltyFactor": 5,
+    "totalPurchasesToDate": 80000
+  },
+  "OrderInfo": {
+    "totalOrders": 16,
+    "recurringItems": 2
+  },
+  "TelemetryInfo": {
+    "noOfVisitsPerMonth": 10,
+    "percentageOfBuyingToVisit": 15
+  }
+}
+
+######################################################################################################
+
+GiveDiscount35NestedAndExample - 
+This rule uses an AndAlso operator, so all nested conditions must be true:
+• "IsLoyal": input1.loyaltyFactor > 3
+• "AndHasTotalPurchased100000": input1.totalPurchasesToDate is at least 100000
+• "AndOtherConditions": input2.totalOrders is greater than 15 and input3.noOfVisitsPerMonth is greater than 25
+
+{
+  "BasicInfo": {
+    "name": "hello",
+    "email": "abcy@xyz.com",
+    "creditHistory": "good",
+    "country": "india",
+    "loyaltyFactor": 4,
+    "totalPurchasesToDate": 110000
+  },
+  "OrderInfo": {
+    "totalOrders": 16,
+    "recurringItems": 2
+  },
+  "TelemetryInfo": {
+    "noOfVisitsPerMonth": 30,
+    "percentageOfBuyingToVisit": 15
+  }
+}
+
+######################################################################################################
+
+SpecialDiscount - 
+
+{
+  "BasicInfo": {
+    "Name": "Chaitanya",
+    "Email": "chaitanya@spectraltech.ai",
+    "CreditHistory": "excellent",
+    "Country": "Indai",
+    "LoyaltyFactor": 5,
+    "TotalPurchasesToDate": 2500000
+  },
+  "OrderInfo": {
+    "TotalOrders": 50,
+    "RecurringItems": 2
+  },
+  "TelemetryInfo": {
+    "NoOfVisitsPerMonth": 40,
+    "PercentageOfBuyingToVisit": 100
+  }
+}
+
+######################################################################################################
+
+No Discount - 
+
+{
+  "BasicInfo": {
+    "Name": "Test",
+    "Email": "test@test.com",
+    "CreditHistory": "average",
+    "Country": "usa",
+    "LoyaltyFactor": 1,
+    "TotalPurchasesToDate": 3000
+  },
+  "OrderInfo": {
+    "TotalOrders": 1,
+    "RecurringItems": 0
+  },
+  "TelemetryInfo": {
+    "NoOfVisitsPerMonth": 1,
+    "PercentageOfBuyingToVisit": 10
+  }
+}
+
+######################################################################################################
+
+GiveDiscount40 - 
+
+{
+  "BasicInfo": {
+    "Name": "TestUser",
+    "Email": "testuser@example.com",
+    "CreditHistory": "good",
+    "Country": "india",
+    "LoyaltyFactor": 4,
+    "TotalPurchasesToDate": 250000
+  },
+  "OrderInfo": {
+    "TotalOrders": 11,
+    "RecurringItems": 2
+  },
+  "TelemetryInfo": {
+    "NoOfVisitsPerMonth": 35,
+    "PercentageOfBuyingToVisit": 20
+  }
+}
+
+######################################################################################################
+
+For multiple workflow endpoint - 
+
+[
+  {
+    "BasicInfo": {
+      "Name": "UserFor20",
+      "Email": "user20@example.com",
+      "CreditHistory": "good",
+      "Country": "india",
+      "LoyaltyFactor": 3,
+      "TotalPurchasesToDate": 15000
+    },
+    "OrderInfo": {
+      "TotalOrders": 5,
+      "RecurringItems": 2
+    },
+    "TelemetryInfo": {
+      "NoOfVisitsPerMonth": 10,
+      "PercentageOfBuyingToVisit": 20
+    }
+  },
+  {
+    "BasicInfo": {
+      "Name": "UserForNested",
+      "Email": "usernested@example.com",
+      "CreditHistory": "good",
+      "Country": "india",
+      "LoyaltyFactor": 2,
+      "TotalPurchasesToDate": 4000
+    },
+    "OrderInfo": {
+      "TotalOrders": 16,
+      "RecurringItems": 1
+    },
+    "TelemetryInfo": {
+      "NoOfVisitsPerMonth": 3,
+      "PercentageOfBuyingToVisit": 20
+    }
+  },
+  {
+    "BasicInfo": {
+      "Name": "UserForNone",
+      "Email": "usernone@example.com",
+      "CreditHistory": "average",
+      "Country": "usa",
+      "LoyaltyFactor": 1,
+      "TotalPurchasesToDate": 3000
+    },
+    "OrderInfo": {
+      "TotalOrders": 1,
+      "RecurringItems": 0
+    },
+    "TelemetryInfo": {
+      "NoOfVisitsPerMonth": 1,
+      "PercentageOfBuyingToVisit": 10
+    }
+  }
+]
+
+######################################################################################################

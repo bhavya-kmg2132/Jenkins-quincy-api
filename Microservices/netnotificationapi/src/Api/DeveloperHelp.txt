@@ -1,0 +1,135 @@
+﻿Tenant Id:  2d69b9dd-2505-4e68-92e8-65b8798df79b
+Client Id: ce996f11-8406-49fc-978e-06db61125cbe
+Client Secret: 4e34a5ee-7512-4ac0-ab08-f18512478daa
+Application ID URO: api://ce996f11-8406-49fc-978e-06db61125cbe
+Client Secert Value: uGU7Q~L4eppkpGGwfkXSLbOVU6kssIgCxDBqi
+&scope=api://ce996f11-8406-49fc-978e-06db61125cbe/.default      //Daemon App
+&scope=api://ce996f11-8406-49fc-978e-06db61125cbe/access_as_user  //Client SPA App
+
+Azure AD User has two unique properties: Object Id and Email
+
+// https://yourazurecoach.com/2020/12/10/api-security-for-dummies-authentication-with-azure-ad/
+https://yourazurecoach.com/2020/12/10/api-security-for-dummies-authorization-with-application-roles/
+
+// https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-flows-app-scenarios
+
+==============================================================================================================================
+
+// Implicit Grant Flow for OIDC using Azure AD
+// https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-spa-overview
+
+
+https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize?
+client_id=ce996f11-8406-49fc-978e-06db61125cbe
+&response_type=id_token
+&redirect_uri=http%3A%2F%2Flocalhost%2Fmyapp%2F
+&scope=openid+profile+email
+&response_mode=fragment
+&state=12345
+&nonce=678910
+
+OR
+
+https://login.microsoftonline.com/2d69b9dd-2505-4e68-92e8-65b8798df79b/oauth2/v2.0/authorize?
+client_id=ce996f11-8406-49fc-978e-06db61125cbe
+&response_type=id_token
+&redirect_uri=http://localhost/myapp/
+&scope=openid+profile+email
+&response_mode=fragment
+&state=12345
+&nonce=678910
+
+OR
+
+
+POST for Scopes:
+
+https://login.microsoftonline.com/2d69b9dd-2505-4e68-92e8-65b8798df79b/oauth2/v2.0/token?
+client_id=ce996f11-8406-49fc-978e-06db61125cbe
+client_secret=4e34a5ee-7512-4ac0-ab08-f18512478daa
+&response_type=id_token
+&redirect_uri=http%3A%2F%2Flocalhost%2Fmyapp%2F
+&scope=api://ce996f11-8406-49fc-978e-06db61125cbe/.default
+&response_mode=fragment
+&state=12345
+&nonce=678910
+
+OR
+
+To test signing in using the implicit flow, click 
+https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=ce996f11-8406-49fc-978e-06db61125cbe&response_type=id_token&redirect_uri=http%3A%2F%2Flocalhost%2Fmyapp%2F&scope=openid&response_mode=fragment&state=12345&nonce=678910
+After signing in, your browser should be redirected to https://localhost/myapp/ with an id_token in the address bar.
+
+==============================================================================================================================
+
+// V2 OAuth2 code flow for Azure AD
+//https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow
+
+https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize?
+client_id=ce996f11-8406-49fc-978e-06db61125cbe
+&response_type=code
+&redirect_uri=http%3A%2F%2Flocalhost%2Fmyapp%2F
+&response_mode=query
+&scope=https%3A%2F%2Fgraph.microsoft.com%2Fmail.read%20api%3A%2F%2F
+&state=12345
+&code_challenge=YTFjNjI1OWYzMzA3MTI4ZDY2Njg5M2RkNmVjNDE5YmEyZGRhOGYyM2IzNjdmZWFhMTQ1ODg3NDcxY2Nl
+&code_challenge_method=S256
+
+OR
+
+Step 1:
+Click the link below to execute this request! After signing in, your browser should be redirected to http://localhost/myapp/ with a 'code' in the address bar. Then use this 'code' to get 'access_token'  
+https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=ce996f11-8406-49fc-978e-06db61125cbe&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%2Fmyapp%2F&response_mode=query&scope=openid%20offline_access%20https%3A%2F%2Fgraph.microsoft.com%2Fmail.read&state=12345
+
+Sample successful response:
+GET http://localhost?
+code=AwABAAAAvPM1KaPlrEqdFSBzjqfTGBCmLdgfSTLEMPGYuNHSUYBrq...
+&state=12345
+
+Step 2:
+
+The authorization_code that the app requested. The app can use the authorization code to request an access token for the target resource. 
+Authorization_codes are short lived, typically they expire after about 10 minutes.
+Now that you've acquired an authorization_code and have been granted permission by the user, you can redeem the code for an access_token to the desired resource. 
+Do this by sending a POST request to the /token endpoint:
+
+// Line breaks for legibility only
+
+POST /{tenant}/oauth2/v2.0/token HTTP/1.1
+Host: https://login.microsoftonline.com
+Content-Type: application/x-www-form-urlencoded
+
+client_id=ce996f11-8406-49fc-978e-06db61125cbe
+&scope=https%3A%2F%2Fgraph.microsoft.com%2Fmail.read
+&code=OAAABAAAAiL9Kn2Z27UubvWFPbm0gLWQJVzCTE9UkP3pSx1aXxUjq3n8b2JRLk4OxVXr...
+&redirect_uri=http%3A%2F%2Flocalhost%2Fmyapp%2F
+&grant_type=authorization_code
+&code_verifier=ThisIsntRandomButItNeedsToBe43CharactersLong 
+&client_secret=JqQX2PNo9bpM0uEihUPzyrh    // NOTE: Only required for web apps. This secret needs to be URL-Encoded.
+
+
+*******************************************************************
+
+https://login.microsoftonline.com/common/oauth2/v2.0/token client_id, 
+scope and redirect_uri params can be sent as query params. where as grant_type, code and client_secret should sent in body params.
+
+*******************************************************************
+
+Successfull Response:
+{
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik5HVEZ2ZEstZnl0aEV1Q...",
+    "token_type": "Bearer",
+    "expires_in": 3599,
+    "scope": "https%3A%2F%2Fgraph.microsoft.com%2Fmail.read",
+    "refresh_token": "AwABAAAAvPM1KaPlrEqdFSBzjqfTGAMxZGUTdM0t4B4...",
+    "id_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJhdWQiOiIyZDRkMTFhMi1mODE0LTQ2YTctOD...",
+}
+==============================================================================================================================
+
+
+ROLES
+// If you set AllowWebApiToBeAuthorizedByACL to true, this is your responsibility to ensure the ACL mechanism.
+
+https://docs.microsoft.com/en-us/azure/active-directory/develop/scenario-protected-web-api-verification-scope-app-roles?tabs=aspnetcore
+
+==============================================================================================================================

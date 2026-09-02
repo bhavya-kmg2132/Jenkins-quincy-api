@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+
+	<sql name="CustomFields.GetCustomFieldByEntity">
+		<![CDATA[
+      SELECT CustomFields
+      FROM ReferenceCustomFields
+      WHERE TableName = @TableName
+    ]]>
+	</sql>
+
+	<sql name="CustomFields.GetEntityNameFromReferenceCustomField">
+		<![CDATA[
+      SELECT TableName
+      FROM ReferenceCustomFields
+    ]]>
+	</sql>
+
+	<sql name="CustomFields.AddCustomFields">
+		<![CDATA[
+      UPDATE ReferenceCustomFields
+      SET CustomFields = @CustomFields
+      WHERE TableName = @Entity
+    ]]>
+	</sql>
+
+	<sql name="CustomFields.DeleteCustomFieldFromEntity">
+		<![CDATA[
+      UPDATE ReferenceCustomFields
+      SET CustomFields = @CustomFields
+      WHERE TableName = @Entity
+    ]]>
+	</sql>
+
+</sql-set>

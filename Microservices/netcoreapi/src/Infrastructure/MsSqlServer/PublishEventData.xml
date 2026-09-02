@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+	<sql name="PublishEventData.Add">
+		<![CDATA[
+         INSERT INTO PublishEventData 
+		 (
+		 Id,
+		 EventName,
+		 OperationType,
+		 OperationDateTimeUtc,
+		 ApiName,
+		 CollectionName,
+		 [Data]
+		 )
+		 OUTPUT
+		 Inserted.Id
+		 VALUES    
+		 (
+		 @Id,
+		 @EventName,
+		 @OperationType,
+		 @OperationDateTimeUtc, 
+		 @ApiName, 
+		 @CollectionName,
+		 @Data
+		 ); 
+		]]>
+	</sql>
+</sql-set>

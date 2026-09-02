@@ -1,0 +1,15 @@
+[
+  {
+    "WorkflowName": "AcmeProduct",
+    "Rules": [
+      {
+        "RuleName": "NameMustBeUnique",
+        "SuccessEvent": "Name is unique",
+        "ErrorMessage": "Name already exists.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.Name != null && input2 != null && !input2.Any(x => x == input1.Name)"
+      }
+    ]
+  }
+]

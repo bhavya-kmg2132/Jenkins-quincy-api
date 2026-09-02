@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+	<sql name="TransactionAction.GetTransactionActionMatrix">
+		<![CDATA[SELECT
+    "TransactionCode",
+    "TransactionCodeName",
+    "Status",
+    "ActionName",
+    "ActionDisplayName",
+    "DisplayOrder"
+FROM
+    "TransactionActionMatrix"
+WHERE
+    "IsActive" = true
+ORDER BY
+    "TransactionCode",
+    "Status",
+    "DisplayOrder";
+]]>
+	</sql>
+</sql-set>

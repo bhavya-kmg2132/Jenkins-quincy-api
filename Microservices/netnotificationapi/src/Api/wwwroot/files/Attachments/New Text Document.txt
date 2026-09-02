@@ -1,0 +1,13 @@
+/flow/Clone_Closed_Case
+/flow/Create_Child_Campaign
+                    BsonDocument.Parse(@"{ $project: { _id: 0, Opportunity: { $mergeObjects: 
+['$$ROOT',
+    { Account: 
+      
+        { Contacts: '$account.contacts' } 
+    } ,
+{ lead: '$lead'} ,
+] 
+} } }")
+
+};

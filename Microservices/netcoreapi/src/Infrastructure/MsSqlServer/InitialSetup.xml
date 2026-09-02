@@ -1,0 +1,841 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+
+	<sql name="InitialSetup.AppUser">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AppUser]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[AppUser] (
+        [Id]              VARCHAR(100)  NOT NULL,
+        [UserName]        VARCHAR(200)  NOT NULL,
+        [PasswordHash]    VARCHAR(500)  NOT NULL,
+        [CreatedDateTime] DATETIME2(7)  DEFAULT GETUTCDATE(),
+        [UpdatedDateTime] DATETIME2(7)  DEFAULT GETUTCDATE(),
+        CONSTRAINT [PK_AppUser]              PRIMARY KEY ([Id]),
+        CONSTRAINT [UQ_AppUser_UserName_key] UNIQUE ([UserName])
+    );
+END
+
+EXEC('
+    IF NOT EXISTS (SELECT 1 FROM [dbo].[AppUser] WHERE [UserName] = ''john_doe'')
+        INSERT INTO [dbo].[AppUser] ([Id],[UserName],[PasswordHash],[CreatedDateTime],[UpdatedDateTime])
+        VALUES (CONVERT(VARCHAR(100),NEWID()),''john_doe'',''hashed_password_123'',GETUTCDATE(),GETUTCDATE());
+
+    IF NOT EXISTS (SELECT 1 FROM [dbo].[AppUser] WHERE [UserName] = ''jane_smith'')
+        INSERT INTO [dbo].[AppUser] ([Id],[UserName],[PasswordHash],[CreatedDateTime],[UpdatedDateTime])
+        VALUES (CONVERT(VARCHAR(100),NEWID()),''jane_smith'',''hashed_password_456'',GETUTCDATE(),GETUTCDATE());
+')
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddAuthReferenceLookup">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AuthReferenceLookup]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[AuthReferenceLookup] (
+        [Id]          VARCHAR(100) NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [Name]        VARCHAR(100) NULL,
+        [DisplayName] VARCHAR(100) NULL,
+        [Type]        VARCHAR(100) NULL,
+        CONSTRAINT [PK_AuthReferenceLookup]           PRIMARY KEY ([Id]),
+        CONSTRAINT [UQ_AuthReferenceLookup_Name_Type] UNIQUE ([Name], [Type])
+    );
+END
+
+EXEC('
+    INSERT INTO [dbo].[AuthReferenceLookup] ([Name],[DisplayName],[Type])
+    SELECT v.[Name], v.[DisplayName], v.[Type]
+    FROM (VALUES
+        (''TodoItemModule'',      ''TodoItem Module'',      ''Module''),
+        (''MasterUpdate'',        ''MasterUpdate'',         ''PermissionSet''),
+        (''AcmeProductModule'',   ''AcmeProduct Module'',   ''Module''),
+        (''SystemDesignModule'',  ''SystemDesign Module'',  ''Module''),
+        (''SystemManagerModule'', ''SystemManager Module'', ''Module''),
+        (''OtherModule'',         ''Other Module'',         ''Module''),
+        (''PermissionView'',      ''PermissionView'',       ''PermissionSet''),
+        (''UserRoleUpdate'',      ''UserRoleUpdate'',       ''PermissionSet''),
+        (''TodoListView'',        ''TodoListView'',         ''PermissionSet''),
+        (''SystemDesign'',        ''SystemDesign'',         ''PermissionSet''),
+        (''Field'',               ''Field'',                ''UIPermissionType''),
+        (''TodoListModule'',      ''TodoList Module'',      ''Module''),
+        (''RoleView'',            ''RoleView'',             ''PermissionSet''),
+        (''AcmeProductUpdate'',   ''AcmeProductUpdate'',    ''PermissionSet''),
+        (''SystemManager'',       ''SystemManager'',        ''PermissionSet''),
+        (''UserCreate'',          ''UserCreate'',           ''PermissionSet''),
+        (''AcmeProductCreate'',   ''AcmeProductCreate'',    ''PermissionSet''),
+        (''AcmeOrderView'',       ''AcmeOrderView'',        ''PermissionSet''),
+        (''PermissionModule'',    ''Permission Module'',    ''Module''),
+        (''https://netauthapi.azurewebsites.net/'',''netauthapi-timetrack'',''InternalApiUrl''),
+        (''UserUpdate'',          ''UserUpdate'',           ''PermissionSet''),
+        (''Other'',               ''Other'',                ''PermissionSet''),
+        (''UserModule'',          ''User Module'',          ''Module''),
+        (''Screen'',              ''Screen'',               ''UIPermissionType''),
+        (''AcmeProductView'',     ''AcmeProductView'',      ''PermissionSet''),
+        (''TodoItemCreate'',      ''TodoItemCreate'',       ''PermissionSet''),
+        (''RoleModule'',          ''Role Module'',          ''Module''),
+        (''MasterModule'',        ''Master Module'',        ''Module''),
+        (''TodoItemUpdate'',      ''TodoItemUpdate'',       ''PermissionSet''),
+        (''PermissionUpdate'',    ''PermissionUpdate'',     ''PermissionSet''),
+        (''MasterView'',          ''MasterView'',           ''PermissionSet''),
+        (''TodoListCreate'',      ''TodoListCreate'',       ''PermissionSet''),
+        (''MasterCreate'',        ''MasterCreate'',         ''PermissionSet''),
+        (''AcmeOrderCreate'',     ''AcmeOrderCreate'',      ''PermissionSet''),
+        (''UserView'',            ''UserView'',             ''PermissionSet''),
+        (''AcmeOrderUpdate'',     ''AcmeOrderUpdate'',      ''PermissionSet''),
+        (''Menu'',                ''Menu'',                 ''UIPermissionType''),
+        (''TodoItemView'',        ''TodoItemView'',         ''PermissionSet''),
+        (''AcemOrderModule'',     ''AcmeOrder Module'',     ''Module''),
+        (''TodoListUpdate'',      ''TodoListUpdate'',       ''PermissionSet'')
+    ) AS v([Name],[DisplayName],[Type])
+    WHERE NOT EXISTS (
+        SELECT 1 FROM [dbo].[AuthReferenceLookup] a
+        WHERE a.[Name] = v.[Name] AND a.[Type] = v.[Type]
+    );
+')
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddPermission">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Permission]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[Permission] (
+        [Id]                    VARCHAR(100)  NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [PermissionValue]       VARCHAR(200)  NOT NULL,
+        [PermissionDisplayName] VARCHAR(200)  NOT NULL,
+        [CreatedBy]             VARCHAR(100)  NULL,
+        [CreatedDateTime]       DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]             VARCHAR(100)  NULL,
+        [UpdatedDateTime]       DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]          VARCHAR(100)  NULL,
+        [IsDeleted]             BIT NULL  DEFAULT 0,
+        [IsActive]              BIT NULL  DEFAULT 0,
+        [OwnerId]               VARCHAR(100)  NULL,
+        [IsApproved]            BIT NULL  DEFAULT 0,
+        [ApproverId]            VARCHAR(100)  NULL,
+        [ApprovedDateTime]      DATETIME  NULL,
+        [IsAuthorized]          BIT NULL  DEFAULT 0,
+        [AuthorizedById]        VARCHAR(100)  NULL,
+        [AuthorizedDateTime]    DATETIME  NULL,
+        [TenantId]              VARCHAR(100)  NULL,
+        [SubTenantId]           VARCHAR(100)  NULL,
+        [SysData]               NVARCHAR(MAX) NULL,
+        [ModuleId]              VARCHAR(100)  NOT NULL,
+        [PermissionSetId]       VARCHAR(100)  NOT NULL,
+        [ApiName]               VARCHAR(200)  NULL,
+		[PermissionType] [varchar](200) NULL,
+        CONSTRAINT [PK_Permission]                PRIMARY KEY ([Id]),
+        CONSTRAINT [UQ_Permission_Value]           UNIQUE ([PermissionValue]),
+        CONSTRAINT [UQ_Permission_DisplayName]     UNIQUE ([PermissionDisplayName]),
+        CONSTRAINT [FK_Permission_ModuleId]        FOREIGN KEY ([ModuleId])        REFERENCES [dbo].[AuthReferenceLookup]([Id]),
+        CONSTRAINT [FK_Permission_PermissionSetId] FOREIGN KEY ([PermissionSetId]) REFERENCES [dbo].[AuthReferenceLookup]([Id])
+    );
+END
+
+EXEC('
+    INSERT INTO [dbo].[Permission] (
+        [PermissionValue],[PermissionDisplayName],[CreatedBy],[CreatedDateTime],
+        [UpdatedBy],[UpdatedDateTime],[IsDeleted],[IsActive],[IsApproved],[IsAuthorized],
+        [ModuleId],[PermissionSetId],[ApiName]
+    )
+    SELECT v.PermissionValue, v.PermissionDisplayName, v.CreatedBy, GETUTCDATE(),
+           NULL, GETUTCDATE(), 0, 1, 0, 1,
+           m.Id, ps.Id, v.ApiName
+    FROM (VALUES
+        (''GetUsersQuery'',           ''Get Users Query'',          NULL,                           ''UserModule'',       ''UserView'',         ''User/GetUsersAsync''),
+        (''GetAcmeProductListQuery'', ''GetAcmeProductListQuery'',  ''john.smith@kmgus.com'',       ''AcmeProductModule'',''AcmeProductView'',  NULL),
+        (''GetUsersByStatusQuery'',   ''GetUsersByStatusQuery'',    ''john.smith@kmgus.com'',       ''UserModule'',       ''UserView'',         NULL),
+        (''GetRolesQuery'',           ''GetRolesQuery'',            ''john.smith@kmgus.com'',       ''RoleModule'',       ''RoleView'',         NULL),
+        (''UpdateAcmeProductRequest'',''UpdateAcmeProductRequest'', ''john.smith@kmgus.com'',       ''AcmeProductModule'',''AcmeProductUpdate'',NULL),
+        (''GetUserActivitiesQuery'',  ''GetUserActivitiesQuery'',   ''john.smith@kmgus.com'',       ''UserModule'',       ''UserView'',         NULL),
+        (''GetAcmeProductByIdQuery'', ''GetAcmeProductByIdQuery'',  ''john.smith@kmgus.com'',       ''AcmeProductModule'',''AcmeProductView'',  NULL),
+        (''DeleteAcmeProductRequest'',''DeleteAcmeProductRequest'', ''john.smith@kmgus.com'',       ''AcmeProductModule'',''AcmeProductUpdate'',NULL),
+        (''CreateAcmeProductRequest'',''CreateAcmeProductRequest'', ''john.smith@kmgus.com'',       ''AcmeProductModule'',''AcmeProductCreate'',NULL),
+        (''GetPermissionsQueryAsync'',''GetPermissionsQueryAsync'',  ''john.smith@kmgus.com'',       ''PermissionModule'', ''PermissionView'',   NULL),
+        (''GetAcmeOrderListQuery'',   ''GetAcmeOrderListQuery'',    ''leeladhar.kumawat@kmgus.com'',''AcemOrderModule'',  ''AcmeOrderView'',    NULL),
+        (''GetAcmeOrderByIdQuery'',   ''GetAcmeOrderByIdQuery'',    ''leeladhar.kumawat@kmgus.com'',''AcemOrderModule'',  ''AcmeOrderView'',    NULL),
+        (''CreateAcmeOrderRequest'',  ''CreateAcmeOrderRequest'',   ''leeladhar.kumawat@kmgus.com'',''AcemOrderModule'',  ''AcmeOrderCreate'',  NULL),
+        (''UpdateAcmeOrderRequest'',  ''UpdateAcmeOrderRequest'',   ''leeladhar.kumawat@kmgus.com'',''AcemOrderModule'',  ''AcmeOrderUpdate'',  NULL),
+        (''DeleteAcmeOrderRequest'',  ''DeleteAcmeOrderRequest'',   ''leeladhar.kumawat@kmgus.com'',''AcemOrderModule'',  ''AcmeOrderUpdate'',  NULL)
+    ) AS v(PermissionValue, PermissionDisplayName, CreatedBy, ModuleName, PermissionSetName, ApiName)
+    JOIN [dbo].[AuthReferenceLookup] m  ON m.[Name] = v.ModuleName       AND m.[Type] = ''Module''
+    JOIN [dbo].[AuthReferenceLookup] ps ON ps.[Name] = v.PermissionSetName AND ps.[Type] = ''PermissionSet''
+    WHERE NOT EXISTS (
+        SELECT 1 FROM [dbo].[Permission] WHERE [PermissionValue] = v.PermissionValue
+    );
+')
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddRole">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Role]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[Role] (
+        [Id]                 VARCHAR(100)  NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [RoleName]           VARCHAR(200)  NULL,
+        [RoleValue]          VARCHAR(200)  NULL,
+        [DisplayName]        VARCHAR(200)  NULL,
+        [AzureRoleGuid]      VARCHAR(100)  NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [CreatedBy]          VARCHAR(100)  NULL,
+        [CreatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]          VARCHAR(100)  NULL,
+        [UpdatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]       VARCHAR(100)  NULL,
+        [IsDeleted]          BIT NULL  DEFAULT 0,
+        [IsActive]           BIT NULL  DEFAULT 0,
+        [OwnerId]            VARCHAR(100)  NULL,
+        [IsApproved]         BIT NULL  DEFAULT 0,
+        [ApproverId]         VARCHAR(100)  NULL,
+        [ApprovedDateTime]   DATETIME  NULL,
+        [IsAuthorized]       BIT NULL  DEFAULT 0,
+        [AuthorizedById]     VARCHAR(100)  NULL,
+        [AuthorizedDateTime] DATETIME  NULL,
+        [TenantId]           VARCHAR(100)  NULL,
+        [SubTenantId]        VARCHAR(100)  NULL,
+        [SysData]            NVARCHAR(MAX) NULL,
+        CONSTRAINT [PK_Role]                   PRIMARY KEY ([Id]),
+        CONSTRAINT [UQ_Role_Display_AzureGuid] UNIQUE ([DisplayName], [AzureRoleGuid])
+    );
+END
+
+EXEC('
+    INSERT INTO [dbo].[Role] (
+        [AzureRoleGuid],[RoleName],[RoleValue],[DisplayName],
+        [IsDeleted],[IsAuthorized],[IsActive],[OwnerId],
+        [CreatedBy],[CreatedDateTime],[UpdatedBy],[UpdatedDateTime],[SysData],[TenantId],[SubTenantId]
+    )
+    SELECT v.AzureRoleGuid, v.RoleName, v.RoleValue, v.DisplayName,
+           v.IsDeleted, v.IsAuthorized, v.IsActive, v.OwnerId,
+           NULL, GETUTCDATE(), NULL, GETUTCDATE(), NULL, NULL, NULL
+    FROM (VALUES
+        (NULL,''System Manager'',''System Manager'',''System Manager'',0,0,1,NULL),
+        (NULL,''Admin'',         ''Admin'',          ''Admin'',         0,0,1,''debe9ba5-92f1-475c-9eaa-d8f86cce89cc''),
+        (NULL,''User'',          ''User'',           ''User'',          0,0,1,NULL),
+        (NULL,''Power'',         ''Power'',          ''Power'',         0,0,1,''3eeca4cb-3e85-4b5c-9147-ce6e5f0868f6'')
+    ) AS v(AzureRoleGuid, RoleName, RoleValue, DisplayName, IsDeleted, IsAuthorized, IsActive, OwnerId)
+    WHERE NOT EXISTS (
+        SELECT 1 FROM [dbo].[Role] WHERE [DisplayName] = v.DisplayName
+    );
+')
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddPermissionDenied">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PermissionDenied]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[PermissionDenied] (
+        [Id]                 VARCHAR(100)  NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [UserId]             VARCHAR(100)  NOT NULL,
+        [PermissionId]       VARCHAR(100)  NOT NULL,
+        [CreatedBy]          VARCHAR(100)  NULL,
+        [CreatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]          VARCHAR(100)  NULL,
+        [UpdatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]       VARCHAR(100)  NULL,
+        [IsDeleted]          BIT NULL  DEFAULT 0,
+        [IsActive]           BIT NULL  DEFAULT 0,
+        [OwnerId]            VARCHAR(100)  NULL,
+        [IsApproved]         BIT NULL  DEFAULT 0,
+        [ApproverId]         VARCHAR(100)  NULL,
+        [ApprovedDateTime]   DATETIME  NULL,
+        [IsAuthorized]       BIT NULL  DEFAULT 0,
+        [AuthorizedById]     VARCHAR(100)  NULL,
+        [AuthorizedDateTime] DATETIME  NULL,
+        [TenantId]           VARCHAR(100)  NULL,
+        [SubTenantId]        VARCHAR(100)  NULL,
+        [SysData]            NVARCHAR(MAX) NULL,
+        CONSTRAINT [PK_PermissionDenied]                 PRIMARY KEY ([Id]),
+        CONSTRAINT [UC_PermissionDenied_User_Permission] UNIQUE ([UserId], [PermissionId]),
+        CONSTRAINT [FK_PermissionDenied_Permission]      FOREIGN KEY ([PermissionId]) REFERENCES [dbo].[Permission]([Id]),
+        CONSTRAINT [FK_PermissionDenied_User]            FOREIGN KEY ([UserId])       REFERENCES [dbo].[User]([Id])
+    );
+END
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddPermissionGranted">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[PermissionGranted]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[PermissionGranted] (
+        [Id]                 VARCHAR(100)  NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [UserId]             VARCHAR(100)  NOT NULL,
+        [PermissionId]       VARCHAR(100)  NOT NULL,
+        [CreatedBy]          VARCHAR(100)  NULL,
+        [CreatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]          VARCHAR(100)  NULL,
+        [UpdatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]       VARCHAR(100)  NULL,
+        [IsDeleted]          BIT NULL  DEFAULT 0,
+        [IsActive]           BIT NULL  DEFAULT 0,
+        [OwnerId]            VARCHAR(100)  NULL,
+        [IsApproved]         BIT NULL  DEFAULT 0,
+        [ApproverId]         VARCHAR(100)  NULL,
+        [ApprovedDateTime]   DATETIME  NULL,
+        [IsAuthorized]       BIT NULL  DEFAULT 0,
+        [AuthorizedById]     VARCHAR(100)  NULL,
+        [AuthorizedDateTime] DATETIME  NULL,
+        [TenantId]           VARCHAR(100)  NULL,
+        [SubTenantId]        VARCHAR(100)  NULL,
+        [SysData]            NVARCHAR(MAX) NULL,
+        CONSTRAINT [PK_PermissionGranted]                PRIMARY KEY ([Id]),
+        CONSTRAINT [UC_PermissionGranted_User_Permission] UNIQUE ([UserId], [PermissionId]),
+        CONSTRAINT [FK_PermissionGranted_Permission]     FOREIGN KEY ([PermissionId]) REFERENCES [dbo].[Permission]([Id]),
+        CONSTRAINT [FK_PermissionGranted_User]           FOREIGN KEY ([UserId])       REFERENCES [dbo].[User]([Id])
+    );
+END
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUser">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[User]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[User] (
+        [Id]                       VARCHAR(100)  NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [UserName]                 VARCHAR(200)  NOT NULL,
+        [EmpId]                    VARCHAR(6)    NULL,
+        [EmpType]                  VARCHAR(200)  NULL,
+        [FirstName]                VARCHAR(200)  NOT NULL,
+        [LastName]                 VARCHAR(200)  NOT NULL,
+        [Email]                    VARCHAR(200)  NULL,
+        [SecondaryEmail]           VARCHAR(200)  NULL,
+        [PhoneNumber]              VARCHAR(20)   NULL,
+        [Extension]                VARCHAR(20)   NULL,
+        [mobile]                   VARCHAR(20)   NULL,
+        [oid]                      VARCHAR(100)  NULL,
+        [preferred_username]       VARCHAR(200)  NULL,
+        [display_name]             VARCHAR(200)  NULL,
+        [given_name]               VARCHAR(200)  NULL,
+        [family_name]              VARCHAR(200)  NULL,
+        [Position]                 VARCHAR(200)  NULL,
+        [BusinessUnit]             VARCHAR(200)  NULL,
+        [ManagerId]                VARCHAR(100)  NULL,
+        [Designation]              VARCHAR(200)  NULL,
+        [Department]               VARCHAR(200)  NULL,
+        [Location]                 VARCHAR(200)  NULL,
+        [Organization]             VARCHAR(200)  NULL,
+        [CreatedBy]                VARCHAR(100)  NULL,
+        [CreatedDateTime]          DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]                VARCHAR(100)  NULL,
+        [UpdatedDateTime]          DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]             VARCHAR(100)  NULL,
+        [IsDeleted]                BIT NULL  DEFAULT 0,
+        [IsActive]                 BIT NULL  DEFAULT 0,
+        [OwnerId]                  VARCHAR(100)  NULL,
+        [IsApproved]               BIT NULL  DEFAULT 0,
+        [ApproverId]               VARCHAR(100)  NULL,
+        [ApprovedDateTime]         DATETIME  NULL,
+        [IsAuthorized]             BIT NULL  DEFAULT 0,
+        [AuthorizedById]           VARCHAR(100)  NULL,
+        [AuthorizedDateTime]       DATETIME  NULL,
+        [TenantId]                 VARCHAR(100)  NULL,
+        [SubTenantId]              VARCHAR(100)  NULL,
+        [SysData]                  NVARCHAR(MAX) NULL,
+        [AccessLevel]              VARCHAR(50)   NULL,
+        [CorrelationId]            VARCHAR(50)   NULL,
+        [AuditableRequestId]       VARCHAR(50)   NULL,
+        [AuditableRequestName]     VARCHAR(100)  NULL,
+        [AuditableSourceEventName] VARCHAR(100)  NULL,
+        [auth_type]                VARCHAR(200)  NULL,
+        CONSTRAINT [PK_User]             PRIMARY KEY ([Id]),
+        CONSTRAINT [UQ_User_Email]       UNIQUE ([Email]),
+        CONSTRAINT [UQ_User_UserName]    UNIQUE ([UserName]),
+        CONSTRAINT [FK_User_AccessLevel] FOREIGN KEY ([AccessLevel]) REFERENCES [dbo].[UserAccessLevel]([AccessLevel])
+    );
+END
+
+EXEC('
+    IF NOT EXISTS (SELECT 1 FROM [dbo].[User] WHERE [UserName] = ''test_Admin_User@systemdesign.com'')
+        INSERT INTO [dbo].[User] (
+            [UserName],[FirstName],[LastName],[Email],[SecondaryEmail],[PhoneNumber],
+            [oid],[preferred_username],[display_name],[given_name],[family_name],
+            [IsDeleted],[IsAuthorized],[IsActive],[CreatedBy],[CreatedDateTime],[UpdatedDateTime],[SysData],[AccessLevel]
+        ) VALUES (
+            ''test_Admin_User@systemdesign.com'',''Test Admin'',''User'',
+            ''test_Admin_User@systemdesign.com'',''test_Admin_User@systemdesign.com'',''77889988'',
+            ''test_Admin_User@systemdesign.com'',''test_Admin_User@systemdesign.com'',''Test AdminUser'',''Test Admin'',''User'',
+            0,1,1,''test_Admin_User@systemdesign.com'',GETUTCDATE(),GETUTCDATE(),''db'',''L1''
+        );
+
+    IF NOT EXISTS (SELECT 1 FROM [dbo].[User] WHERE [UserName] = ''test_Level_1_User@systemdesign.com'')
+        INSERT INTO [dbo].[User] (
+            [UserName],[FirstName],[LastName],[Email],[SecondaryEmail],[PhoneNumber],
+            [oid],[preferred_username],[display_name],[given_name],[family_name],
+            [IsDeleted],[IsAuthorized],[IsActive],[CreatedBy],[CreatedDateTime],[UpdatedDateTime],[SysData],[AccessLevel]
+        ) VALUES (
+            ''test_Level_1_User@systemdesign.com'',''Test Level 1'',''User'',
+            ''test_Level_1_User@systemdesign.com'',''test_Level_1_User@systemdesign.com'',''1212121212'',
+            ''test_Level_1_User@systemdesign.com'',''test_Level_1_User@systemdesign.com'',''Test Level 1User'',''Test Level 1'',''User'',
+            0,1,1,''test_Level_1_User@systemdesign.com'',GETUTCDATE(),GETUTCDATE(),''db'',''L1''
+        );
+
+    IF NOT EXISTS (SELECT 1 FROM [dbo].[User] WHERE [UserName] = ''test_Level_2_User@systemdesign.com'')
+        INSERT INTO [dbo].[User] (
+            [UserName],[FirstName],[LastName],[Email],[SecondaryEmail],[PhoneNumber],
+            [oid],[preferred_username],[display_name],[given_name],[family_name],
+            [IsDeleted],[IsAuthorized],[IsActive],[CreatedBy],[CreatedDateTime],[UpdatedDateTime],[SysData],[AccessLevel]
+        ) VALUES (
+            ''test_Level_2_User@systemdesign.com'',''Test Level 2'',''User'',
+            ''test_Level_2_User@systemdesign.com'',''test_Level_2_User@systemdesign.com'',''12121212121'',
+            ''test_Level_2_User@systemdesign.com'',''test_Level_2_User@systemdesign.com'',''Test Level 2User'',''Test Level 2'',''User'',
+            0,1,1,''test_Level_2_User@systemdesign.com'',GETUTCDATE(),GETUTCDATE(),''db'',''L1''
+        );
+')
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUserAccessLevel">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[UserAccessLevel]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[UserAccessLevel] (
+        [AccessLevel]        VARCHAR(50)   NOT NULL,
+        [DisplayName]        VARCHAR(200)  NOT NULL,
+        [Hierarchy]          INT           NOT NULL,
+        [CreatedBy]          VARCHAR(100)  NULL,
+        [CreatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]          VARCHAR(100)  NULL,
+        [UpdatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]       VARCHAR(100)  NULL,
+        [IsDeleted]          BIT NULL  DEFAULT 0,
+        [IsActive]           BIT NULL  DEFAULT 0,
+        [OwnerId]            VARCHAR(100)  NULL,
+        [IsApproved]         BIT NULL  DEFAULT 0,
+        [ApproverId]         VARCHAR(100)  NULL,
+        [ApprovedDateTime]   DATETIME  NULL,
+        [IsAuthorized]       BIT NULL  DEFAULT 0,
+        [AuthorizedById]     VARCHAR(100)  NULL,
+        [AuthorizedDateTime] DATETIME  NULL,
+        [TenantId]           VARCHAR(100)  NULL,
+        [SubTenantId]        VARCHAR(100)  NULL,
+        [SysData]            NVARCHAR(MAX) NULL,
+        CONSTRAINT [PK_UserAccessLevel]             PRIMARY KEY ([AccessLevel]),
+        CONSTRAINT [UQ_UserAccessLevel_DisplayName] UNIQUE ([DisplayName])
+    );
+END
+
+EXEC('
+    INSERT INTO [dbo].[UserAccessLevel] (
+        [AccessLevel],[DisplayName],[Hierarchy],[CreatedDateTime],[UpdatedDateTime],
+        [IsDeleted],[IsActive],[IsApproved],[IsAuthorized]
+    )
+    SELECT v.AccessLevel, v.DisplayName, v.Hierarchy, GETUTCDATE(), GETUTCDATE(), 0, 1, 0, 0
+    FROM (VALUES
+        (''L1'',''Junior Executive'',1),
+        (''L2'',''Executive'',       2),
+        (''L3'',''Senior Executive'',3)
+    ) AS v(AccessLevel, DisplayName, Hierarchy)
+    WHERE NOT EXISTS (
+        SELECT 1 FROM [dbo].[UserAccessLevel] WHERE [AccessLevel] = v.AccessLevel
+    );
+')
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUserActivity">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[UserActivity]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[UserActivity] (
+        [Id]                   VARCHAR(100)  NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [UserId]               VARCHAR(100)  NOT NULL,
+        [LastLoginDateTime]    DATETIME  NULL,
+        [LastLogoutDateTime]   DATETIME  NULL,
+        [LastActivityDateTime] DATETIME  NULL,
+        [LastActivityModule]   VARCHAR(200)  NULL,
+        [LastActionType]       VARCHAR(200)  NULL,
+        [LastActivityDetail]   NVARCHAR(MAX) NULL,
+        [CreatedBy]            VARCHAR(100)  NULL,
+        [CreatedDateTime]      DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]            VARCHAR(100)  NULL,
+        [UpdatedDateTime]      DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]         VARCHAR(100)  NULL,
+        [IsDeleted]            BIT NULL  DEFAULT 0,
+        [IsActive]             BIT NULL  DEFAULT 1,
+        [OwnerId]              VARCHAR(100)  NULL,
+        [IsApproved]           BIT NULL  DEFAULT 0,
+        [ApproverId]           VARCHAR(100)  NULL,
+        [ApprovedDateTime]     DATETIME  NULL,
+        [IsAuthorized]         BIT NULL  DEFAULT 0,
+        [AuthorizedById]       VARCHAR(100)  NULL,
+        [AuthorizedDateTime]   DATETIME  NULL,
+        [TenantId]             VARCHAR(100)  NULL,
+        [SubTenantId]          VARCHAR(100)  NULL,
+        [SysData]              NVARCHAR(MAX) NULL,
+        [CustomFields]         NVARCHAR(MAX) NULL,
+        CONSTRAINT [PK_UserActivity]                   PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_UserActivity_User]              FOREIGN KEY ([UserId]) REFERENCES [dbo].[User]([Id]),
+        CONSTRAINT [ck_customfieldsUserActivity_json] CHECK (isjson([CustomFields])=(1))
+    );
+END
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUserPasswordHash">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[UserPasswordHash]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[UserPasswordHash] (
+        [UserId]          VARCHAR(100) NOT NULL,
+        [PasswordHash]    VARCHAR(200) NULL,
+        [UpdatedBy]       VARCHAR(200) NULL,
+        [UpdatedDateTime] DATETIME NULL,
+        [UpdateReason]    VARCHAR(200) NULL,
+        CONSTRAINT [PK_UserPasswordHash]      PRIMARY KEY ([UserId]),
+        CONSTRAINT [FK_UserPasswordHash_User] FOREIGN KEY ([UserId]) REFERENCES [dbo].[User]([Id])
+    );
+END
+
+EXEC('
+    INSERT INTO [dbo].[UserPasswordHash] ([UserId],[PasswordHash],[UpdatedBy],[UpdatedDateTime],[UpdateReason])
+    SELECT u.[Id], v.PasswordHash, NULL, GETUTCDATE(), ''Initial BCrypt password''
+    FROM (VALUES
+        (''test_Admin_User@systemdesign.com'',   ''$2a$11$LzB1OPiO/FoyQ8IPlXKND.IzDmSloCb5IZZ7LcCCD55U36fWIfgAO''),
+        (''test_Level_1_User@systemdesign.com'', ''$2a$11$8VhImHUy.k9ekQ.Jao3S6Oy3ZavD726tq8/Cyy.RsiDTuCLThH5nS''),
+        (''test_Level_2_User@systemdesign.com'', ''$2a$11$CCFTX7LQ54m.RQ5IvlnCPuQOIhULF95IBvwEMB45WmGiGJQ6YCB56'')
+    ) AS v(UserName, PasswordHash)
+    JOIN [dbo].[User] u ON u.[UserName] = v.UserName
+    WHERE NOT EXISTS (SELECT 1 FROM [dbo].[UserPasswordHash] WHERE [UserId] = u.[Id]);
+')
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUserProfile">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[UserProfile]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[UserProfile] (
+        [Id]                     VARCHAR(100)  NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [UserId]                 VARCHAR(100)  NOT NULL,
+        [DOB]                    VARCHAR(200)  NULL,
+        [Gender]                 VARCHAR(200)  NULL,
+        [BloodGroup]             VARCHAR(200)  NULL,
+        [PersonalEmail]          VARCHAR(200)  NULL,
+        [DateOfJoining]          VARCHAR(200)  NULL,
+        [PassportNumber]         VARCHAR(100)  NULL,
+        [FatherName]             VARCHAR(200)  NULL,
+        [MotherName]             VARCHAR(200)  NULL,
+        [MaritalStatus]          VARCHAR(200)  NULL,
+        [WeddingAnniversaryDate] VARCHAR(200)  NULL,
+        [SpouseName]             VARCHAR(200)  NULL,
+        [SpouseDOB]              VARCHAR(200)  NULL,
+        [HomeAddress1]           VARCHAR(200)  NULL,
+        [HomeAddress2]           VARCHAR(200)  NULL,
+        [City]                   VARCHAR(200)  NULL,
+        [State]                  VARCHAR(200)  NULL,
+        [HomeAddressCity]        VARCHAR(200)  NULL,
+        [HomeAddressState]       VARCHAR(200)  NULL,
+        [HomeAddressCountry]     VARCHAR(200)  NULL,
+        [HomePhoneNumber]        VARCHAR(200)  NULL,
+        [EmergencyContactNumber] VARCHAR(200)  NULL,
+        [EmergencyContactName]   VARCHAR(200)  NULL,
+        [PrimarySkills]          VARCHAR(200)  NULL,
+        [SecondarySkills]        VARCHAR(200)  NULL,
+        [TertiarySkills]         VARCHAR(200)  NULL,
+        [OtherSkills]            VARCHAR(200)  NULL,
+        [Branch]                 VARCHAR(200)  NULL,
+        [LookUpCode]             VARCHAR(200)  NULL,
+        [OtherId]                VARCHAR(200)  NULL,
+        [LinkedInUrl]            VARCHAR(200)  NULL,
+        [UserPic]                VARCHAR(100)  NULL,
+        [CreatedBy]              VARCHAR(100)  NULL,
+        [CreatedDateTime]        DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]              VARCHAR(100)  NULL,
+        [UpdatedDateTime]        DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]           VARCHAR(100)  NULL,
+        [IsDeleted]              BIT NULL  DEFAULT 0,
+        [IsActive]               BIT NULL  DEFAULT 0,
+        [OwnerId]                VARCHAR(100)  NULL,
+        [IsApproved]             BIT NULL  DEFAULT 0,
+        [ApproverId]             VARCHAR(100)  NULL,
+        [ApprovedDateTime]       DATETIME  NULL,
+        [IsAuthorized]           BIT NULL  DEFAULT 0,
+        [AuthorizedById]         VARCHAR(100)  NULL,
+        [AuthorizedDateTime]     DATETIME  NULL,
+        [TenantId]               VARCHAR(100)  NULL,
+        [SubTenantId]            VARCHAR(100)  NULL,
+        [SysData]                NVARCHAR(MAX) NULL,
+        CONSTRAINT [PK_UserProfile]      PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_UserProfile_User] FOREIGN KEY ([UserId]) REFERENCES [dbo].[User]([Id])
+    );
+END
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddRolePermission">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[RolePermission]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[RolePermission] (
+        [Id]                 VARCHAR(100)  NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [RoleId]             VARCHAR(100)  NULL,
+        [PermissionId]       VARCHAR(100)  NULL,
+        [CreatedBy]          VARCHAR(100)  NULL,
+        [CreatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]          VARCHAR(100)  NULL,
+        [UpdatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]       VARCHAR(100)  NULL,
+        [IsDeleted]          BIT NULL  DEFAULT 0,
+        [IsActive]           BIT NULL  DEFAULT 0,
+        [OwnerId]            VARCHAR(100)  NULL,
+        [IsApproved]         BIT NULL  DEFAULT 0,
+        [ApproverId]         VARCHAR(100)  NULL,
+        [ApprovedDateTime]   DATETIME  NULL,
+        [IsAuthorized]       BIT NULL  DEFAULT 0,
+        [AuthorizedById]     VARCHAR(100)  NULL,
+        [AuthorizedDateTime] DATETIME  NULL,
+        [TenantId]           VARCHAR(100)  NULL,
+        [SubTenantId]        VARCHAR(100)  NULL,
+        [SysData]            NVARCHAR(MAX) NULL,
+        CONSTRAINT [PK_RolePermission]           PRIMARY KEY ([Id]),
+        CONSTRAINT [UC_RolePermission]           UNIQUE ([RoleId], [PermissionId]),
+        CONSTRAINT [FK_RolePermission_Permission] FOREIGN KEY ([PermissionId]) REFERENCES [dbo].[Permission]([Id]),
+        CONSTRAINT [FK_RolePermission_Role]      FOREIGN KEY ([RoleId])       REFERENCES [dbo].[Role]([Id])
+    );
+END
+
+EXEC('
+    INSERT INTO [dbo].[RolePermission] (
+        [RoleId],[PermissionId],[CreatedBy],[CreatedDateTime],
+        [UpdatedBy],[UpdatedDateTime],[IsDeleted],[IsActive],[IsApproved],[IsAuthorized]
+    )
+    SELECT r.[Id], p.[Id], NULL, GETUTCDATE(), NULL, GETUTCDATE(), 0, 1, 0, 1
+    FROM [dbo].[Role] r
+    CROSS JOIN [dbo].[Permission] p
+    WHERE NOT EXISTS (
+        SELECT 1 FROM [dbo].[RolePermission] rp
+        WHERE rp.[RoleId] = r.[Id] AND rp.[PermissionId] = p.[Id]
+    );
+')
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddRoleUiPermission">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[RoleUiPermission]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[RoleUiPermission] (
+        [RoleId]             VARCHAR(100)  NOT NULL,
+        [UiPermissionId]     VARCHAR(100)  NOT NULL,
+        [CanView]            BIT NULL  DEFAULT 0,
+        [CanEdit]            BIT NULL  DEFAULT 0,
+        [CanCreate]          BIT NULL  DEFAULT 0,
+        [CanDelete]          BIT NULL  DEFAULT 0,
+        [CreatedBy]          VARCHAR(100)  NULL,
+        [CreatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]          VARCHAR(100)  NULL,
+        [UpdatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]       VARCHAR(100)  NULL,
+        [IsDeleted]          BIT NULL  DEFAULT 0,
+        [IsActive]           BIT NULL  DEFAULT 1,
+        [OwnerId]            VARCHAR(100)  NULL,
+        [IsApproved]         BIT NULL  DEFAULT 0,
+        [ApproverId]         VARCHAR(100)  NULL,
+        [ApprovedDateTime]   DATETIME  NULL,
+        [IsAuthorized]       BIT NULL  DEFAULT 0,
+        [AuthorizedById]     VARCHAR(100)  NULL,
+        [AuthorizedDateTime] DATETIME  NULL,
+        [TenantId]           VARCHAR(100)  NULL,
+        [SubTenantId]        VARCHAR(100)  NULL,
+        [SysData]            NVARCHAR(MAX) NULL,
+        CONSTRAINT [UC_RoleUiPermission]      UNIQUE ([RoleId], [UiPermissionId]),
+        CONSTRAINT [FK_RoleUiPermission_Role] FOREIGN KEY ([RoleId]) REFERENCES [dbo].[Role]([Id])
+    );
+END
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUiPermission">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[UiPermission]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[UiPermission] (
+        [Id]                    VARCHAR(100)  NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [PermissionValue]       VARCHAR(200)  NOT NULL,
+        [PermissionDisplayName] VARCHAR(200)  NOT NULL,
+        [PermissionParentId]    VARCHAR(100)  NULL,
+        [CreatedBy]             VARCHAR(100)  NULL,
+        [CreatedDateTime]       DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]             VARCHAR(100)  NULL,
+        [UpdatedDateTime]       DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]          VARCHAR(100)  NULL,
+        [IsDeleted]             BIT NULL  DEFAULT 0,
+        [IsActive]              BIT NULL  DEFAULT 0,
+        [OwnerId]               VARCHAR(100)  NULL,
+        [IsApproved]            BIT NULL  DEFAULT 0,
+        [ApproverId]            VARCHAR(100)  NULL,
+        [ApprovedDateTime]      DATETIME  NULL,
+        [IsAuthorized]          BIT NULL  DEFAULT 0,
+        [AuthorizedById]        VARCHAR(100)  NULL,
+        [AuthorizedDateTime]    DATETIME  NULL,
+        [TenantId]              VARCHAR(100)  NULL,
+        [SubTenantId]           VARCHAR(100)  NULL,
+        [SysData]               NVARCHAR(MAX) NULL,
+        [ModuleId]              VARCHAR(100)  NOT NULL,
+        [UiPermissionTypeId]    VARCHAR(100)  NULL,
+        CONSTRAINT [PK_UiPermission]                 PRIMARY KEY ([Id]),
+        CONSTRAINT [UQ_UiPermission_PermissionValue] UNIQUE ([PermissionValue]),
+        CONSTRAINT [FK_UiPermission_Type]            FOREIGN KEY ([UiPermissionTypeId]) REFERENCES [dbo].[AuthReferenceLookup]([Id]),
+        CONSTRAINT [FK_UiPermission_Module]          FOREIGN KEY ([ModuleId])           REFERENCES [dbo].[AuthReferenceLookup]([Id])
+    );
+END
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUiPermissionDenied">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[UiPermissionDenied]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[UiPermissionDenied] (
+        [UserId]             VARCHAR(100)  NULL,
+        [UiPermissionId]     VARCHAR(100)  NULL,
+        [CanView]            BIT NULL  DEFAULT 0,
+        [CanEdit]            BIT NULL  DEFAULT 0,
+        [CanCreate]          BIT NULL  DEFAULT 0,
+        [CanDelete]          BIT NULL  DEFAULT 0,
+        [CreatedBy]          VARCHAR(100)  NULL,
+        [CreatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]          VARCHAR(100)  NULL,
+        [UpdatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]       VARCHAR(100)  NULL,
+        [IsDeleted]          BIT NULL  DEFAULT 0,
+        [IsActive]           BIT NULL  DEFAULT 1,
+        [OwnerId]            VARCHAR(100)  NULL,
+        [IsApproved]         BIT NULL  DEFAULT 0,
+        [ApproverId]         VARCHAR(100)  NULL,
+        [ApprovedDateTime]   DATETIME  NULL,
+        [IsAuthorized]       BIT NULL  DEFAULT 0,
+        [AuthorizedById]     VARCHAR(100)  NULL,
+        [AuthorizedDateTime] DATETIME  NULL,
+        [TenantId]           VARCHAR(100)  NULL,
+        [SubTenantId]        VARCHAR(100)  NULL,
+        [SysData]            NVARCHAR(MAX) NULL,
+        CONSTRAINT [UC_UserIdUiPermissionDenied] UNIQUE ([UserId], [UiPermissionId])
+    );
+END
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUiPermissionGranted">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[UiPermissionGranted]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[UiPermissionGranted] (
+        [UserId]             VARCHAR(100)  NULL,
+        [UiPermissionId]     VARCHAR(100)  NULL,
+        [CanView]            BIT NULL  DEFAULT 0,
+        [CanEdit]            BIT NULL  DEFAULT 0,
+        [CanCreate]          BIT NULL  DEFAULT 0,
+        [CanDelete]          BIT NULL  DEFAULT 0,
+        [CreatedBy]          VARCHAR(100)  NULL,
+        [CreatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]          VARCHAR(100)  NULL,
+        [UpdatedDateTime]    DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]       VARCHAR(100)  NULL,
+        [IsDeleted]          BIT NULL  DEFAULT 0,
+        [IsActive]           BIT NULL  DEFAULT 1,
+        [OwnerId]            VARCHAR(100)  NULL,
+        [IsApproved]         BIT NULL  DEFAULT 0,
+        [ApproverId]         VARCHAR(100)  NULL,
+        [ApprovedDateTime]   DATETIME  NULL,
+        [IsAuthorized]       BIT NULL  DEFAULT 0,
+        [AuthorizedById]     VARCHAR(100)  NULL,
+        [AuthorizedDateTime] DATETIME  NULL,
+        [TenantId]           VARCHAR(100)  NULL,
+        [SubTenantId]        VARCHAR(100)  NULL,
+        [SysData]            NVARCHAR(MAX) NULL,
+        CONSTRAINT [UC_UserIdUiPermissionGranted] UNIQUE ([UserId], [UiPermissionId])
+    );
+END
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddUserRole">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[UserRole]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[UserRole] (
+        [Id]                       VARCHAR(100)  NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [UserId]                   VARCHAR(100)  NOT NULL,
+        [RoleId]                   VARCHAR(100)  NOT NULL,
+        [CreatedBy]                VARCHAR(100)  NULL,
+        [CreatedDateTime]          DATETIME  DEFAULT GETUTCDATE(),
+        [UpdatedBy]                VARCHAR(100)  NULL,
+        [UpdatedDateTime]          DATETIME  DEFAULT GETUTCDATE(),
+        [UpdateReason]             VARCHAR(100)  NULL,
+        [IsDeleted]                BIT NULL  DEFAULT 0,
+        [IsActive]                 BIT NULL  DEFAULT 0,
+        [OwnerId]                  VARCHAR(100)  NULL,
+        [IsApproved]               BIT NULL  DEFAULT 0,
+        [ApproverId]               VARCHAR(100)  NULL,
+        [ApprovedDateTime]         DATETIME  NULL,
+        [IsAuthorized]             BIT NULL  DEFAULT 0,
+        [AuthorizedById]           VARCHAR(100)  NULL,
+        [AuthorizedDateTime]       DATETIME  NULL,
+        [TenantId]                 VARCHAR(100)  NULL,
+        [SubTenantId]              VARCHAR(100)  NULL,
+        [SysData]                  NVARCHAR(MAX) NULL,
+        [CorrelationId]            VARCHAR(50)   NULL,
+        [AuditableRequestId]       VARCHAR(50)   NULL,
+        [AuditableRequestName]     VARCHAR(100)  NULL,
+        [AuditableSourceEventName] VARCHAR(100)  NULL,
+        CONSTRAINT [UserRole_pkey]         PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_UserRole_User]      FOREIGN KEY ([UserId]) REFERENCES [dbo].[User]([Id]),
+        CONSTRAINT [FK_UserRole_Role]      FOREIGN KEY ([RoleId]) REFERENCES [dbo].[Role]([Id]),
+        CONSTRAINT [UC_UserRole_User_Role] UNIQUE ([UserId], [RoleId])
+    );
+END
+
+EXEC('
+    INSERT INTO [dbo].[UserRole] (
+        [UserId],[RoleId],[CreatedBy],[CreatedDateTime],
+        [UpdatedBy],[UpdatedDateTime],[IsDeleted],[IsActive],[IsApproved],[IsAuthorized]
+    )
+    SELECT u.[Id], r.[Id], NULL, GETUTCDATE(), NULL, GETUTCDATE(), 0, 1, 0, 1
+    FROM [dbo].[User] u
+    JOIN [dbo].[Role] r ON r.[RoleName] = ''User''
+    WHERE NOT EXISTS (
+        SELECT 1 FROM [dbo].[UserRole] ur
+        WHERE ur.[UserId] = u.[Id] AND ur.[RoleId] = r.[Id]
+    );
+')
+		]]>
+	</sql>
+
+
+	<sql name="InitialSetup.AddRefreshToken">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[RefreshToken]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[RefreshToken] (
+        [Id]          VARCHAR(100) NOT NULL DEFAULT CONVERT(VARCHAR(100), NEWID()),
+        [UserId]      VARCHAR(100) NULL,
+        [Token]       VARCHAR(500) NULL,
+        [ExpiryDate]  DATETIME     NULL,
+        [IsRevoked]   BIT          NOT NULL DEFAULT 0,
+        [RevokedDate] DATETIME     NULL,
+        [CreatedDate] DATETIME     NULL,
+        CONSTRAINT [PK_RefreshToken] PRIMARY KEY ([Id])
+    );
+END
+		]]>
+	</sql>
+
+	<sql name="InitialSetup.AddSchemaVersions">
+		<![CDATA[
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SchemaVersions]') AND type = 'U')
+BEGIN
+    CREATE TABLE [dbo].[SchemaVersions] (
+        [Id]         INT           IDENTITY(1,1) NOT NULL,
+        [ScriptName] NVARCHAR(255) NOT NULL,
+        [Applied]    DATETIME      NOT NULL,
+        CONSTRAINT [PK_SchemaVersions_Id] PRIMARY KEY ([Id])
+    );
+END
+		]]>
+	</sql>
+
+</sql-set>

@@ -1,0 +1,673 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+
+	<sql name="PostgreNotification.GetNotificationRequests">
+		<![CDATA[
+       SELECT 
+         "Id",
+         "ApiKey",
+         "EmailFrom",
+         "EmailTo",
+         "EmailCc",
+         "EmailBcc",
+         "EmailSubject",
+         "EmailBody",
+         "NotificationErrorMessage",
+         "ScheduledDateTime",
+         "NotificationResponseDateTime",
+         "EmailAttachments"::text AS "EmailAttachments",
+         "EntityJson"::text AS "EntityJson",
+         "NotificationDelivery"::text AS "NotificationDelivery",
+		 "CreatedBy",
+         "CreatedById",
+         "CreatedDateTime",
+         "UpdatedBy",
+         "UpdatedById",
+         "UpdatedDateTime",
+         "UpdateReason",
+         "OwnerId",
+         "IsActive",
+         "IsDeleted",
+         "IsApproved",
+         "ApproverId",
+         "ApprovedDateTime",
+         "IsAuthorized",
+         "AuthorizedById",
+         "AuthorizedDateTime",
+         "SysData",
+         "TenantId",
+         "AssociatedUserId",
+         "SubTenantId"
+       FROM "NotificationRequest";
+		]]>
+	</sql> 
+
+	<sql name="PostgreNotification.InsertNotificationResponse">
+		<![CDATA[
+       INSERT INTO "NotificationResponse"
+        (
+            "Id",
+            "ApiKey", 
+			"CreatedDateTime", 
+            "UpdatedDateTime",
+            "EmailFrom",
+            "EmailTo",
+            "EmailCc",
+            "EmailBcc",
+            "EmailSubject",
+            "EmailBody", 
+            "EmailAttachments", 
+            "NotificationErrorMessage", 
+            "NotificationDelivery", 
+            "ScheduledDateTime", 
+            "NotificationResponseDateTime", 
+            "EntityJson",
+			"CreatedBy",
+            "CreatedById",
+            "UpdatedBy",
+            "UpdatedById",
+            "UpdateReason",
+            "OwnerId",
+            "IsActive",
+            "IsDeleted",
+            "IsApproved",
+            "ApproverId",
+            "ApprovedDateTime",
+            "IsAuthorized",
+            "AuthorizedById",
+            "AuthorizedDateTime",
+            "SysData",
+            "TenantId",
+            "AssociatedUserId",
+            "SubTenantId"
+        )
+       VALUES
+        (
+            @Id,
+            @ApiKey, 
+            @CreatedDateTime, 
+            @UpdatedDateTime, 
+            @EmailFrom,
+            @EmailTo,
+            @EmailCc,
+            @EmailBcc,
+            @EmailSubject,
+            @EmailBody, 
+            @EmailAttachments::jsonb, 
+            @NotificationErrorMessage, 
+            @NotificationDelivery::jsonb, 
+            @ScheduledDateTime, 
+            @NotificationResponseDateTime, 
+            @EntityJson::jsonb,
+			@CreatedBy,
+            @CreatedById,
+            @UpdatedBy,
+            @UpdatedById,
+            @UpdateReason,
+            @OwnerId,
+            @IsActive,
+            @IsDeleted,
+            @IsApproved,
+            @ApproverId,
+            @ApprovedDateTime,
+            @IsAuthorized,
+            @AuthorizedById,
+            @AuthorizedDateTime,
+            @SysData,
+            @TenantId,
+            @AssociatedUserId,
+            @SubTenantId
+        )
+       RETURNING "Id";
+
+		]]>
+	</sql>
+
+	<sql name="PostgreNotification.DeleteNotificationRequestById">
+		<![CDATA[
+       DELETE FROM "NotificationRequest" WHERE "Id" = @Id;
+		]]>
+	</sql>
+	
+	<sql name="PostgreNotification.InsertNotificationRequest">
+		<![CDATA[
+     INSERT INTO "NotificationRequest"
+        (
+            "Id",
+            "ApiKey", 
+			"CreatedDateTime", 
+            "UpdatedDateTime",
+            "EmailFrom",
+            "EmailTo",
+            "EmailCc",
+            "EmailBcc",
+            "EmailSubject",
+            "EmailBody", 
+            "EmailAttachments", 
+            "NotificationErrorMessage", 
+            "NotificationDelivery", 
+            "ScheduledDateTime", 
+            "NotificationResponseDateTime", 
+            "EntityJson",
+			"CreatedBy",
+            "CreatedById",
+            "UpdatedBy",
+            "UpdatedById",
+            "UpdateReason",
+            "OwnerId",
+            "IsActive",
+            "IsDeleted",
+            "IsApproved",
+            "ApproverId",
+            "ApprovedDateTime",
+            "IsAuthorized",
+            "AuthorizedById",
+            "AuthorizedDateTime",
+            "SysData",
+            "TenantId",
+            "AssociatedUserId",
+            "SubTenantId"
+        )
+       VALUES
+        (
+            @Id,
+            @ApiKey, 
+            @CreatedDateTime, 
+            @UpdatedDateTime, 
+            @EmailFrom,
+            @EmailTo,
+            @EmailCc,
+            @EmailBcc,
+            @EmailSubject,
+            @EmailBody, 
+            @EmailAttachments::jsonb, 
+            @NotificationErrorMessage, 
+            @NotificationDelivery::jsonb, 
+            @ScheduledDateTime, 
+            @NotificationResponseDateTime, 
+            @EntityJson::jsonb,
+			@CreatedBy,
+            @CreatedById,
+            @UpdatedBy,
+            @UpdatedById,
+            @UpdateReason,
+            @OwnerId,
+            @IsActive,
+            @IsDeleted,
+            @IsApproved,
+            @ApproverId,
+            @ApprovedDateTime,
+            @IsAuthorized,
+            @AuthorizedById,
+            @AuthorizedDateTime,
+            @SysData,
+            @TenantId,
+            @AssociatedUserId,
+            @SubTenantId
+        )
+       RETURNING "Id";
+		]]>
+	</sql>
+	
+
+	<sql name="PostgreNotification.GetBrevoNotificationRequests">
+		<![CDATA[
+	   SELECT 
+	     "Id", 
+		 "ApiKey", 
+		 "NotificationDelivery"::text AS "NotificationDelivery", 
+		 "NotificationResponseDateTime", 
+		 "NotificationErrorMessage", 
+		 "SenderEmail", 
+		 "SenderName", 
+		 "ReceiverEmail", 
+		 "ReceiverList"::text AS "ReceiverList", 
+		 "ReceiverNumber", 
+		 "HtmlContent", 
+		 "CcList"::text AS "CcList", 
+		 "BccList"::text AS "BccList", 
+		 "ScheduledAt", 
+		 "Tags"::text AS "Tags", 
+		 "UpdateStatus", 
+		 "Subject",
+		 "Message",
+		 "EntityJson"::text AS "EntityJson",
+         "CreatedBy",
+         "CreatedById",
+         "CreatedDateTime",
+         "UpdatedBy",
+         "UpdatedById",
+         "UpdatedDateTime",
+         "UpdateReason",
+         "OwnerId",
+         "IsActive",
+         "IsDeleted",
+         "IsApproved",
+         "ApproverId",
+         "ApprovedDateTime",
+         "IsAuthorized",
+         "AuthorizedById",
+         "AuthorizedDateTime",
+         "SysData",
+         "TenantId",
+         "AssociatedUserId",
+         "SubTenantId"
+   	   FROM "BrevoNotificationRequest"
+		]]>
+	</sql>
+
+	<sql name="PostgreNotification.InsertBrevoNotificationResponse">
+		<![CDATA[
+       INSERT INTO "BrevoNotificationResponse" 
+	    (
+           "Id",
+           "ApiKey",
+           "NotificationDelivery",
+           "NotificationResponseDateTime",
+           "NotificationErrorMessage",
+           "SenderEmail",
+           "SenderName",
+           "ReceiverEmail",
+           "ReceiverList",
+           "ReceiverNumber",
+           "HtmlContent",
+           "CcList",
+           "BccList",
+           "ScheduledAt",
+           "UpdateStatus",
+           "Tags",
+           "Subject",
+           "Message",
+           "EntityJson",
+           "CreatedBy",
+           "CreatedById",
+           "CreatedDateTime",
+           "UpdatedBy",
+           "UpdatedById",
+           "UpdatedDateTime",
+           "UpdateReason",
+           "OwnerId",
+           "IsActive",
+           "IsDeleted",
+           "IsApproved",
+           "ApproverId",
+           "ApprovedDateTime",
+           "IsAuthorized",
+           "AuthorizedById",
+           "AuthorizedDateTime",
+           "SysData",
+           "TenantId",
+           "AssociatedUserId",
+           "SubTenantId"
+		)
+       VALUES 
+	    (
+            @Id,
+            @ApiKey,
+            @NotificationDelivery::jsonb,
+            @NotificationResponseDateTime,
+            @NotificationErrorMessage,
+            @SenderEmail,
+            @SenderName,
+            @ReceiverEmail,
+            @ReceiverList::jsonb,
+            @ReceiverNumber,
+            @HtmlContent,
+            @CcList::jsonb,
+            @BccList::jsonb,
+            @ScheduledAt,
+            @UpdateStatus,
+            @Tags::jsonb,
+            @Subject,
+            @Message,
+            @EntityJson::jsonb,
+            @CreatedBy,
+            @CreatedById,
+            @CreatedDateTime,
+            @UpdatedBy,
+            @UpdatedById,
+            @UpdatedDateTime,
+            @UpdateReason,
+            @OwnerId,
+            @IsActive,
+            @IsDeleted,
+            @IsApproved,
+            @ApproverId,
+            @ApprovedDateTime,
+            @IsAuthorized,
+            @AuthorizedById,
+            @AuthorizedDateTime,
+            @SysData,
+            @TenantId,
+            @AssociatedUserId,
+            @SubTenantId
+       )RETURNING "Id";
+		]]>
+	</sql>
+
+	<sql name="PostgreNotification.DeleteBrevoNotificationRequestById">
+		<![CDATA[
+       DELETE FROM "BrevoNotificationRequest" WHERE "Id" = @Id;
+		]]>
+	</sql>
+	
+	<sql name="PostgreNotification.InsertBrevoNotificationRequest">
+		<![CDATA[
+       INSERT INTO "BrevoNotificationRequest" 
+	    (
+           "Id",
+           "ApiKey",
+           "NotificationDelivery",
+           "NotificationResponseDateTime",
+           "NotificationErrorMessage",
+           "SenderEmail",
+           "SenderName",
+           "ReceiverEmail",
+           "ReceiverList",
+           "ReceiverNumber",
+           "HtmlContent",
+           "CcList",
+           "BccList",
+           "ScheduledAt",
+           "UpdateStatus",
+           "Tags",
+           "Subject",
+           "Message",
+           "EntityJson",
+           "CreatedBy",
+           "CreatedById",
+           "CreatedDateTime",
+           "UpdatedBy",
+           "UpdatedById",
+           "UpdatedDateTime",
+           "UpdateReason",
+           "OwnerId",
+           "IsActive",
+           "IsDeleted",
+           "IsApproved",
+           "ApproverId",
+           "ApprovedDateTime",
+           "IsAuthorized",
+           "AuthorizedById",
+           "AuthorizedDateTime",
+           "SysData",
+           "TenantId",
+           "AssociatedUserId",
+           "SubTenantId"
+        )
+       VALUES 
+	    (
+            @Id,
+            @ApiKey,
+            @NotificationDelivery::jsonb,
+            @NotificationResponseDateTime,
+            @NotificationErrorMessage,
+            @SenderEmail,
+            @SenderName,
+            @ReceiverEmail,
+            @ReceiverList::jsonb,
+            @ReceiverNumber,
+            @HtmlContent,
+            @CcList::jsonb,
+            @BccList::jsonb,
+            @ScheduledAt,
+            @UpdateStatus,
+            @Tags::jsonb,
+            @Subject,
+            @Message,
+            @EntityJson::jsonb,
+            @CreatedBy,
+            @CreatedById,
+            @CreatedDateTime,
+            @UpdatedBy,
+            @UpdatedById,
+            @UpdatedDateTime,
+            @UpdateReason,
+            @OwnerId,
+            @IsActive,
+            @IsDeleted,
+            @IsApproved,
+            @ApproverId,
+            @ApprovedDateTime,
+            @IsAuthorized,
+            @AuthorizedById,
+            @AuthorizedDateTime,
+            @SysData,
+            @TenantId,
+            @AssociatedUserId,
+            @SubTenantId
+       )RETURNING "Id";
+		]]>
+	</sql>
+
+	
+	<sql name="PostgreNotification.GetRecentNotifications">
+		<![CDATA[
+       SELECT * FROM "InSystemNotification" WHERE "CreatedDateTime" >= (NOW() AT TIME ZONE 'UTC' - INTERVAL '48 hours');
+		]]>
+	</sql>
+
+	<sql name="PostgreNotification.InsertInSystemNotification">
+		<![CDATA[
+   INSERT INTO "InSystemNotification" 
+ (
+    "Message",
+    "CreatedBy",
+    "CreatedById",
+    "CreatedDateTime",
+    "UpdatedBy",
+    "UpdatedById",
+    "UpdatedDateTime",
+    "UpdateReason",
+    "OwnerId",
+    "IsActive",
+    "IsDeleted",
+    "IsApproved",
+    "ApproverId",
+    "ApprovedDateTime",
+    "IsAuthorized",
+    "AuthorizedById",
+    "AuthorizedDateTime",
+    "SysData",
+    "TenantId",
+    "AssociatedUserId",
+    "SubTenantId"
+ )
+VALUES 
+ (
+     @Message,
+     @CreatedBy,
+     @CreatedById,
+     @CreatedDateTime,
+     @UpdatedBy,
+     @UpdatedById,
+     @UpdatedDateTime,
+     @UpdateReason,
+     @OwnerId,
+     @IsActive,
+     @IsDeleted,
+     @IsApproved,
+     @ApproverId,
+     @ApprovedDateTime,
+     @IsAuthorized,
+     @AuthorizedById,
+     @AuthorizedDateTime,
+     @SysData,
+     @TenantId,
+     @AssociatedUserId,
+     @SubTenantId
+)RETURNING "Id";
+	]]>
+	</sql>
+	
+
+	<sql name="PostgreNotification.GetZeptoMailRequests">
+		<![CDATA[
+       SELECT 
+         "Id",
+         "ApiKey",
+         "SenderEmail",
+         "SenderName",
+         "To"::text AS "To",
+         "Cc"::text AS "Cc",
+		 "Bcc"::text AS "Bcc",
+         "Subject",
+         "HtmlBody",
+		 "TextBody",
+		 "Attachments"::text AS "Attachments",
+         "NotificationErrorMessage",
+         "NotificationResponseDateTime",
+         "NotificationDelivery"::text AS "NotificationDelivery",
+		 "CreatedBy",
+         "CreatedById",
+         "CreatedDateTime",
+         "UpdatedBy",
+         "UpdatedById",
+         "UpdatedDateTime",
+         "UpdateReason",
+         "OwnerId",
+         "IsActive",
+         "IsDeleted",
+         "IsApproved",
+         "ApproverId",
+         "ApprovedDateTime",
+         "IsAuthorized",
+         "AuthorizedById",
+         "AuthorizedDateTime",
+         "SysData",
+         "TenantId",
+         "AssociatedUserId",
+         "SubTenantId"
+       FROM "ZeptoMailRequest";
+		]]>
+	</sql>
+
+	<sql name="PostgreNotification.InsertZeptoMailResponse">
+		<![CDATA[
+       INSERT INTO "ZeptoMailResponse"
+        (
+            "Id",
+            "ApiKey",
+            "SenderEmail",
+            "SenderName",
+            "To",
+            "Cc",
+		    "Bcc",
+            "Subject",
+            "HtmlBody",
+		    "TextBody",
+		    "Attachments",
+            "NotificationErrorMessage",
+            "NotificationResponseDateTime",
+            "NotificationDelivery",
+			"CreatedBy",
+            "CreatedById",
+            "UpdatedBy",
+            "UpdatedById",
+            "UpdateReason",
+            "OwnerId",
+            "IsActive",
+            "IsDeleted",
+            "IsApproved",
+            "ApproverId",
+            "ApprovedDateTime",
+            "IsAuthorized",
+            "AuthorizedById",
+            "AuthorizedDateTime",
+            "SysData",
+            "TenantId",
+            "AssociatedUserId",
+            "SubTenantId"
+        )
+       VALUES
+        (
+            @Id,
+            @ApiKey, 
+            @SenderEmail,
+            @SenderName,
+            @To::jsonb,
+            @Cc::jsonb,
+		    @Bcc::jsonb,
+            @Subject,
+            @HtmlBody,
+		    @TextBody,
+		    @Attachments::jsonb,
+			@NotificationErrorMessage,
+            @NotificationResponseDateTime,
+            @NotificationDelivery::jsonb,
+			@CreatedBy,
+            @CreatedById,
+            @UpdatedBy,
+            @UpdatedById,
+            @UpdateReason,
+            @OwnerId,
+            @IsActive,
+            @IsDeleted,
+            @IsApproved,
+            @ApproverId,
+            @ApprovedDateTime,
+            @IsAuthorized,
+            @AuthorizedById,
+            @AuthorizedDateTime,
+            @SysData,
+            @TenantId,
+            @AssociatedUserId,
+            @SubTenantId
+        )
+       RETURNING "Id";
+
+		]]>
+	</sql>
+
+	<sql name="PostgreNotification.DeleteZeptoMailRequestById">
+		<![CDATA[
+       DELETE FROM "ZeptoMailRequest" WHERE "Id" = @Id;
+		]]>
+	</sql>
+
+	<sql name="PostgreNotification.MassTransitServiceLogs">
+		<![CDATA[
+          INSERT INTO "message_contract_store" (
+        id,
+        correlation_id,
+        conversation_id,
+        message_type,
+        source_address,
+        destination_address,
+        payload
+    )
+    VALUES (
+        @Id,
+        @CorrelationId,
+        @ConversationId,
+        @MessageType,
+        @SourceAddress,
+        @DestinationAddress,
+        @Payload::jsonb
+    );
+
+		]]>
+	</sql>
+
+	<sql name="PostgreNotification.FailedMassTransitMessages">
+		<![CDATA[
+          INSERT INTO "FailedMassTransitMessage"
+    (
+        "Id",
+        "QueueName",
+        "MessageType",
+        "Payload",
+        "Exception",
+        "FailedDateTime"
+    )
+    VALUES
+    (
+        @Id,
+        @QueueName,
+        @MessageType,
+        @Payload,
+        @Exception,
+        @FailedDateTime
+    );]]>
+	</sql>
+</sql-set>

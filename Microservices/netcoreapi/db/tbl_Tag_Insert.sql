@@ -1,0 +1,3 @@
+﻿INSERT INTO Tag values('User Defined',null,null,'60c7521f-9316-4a5f-a478-cffbb0ea0367',getdate(),'60c7521f-9316-4a5f-a478-cffbb0ea0367',getdate(),0);
+INSERT INTO Tag values('Cerebro',null,null,'60c7521f-9316-4a5f-a478-cffbb0ea0367',getdate(),'60c7521f-9316-4a5f-a478-cffbb0ea0367',getdate(),0);
+INSERT INTO Tag values('EPIC Classifications',null,null,'60c7521f-9316-4a5f-a478-cffbb0ea0367',getdate(),'60c7521f-9316-4a5f-a478-cffbb0ea0367',getdate(),0);

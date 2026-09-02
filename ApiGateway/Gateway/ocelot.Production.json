@@ -1,0 +1,161 @@
+{
+  // THe routes for auth should be written on the top, because it is hosted differently
+  // & path template : "/gateway/timesheet/{}", is common for Timesheet microservicews & 
+  //Timesheet authentication microservices, causing authentication on get users from auth itself.
+
+
+  //Gateways : 
+  //1. Heartbeat
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/gateway/heartbeat",
+      "UpstreamHttpMethod": [ "POST", "PUT", "GET" ],
+      "DownstreamPathTemplate": "/api/v1/heartbeat",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "10.1.29.32",
+          "Port": 85
+        }
+      ]
+    },
+    //2. WeatherForecast
+    {
+      "DownstreamPathTemplate": "/WeatherForecast",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "10.1.29.32",
+          "Port": 85
+        }
+      ],
+      "UpstreamPathTemplate": "/gateway/WeatherForecast",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+
+    //=============================   (NetCore)   ====================================
+    // Auth routes — no authentication at gateway level
+
+    {
+      "UpstreamPathTemplate": "/api/v1/Auth/login",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/POC9_CC/QuincyApi/api/v1/Auth/login",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "10.1.29.32",
+          "Port": 85
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/v1/Auth/autologin",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/POC9_CC/QuincyApi/api/v1/Auth/autologin",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "10.1.29.32",
+          "Port": 85
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/v1/Auth/authorize-token",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/POC9_CC/QuincyApi/api/v1/Auth/authorize-token",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "10.1.29.32",
+          "Port": 85
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/v1/Auth/refreshToken",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/POC9_CC/QuincyApi/api/v1/Auth/refreshToken",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "10.1.29.32",
+          "Port": 85
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/netcore/v1/Auth/serverIp",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/v1/Auth/serverIp",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "10.1.29.32",
+          "Port": 85
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/netcore/v1/Auth/internalAutoLogin",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/v1/Auth/internalAutoLogin",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "systemdesign-api.azurewebsites.net",
+          "Port": 443
+        }
+      ]
+    },
+
+
+    // netcore 
+
+    //{
+    //  "UpstreamPathTemplate": "/gateway/api/{everything}",
+    //  "DownstreamPathTemplate": "/api/{everything}",
+    //  "DownstreamScheme": "https",
+    //  "DownstreamHostAndPorts": [
+    //    {
+    //      "Host": "localhost",
+    //      "Port": 44358
+    //    }
+    //  ],
+    //  "AuthenticationOptions": {
+    //    "AuthenticationProviderKey": "MultiAuth",
+    //    "AllowedScopes": []
+    //  }
+    //},
+    {
+      "UpstreamPathTemplate": "/api/{everything}",
+      "DownstreamPathTemplate": "/POC9_CC/QuincyApi/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "10.1.29.32",
+          "Port": 85
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "MultiAuth",
+        "AllowedScopes": []
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/netcore/{everything}",
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "10.1.29.32",
+          "Port": 85
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "MultiAuth",
+        "AllowedScopes": []
+      }
+    }
+  ]
+}

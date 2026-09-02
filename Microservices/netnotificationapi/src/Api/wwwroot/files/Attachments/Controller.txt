@@ -1,0 +1,50 @@
+using Application.EmailNotification.SendEmailNotification;
+using Application.EmailNotification.RecieveEmailNotification;
+using Application.EmailNotification.ReceiveEmailById;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using MimeKit;
+using System.Collections.Generic;
+
+namespace Api.Controllers
+{
+    [AllowAnonymous]
+    public class NotificationController : ApiControllerBase
+    {
+        [HttpPost("SendEmail")]
+        [Consumes("multipart/form-data")]
+        [Produces("application/json")]
+        [ProducesResponseType(200, Type = typeof(string))]
+        [ProducesResponseType(400, Type = typeof(BadRequestObjectResult))]
+        public async Task<ActionResult<string>> SendEmailNotification(System.Collections.Generic.List<IFormFile> Attachment, string To, string Mailbody, string Subject)
+        {
+            //mediator's send method will call the SendNotificationEmail.
+            await Mediator.Send(new SendEmailNotificationQuery { attachments = Attachment, To = To, Subject = Subject, Mailbody = Mailbody });
+
+            return "Email Sent";
+        }
+
+        [HttpGet()]
+        [ProducesResponseType(200, Type = typeof(List<MimeMessage>))]
+        [ProducesResponseType(400, Type = typeof(BadRequestObjectResult))]
+        public async Task<List<MimeMessage>> ReceiveEmailNotification()
+        {
+            //mediator's send method will call the RecieveEmailNotificationQuery.
+            var result = await Mediator.Send(new RecieveEmailNotificationQuery { });
+            return result;             
+        }
+
+        [HttpGet("GetEmailByMessageId")]
+        [Consumes("application/json")]
+        [ProducesResponseType(200, Type = typeof(Domain.Entities.EmailNotification))]
+        [ProducesResponseType(400, Type = typeof(BadRequestObjectResult))]
+        public async Task<ActionResult<Domain.Entities.EmailNotification>> GetEmailByMessageIdQuery(string messageId)
+        {
+            //mediator's send method will call the ReceiveEmailByIdQuery.
+            return await Mediator.Send(new ReceiveEmailByIdQuery { messageId = messageId });
+        }
+    }
+}

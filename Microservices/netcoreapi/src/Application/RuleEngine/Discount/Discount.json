@@ -1,0 +1,210 @@
+[
+  {
+    "WorkflowName": "Discount",
+    "Rules": [
+
+      {
+        "RuleName": "GiveDiscount5",
+        "SuccessEvent": "5",
+        "ErrorMessage": "GiveDiscount5 failed.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.country == \"india\" && input1.loyaltyFactor == 1 && input1.totalPurchasesToDate >= 5000 && input2.totalOrders > 2 && input3.noOfVisitsPerMonth > 2",
+        "Actions": {
+          "OnFailure": {
+            "Name": "CustomAction",
+            "Context": { "Message": "GiveDiscount5 failed: conditions not met." }
+          }
+        }
+      },
+
+      {
+        "RuleName": "GiveDiscount10",
+        "SuccessEvent": "10",
+        "ErrorMessage": "GiveDiscount10 failed.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.country == \"india\" && input1.loyaltyFactor <= 2 && input1.totalPurchasesToDate >= 5000 && input2.totalOrders > 2 && input3.noOfVisitsPerMonth > 2",
+        "Actions": {
+          "OnFailure": {
+            "Name": "CustomAction",
+            "Context": { "Message": "GiveDiscount10 failed: criteria not met." }
+          }
+        }
+      },
+
+      {
+        "RuleName": "GiveDiscount20",
+        "SuccessEvent": "20",
+        "ErrorMessage": "GiveDiscount20 failed.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.country == \"india\" && input1.loyaltyFactor == 3 && input1.totalPurchasesToDate >= 10000 && input2.totalOrders > 2 && input3.noOfVisitsPerMonth > 2",
+        "Actions": {
+          "OnFailure": {
+            "Name": "CustomAction",
+            "Context": { "Message": "GiveDiscount20 failed: criteria not met." }
+          }
+        }
+      },
+
+      {
+        "RuleName": "GiveDiscount25",
+        "SuccessEvent": "25",
+        "ErrorMessage": "GiveDiscount25 failed.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.country != \"india\" && input1.loyaltyFactor >= 2 && input1.totalPurchasesToDate >= 10000 && input2.totalOrders > 2 && input3.noOfVisitsPerMonth > 5",
+        "Actions": {
+          "OnFailure": {
+            "Name": "CustomAction",
+            "Context": { "Message": "GiveDiscount25 failed: criteria not met." }
+          }
+        }
+      },
+
+      {
+        "RuleName": "GiveDiscount30",
+        "SuccessEvent": "30",
+        "ErrorMessage": "GiveDiscount30 failed.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.loyaltyFactor > 3 && input1.totalPurchasesToDate >= 50000 && input1.totalPurchasesToDate <= 100000 && input2.totalOrders > 5 && input3.noOfVisitsPerMonth > 15",
+        "Actions": {
+          "OnFailure": {
+            "Name": "CustomAction",
+            "Context": { "Message": "GiveDiscount30 failed: criteria not met." }
+          }
+        }
+      },
+
+      {
+        "RuleName": "GiveDiscount30NestedOrExample",
+        "SuccessEvent": "30",
+        "ErrorMessage": "GiveDiscount30NestedOrExample failed.",
+        "ErrorType": "Error",
+        "Operator": "OrElse",
+        "Rules": [
+          {
+            "RuleName": "IsLoyalAndHasGoodSpend",
+            "ErrorMessage": "IsLoyalAndHasGoodSpend failed.",
+            "ErrorType": "Error",
+            "RuleExpressionType": "LambdaExpression",
+            "Expression": "input1.loyaltyFactor > 3 && input1.totalPurchasesToDate >= 50000 && input1.totalPurchasesToDate <= 100000",
+            "Actions": {
+              "OnFailure": {
+                "Name": "CustomAction",
+                "Context": { "Message": "IsLoyalAndHasGoodSpend failed." }
+              }
+            }
+          },
+          {
+            "RuleName": "OrHasHighNumberOfTotalOrders",
+            "ErrorMessage": "OrHasHighNumberOfTotalOrders failed.",
+            "ErrorType": "Error",
+            "RuleExpressionType": "LambdaExpression",
+            "Expression": "input2.totalOrders > 15",
+            "Actions": {
+              "OnFailure": {
+                "Name": "CustomAction",
+                "Context": { "Message": "OrHasHighNumberOfTotalOrders failed." }
+              }
+            }
+          }
+        ],
+        "Actions": {
+          "OnFailure": {
+            "Name": "CustomAction",
+            "Context": { "Message": "GiveDiscount30NestedOrExample failed." }
+          }
+        }
+      },
+
+      {
+        "RuleName": "GiveDiscount35NestedAndExample",
+        "SuccessEvent": "35",
+        "ErrorMessage": "GiveDiscount35NestedAndExample failed.",
+        "ErrorType": "Error",
+        "Operator": "AndAlso",
+        "Rules": [
+          {
+            "RuleName": "IsLoyal",
+            "ErrorMessage": "IsLoyal failed.",
+            "ErrorType": "Error",
+            "RuleExpressionType": "LambdaExpression",
+            "Expression": "input1.loyaltyFactor > 3",
+            "Actions": {
+              "OnFailure": {
+                "Name": "CustomAction",
+                "Context": { "Message": "IsLoyal failed." }
+              }
+            }
+          },
+          {
+            "RuleName": "AndHasTotalPurchased100000",
+            "ErrorMessage": "AndHasTotalPurchased100000 failed.",
+            "ErrorType": "Error",
+            "RuleExpressionType": "LambdaExpression",
+            "Expression": "input1.totalPurchasesToDate >= 100000",
+            "Actions": {
+              "OnFailure": {
+                "Name": "CustomAction",
+                "Context": { "Message": "AndHasTotalPurchased100000 failed." }
+              }
+            }
+          },
+          {
+            "RuleName": "AndOtherConditions",
+            "ErrorMessage": "AndOtherConditions failed.",
+            "ErrorType": "Error",
+            "RuleExpressionType": "LambdaExpression",
+            "Expression": "input2.totalOrders > 15 && input3.noOfVisitsPerMonth > 25",
+            "Actions": {
+              "OnFailure": {
+                "Name": "CustomAction",
+                "Context": { "Message": "AndOtherConditions failed." }
+              }
+            }
+          }
+        ],
+        "Actions": {
+          "OnFailure": {
+            "Name": "CustomAction",
+            "Context": { "Message": "GiveDiscount35NestedAndExample failed." }
+          }
+        }
+      },
+
+      {
+        "RuleName": "SpecialDiscount",
+        "SuccessEvent": "Special Discount",
+        "ErrorMessage": "SpecialDiscount failed.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.name == \"Chaitanya\" && input1.email == \"chaitanya@spectraltech.ai\" && input1.creditHistory == \"excellent\" && input1.country == \"India\" && input1.loyaltyFactor == 5 && input1.totalPurchasesToDate == 2500000 && input2.totalOrders == 50 && input2.recurringItems == 2 && input3.noOfVisitsPerMonth == 40 && input3.percentageOfBuyingToVisit == 100",
+        "Actions": {
+          "OnFailure": {
+            "Name": "CustomAction",
+            "Context": { "Message": "SpecialDiscount failed." }
+          }
+        }
+      },
+
+      {
+        "RuleName": "GiveDiscount40",
+        "SuccessEvent": "40",
+        "ErrorMessage": "GiveDiscount40 failed.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.country == \"india\" && input1.loyaltyFactor == 4 && input1.totalPurchasesToDate >= 200000 && input2.totalOrders > 10 && input3.noOfVisitsPerMonth > 30",
+        "Actions": {
+          "OnFailure": {
+            "Name": "CustomAction",
+            "Context": { "Message": "GiveDiscount40 failed." }
+          }
+        }
+      }
+
+    ]
+  }
+]

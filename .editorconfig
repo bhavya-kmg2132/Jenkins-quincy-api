@@ -1,0 +1,10 @@
+root = true
+
+[*.cs]
+# Using directives
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+csharp_using_directive_placement = outside_namespace:warning
+
+# Remove unused usings
+dotnet_diagnostic.IDE0005.severity = warning

@@ -1,0 +1,151 @@
+Recomendation: Prefer String Interpolation Over Concatenation
+
+Bad:
+string message = "Hello " + name + "!";
+
+Good:
+string message = $"Hello {name}!";
+
+======================================================================================================
+
+Recomendation: Use Records and Immutable Types
+
+Example:
+
+public record Person(string Name, int Age);
+
+======================================================================================================
+
+Recomendation: Always use Dependency Injection
+Example:
+
+public interface IDataService
+{
+    string GetData();
+}
+public class DataService : IDataService
+{
+    public string GetData() => "Hello, Dependency Injection!";
+}
+Register it in your DI container:
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddScoped<IDataService, DataService>();
+
+======================================================================================================
+
+Recomendation: Use Asynchronous Programming
+
+Use Task.Run wisely, avoid async void, and always leverage ConfigureAwait(false) in library code.
+
+Example:
+public async Task<string> FetchDataAsync(HttpClient client)
+{
+    var response = await client.GetAsync("https://api.example.com/data");
+    response.EnsureSuccessStatusCode();
+    return await response.Content.ReadAsStringAsync();
+}
+
+======================================================================================================
+
+Recomendation: Write Unit Tests
+Example:
+
+[Fact]
+public void Add_ShouldReturnSum()
+{
+    int result = Add(2, 3);
+    Assert.Equal(5, result);
+}
+
+======================================================================================================
+
+Using large JSON objects without optimizations can severely impact .NET application performance. To mitigate these issues:
+
+Use streaming deserialization for large JSON files
+
+Compress API responses with Gzip/Brotli
+
+Switch to System.Text.Json for faster serialization
+
+Reduce payload size using DTOs and pagination
+
+Consider binary serialization formats like MessagePack
+
+Ideally JSON size should be less than 100 KB
+
+======================================================================================================
+
+Recomendation: Use JSON Streaming Instead of Loading Entire Files
+
+Instead of deserializing large JSON objects at once, use streaming deserialization to process data incrementally.
+
+Efficient JSON Streaming in .NET:
+using var stream = File.OpenRead("large_data.json");
+var data = await JsonSerializer.DeserializeAsync<MyObject>(stream);
+
+Benefits:
+
+Reduces memory usage
+Speeds up deserialization
+Avoids OutOfMemoryExceptions
+======================================================================================================
+
+Recomendation: Enable Gzip/Brotli Compression for API Responses
+Large JSON responses should be compressed before being sent over the network.
+Enable Compression in ASP.NET Core:
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+app.UseResponseCompression();
+
+Benefits:
+
+Reduces JSON size by 70–90%
+Improves API response time
+Lowers bandwidth costs
+
+======================================================================================================
+
+Recomendation: Use UTF-8-Based System.Text.Json for Performance
+
+.NET Core’s System.Text.Json is faster and more memory-efficient than Newtonsoft.Json.
+
+Example: Using System.Text.Json
+var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+var jsonString = JsonSerializer.Serialize(myObject, options);
+
+======================================================================================================
+
+Recomendation: Reduce JSON Payload Size with Selective Data Fetching
+
+Avoid sending unnecessary data by removing redundant fields and implementing pagination.
+
+Example: Using DTOs to Trim Response Data
+public class CustomerDto
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Email { get; set; }
+}
+
+======================================================================================================
+
+Recomendation: Consider Alternative Formats: MessagePack or Protobuf
+
+For high-performance applications, binary formats like MessagePack and Protocol Buffers (Protobuf) offer faster serialization and smaller payloads.
+
+Example: Using MessagePack in .NET
+byte[] bytes = MessagePackSerializer.Serialize(myObject);
+var deserialized = MessagePackSerializer.Deserialize<MyObject>(bytes);
+
+Why use MessagePack?
+
+Up to 10x faster than JSON
+Smaller payloads (~50% reduction)
+Ideal for real-time applications
+
+======================================================================================================
+
+Recomendation: 

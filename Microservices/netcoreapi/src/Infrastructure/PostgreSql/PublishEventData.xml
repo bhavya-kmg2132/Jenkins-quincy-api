@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+	<sql name="PublishEventData.Add">
+		<![CDATA[
+         INSERT INTO "EventStore_apidesign" 
+		 (
+		 "Id",
+		 "CorrelationId", 
+		 "AuditableRequestId",
+		 "AuditableRequestName",
+		 "AuditableAssemblyQualifiedName",
+		 "AuditableSourceEventName",
+		 "CreatedDateTime",
+		 "ApiName",
+		 "CollectionName",
+		 "EventData",
+		 "EventDataBinary",
+		 "UserId",
+		 "OperationType"
+		 )
+		 VALUES    
+		 (
+		 @Id,
+		 @CorrelationId,
+		 @AuditableRequestId,
+		 @AuditableRequestName,
+		 @AuditableAssemblyQualifiedName,
+		 @AuditableSourceEventName,
+		 @CreatedDateTime, 
+		 @ApiName, 
+		 @CollectionName,
+		 @EventData,
+		 @EventDataBinary,
+		 @UserId,
+		 @OperationType
+		 )
+		 RETURNING "Id"; 
+		]]>
+	</sql>
+
+	<sql name="PublishEventData.GetList">
+		<![CDATA[
+            SELECT 
+                "Es"."Id",
+                "Es"."CorrelationId",
+                "Es"."AuditableRequestId",
+                "Es"."AuditableRequestName",
+                "Es"."AuditableAssemblyQualifiedName",
+                "Es"."AuditableSourceEventName",
+                "Es"."CreatedDateTime",
+                "Es"."ApiName",
+                "Es"."CollectionName",
+                "Es"."EventDataBinary",
+                "Es"."UserId"::text ,
+                "Es"."OperationType"
+            FROM app."EventStore_apidesign" as "Es"
+			Where 1=1
+			#JOIN_CLAUSE#
+ #WHERE_CLAUSE# 
+ORDER BY
+    {0} {1}
+OFFSET (@PageNumber - 1) * @PageSize Limit @PageSize ;
+]]>
+	</sql>
+
+	<sql name="PublishEventData.GetPublishEventDataCount">
+		<![CDATA[
+SELECT COUNT(DISTINCT "Es"."Id")
+FROM
+    app."EventStore_apidesign" AS "Es"
+Where 1=1
+#JOIN_CLAUSE#
+#WHERE_CLAUSE#;
+--WHERE "Es"."IsDeleted" = FALSE
+]]>
+	</sql>
+</sql-set>

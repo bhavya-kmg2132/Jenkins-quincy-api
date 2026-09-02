@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Quincy — System Architecture Document</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true,theme:'neutral',flowchart:{curve:'basis'},sequence:{actorMargin:60,messageAlign:'center'}});</script>
+<style>
+:root{--gold:#b8860b;--gold-lt:#f9f0d4;--gold-md:#d4a017;--blue:#1e4d9b;--blue-lt:#dce8f8;--green:#0a6e3f;--red:#b91c1c;--orange:#c2410c;--grey:#64748b;--border:#d8d4c8;--bg:#fff;--text:#1e1e1e;--code-bg:#f5f5f0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Calibri,Arial,sans-serif;color:var(--text);background:#fff;font-size:13.5px;line-height:1.65}
+
+.cover{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:80px 40px;border-bottom:4px solid var(--gold)}
+.cover-title{font-size:48px;font-weight:800;color:var(--gold);line-height:1.15;margin-bottom:18px}
+.cover-sub{font-size:22px;color:var(--gold-md);margin-bottom:28px;font-weight:500}
+.cover-meta{font-size:14px;color:#888;font-style:italic;margin-top:6px}
+
+.nav{position:sticky;top:0;z-index:100;background:#1a1a1a;border-bottom:3px solid var(--gold);overflow-x:auto;white-space:nowrap}
+.nav-inner{display:inline-flex;padding:0 16px}
+.nav a{color:rgba(255,255,255,.65);text-decoration:none;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;display:inline-block;border-bottom:3px solid transparent;transition:color .2s,border-color .2s}
+.nav a:hover{color:var(--gold-lt);border-bottom-color:var(--gold)}
+
+.main{max-width:1080px;margin:0 auto;padding:40px 28px 80px}
+.section{margin-bottom:60px}
+.section-title{font-size:21px;font-weight:800;color:var(--gold);border-bottom:2px solid var(--gold);padding-bottom:10px;margin-bottom:22px}
+h3{font-size:16px;font-weight:700;color:var(--gold);margin:28px 0 12px}
+h4{font-size:14px;font-weight:700;color:var(--blue);margin:20px 0 8px}
+p{margin-bottom:11px;font-size:13.5px}
+
+.tw{overflow-x:auto;margin-bottom:18px;border-radius:6px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{background:var(--gold);color:#fff;font-weight:700;padding:8px 12px;text-align:left;font-size:11.5px;letter-spacing:.3px}
+table.blue thead th{background:var(--blue)}
+table.green thead th{background:var(--green)}
+table.dark thead th{background:#1a1a1a}
+tbody td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tbody tr:nth-child(even) td{background:#fafaf7}
+tbody tr:last-child td{border-bottom:none}
+td code,th code{background:var(--code-bg);padding:1px 5px;border-radius:3px;font-family:Consolas,monospace;font-size:11.5px;color:#7b3f00}
+
+pre{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:16px 18px;overflow-x:auto;font-family:Consolas,monospace;font-size:11.5px;line-height:1.7;margin-bottom:16px;border-left:4px solid var(--gold)}
+code.inline{background:var(--code-bg);padding:1px 6px;border-radius:3px;font-family:Consolas,monospace;font-size:12px;color:#7b3f00;border:1px solid #e8dfc8}
+
+.alert{border-radius:6px;padding:14px 18px;margin-bottom:16px;font-size:13px}
+.alert-gold{background:var(--gold-lt);border-left:4px solid var(--gold);color:#5c3d00}
+.alert-blue{background:var(--blue-lt);border-left:4px solid var(--blue);color:#1e3a5f}
+
+.sev{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.sev-info{background:#dbeafe;color:#1e40af}
+
+ul.doc{list-style:none;padding:0;margin-bottom:14px}
+ul.doc li{padding:3px 0 3px 20px;position:relative;font-size:13.5px}
+ul.doc li::before{content:'•';position:absolute;left:4px;color:var(--gold);font-size:16px;line-height:1.2}
+ul.doc li strong{color:var(--gold)}
+
+.pipe{display:flex;flex-direction:column;gap:0;margin-bottom:18px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.pipe-row{display:flex;align-items:stretch;border-bottom:1px solid var(--border)}
+.pipe-row:last-child{border-bottom:none}
+.pipe-n{width:38px;min-width:38px;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.pipe-row.muted .pipe-n{background:#888}
+.pipe-name{width:230px;min-width:190px;background:#1a1a1a;color:#fff;padding:9px 12px;font-weight:700;font-size:12.5px;display:flex;align-items:center}
+.pipe-desc{flex:1;padding:9px 12px;font-size:12.5px;display:flex;align-items:center;background:#fff}
+
+.mermaid-wrap{background:#fafaf7;border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px;overflow-x:auto}
+.mermaid-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--grey);margin-bottom:12px}
+
+.stat-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.stat{background:var(--gold-lt);border:1px solid var(--gold-md);border-radius:6px;padding:10px 16px;min-width:180px}
+.stat .lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gold);margin-bottom:3px}
+.stat .val{font-size:14px;font-weight:700;color:var(--text)}
+
+.layers{border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:18px}
+.layer-row{display:flex;border-bottom:1px solid var(--border)}
+.layer-row:last-child{border-bottom:none}
+.layer-label{width:130px;min-width:110px;padding:12px 14px;font-weight:700;font-size:12.5px;display:flex;align-items:center}
+.layer-content{flex:1;padding:12px 14px;font-size:12.5px;border-left:1px solid var(--border)}
+.layer-dep{width:220px;padding:12px 14px;font-size:11.5px;color:var(--grey);font-style:italic;border-left:1px solid var(--border);display:flex;align-items:center}
+.l0 .layer-label{background:var(--gold);color:#fff}
+.l1 .layer-label{background:var(--blue);color:#fff}
+.l2 .layer-label{background:var(--green);color:#fff}
+.l3 .layer-label{background:#7c3aed;color:#fff}
+
+footer{text-align:center;padding:28px;font-size:12px;color:var(--grey);font-style:italic;border-top:1px solid var(--border);margin-top:60px}
+
+@media print{.nav{display:none}.cover{min-height:unset;page-break-after:always}.section{page-break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-title">System Architecture<br>Document</div>
+  <div class="cover-sub">Quincy — Microservices Platform</div>
+  <div class="cover-meta">Prepared by: Manish Singh Bisht &nbsp;·&nbsp; manish.bisht@kmgus.com</div>
+  <div class="cover-meta">Version 1.0 &nbsp;·&nbsp; April 2026</div>
+</div>
+
+<!-- NAV -->
+<div class="nav"><div class="nav-inner">
+  <a href="#s1">1 Summary</a><a href="#s2">2 Principles</a><a href="#s3">3 System</a>
+  <a href="#s4">4 Catalog</a><a href="#s5">5 Security</a><a href="#s6">6 Clean Arch</a>
+  <a href="#s7">7 Data</a><a href="#s8">8 Messaging</a><a href="#s9">9 Caching</a>
+  <a href="#s10">10 Deploy</a><a href="#s11">11 Stack</a><a href="#s12">12 NFR</a>
+</div></div>
+
+<div class="main">
+
+<!-- ══ 1. EXECUTIVE SUMMARY ══ -->
+<div class="section" id="s1">
+<div class="section-title">1. Executive Summary</div>
+<p>This document describes the architecture of an enterprise-grade .NET 10 microservices platform built on Clean Architecture, CQRS, and event-driven design principles. The platform is organised around discrete business domains — core operations, notifications, and workflow orchestration — each deployed as an independent, loosely coupled service behind a unified Ocelot API Gateway.</p>
+<p><strong>Key architectural highlights:</strong></p>
+<ul class="doc">
+  <li><strong>API-First:</strong> Single Ocelot gateway is the sole entry point — enforces auth, routing, rate limiting, and caching.</li>
+  <li><strong>Polyglot Persistence:</strong> SQL Server and PostgreSQL — each service uses the best-fit store. Dual-DB strategy: single config flag <code class="inline">Api:SqlDatabaseServer</code> switches engine at runtime.</li>
+  <li><strong>Hybrid Authentication:</strong> Azure AD (Entra ID) and custom JWT operate side-by-side via a single PolicyScheme selector.</li>
+  <li><strong>Resilient Messaging:</strong> MassTransit on PostgreSQL provides transactional outbox semantics — messages are never lost.</li>
+  <li><strong>Observable by Design:</strong> Structured NLog logging and event audit trails built-in. CorrelationId/CausationId chain across all services.</li>
+  <li><strong>Configuration-Driven Architecture:</strong> Single flag switches DB engine, messaging transport, auth scheme, cache backend, and notification provider — zero code changes required.</li>
+  <li><strong>Field-Level Permission System:</strong> <code class="inline">[FieldPermission]</code> attribute + <code class="inline">FieldPermissionBehaviour</code> + <code class="inline">FieldPermissionService</code> provides bidirectional (EDIT + VIEW) field-level ACL with reflection metadata caching per type.</li>
+  <li><strong>Transactional Outbox Reliability:</strong> MassTransit PostgreSQL outbox guarantees delivery. 3-retry × 10s policy. Batch consumer for throughput. Dead-letter tracking via <code class="inline">FailedMessage</code>.</li>
+  <li><strong>Clean Architecture Discipline:</strong> Domain has zero external NuGet refs. Application defines all interfaces. Infrastructure fully swappable — proven by dual-DB strategy.</li>
+  <li><strong>Three-Stage Validation:</strong> FluentValidation (syntax) → RulesEngine JSON (business) → Specification Pattern (domain) — complete pipeline without coupling.</li>
+  <li><strong>Pluggable Notification Providers:</strong> ZeptoMail API and Microsoft Graph configurable without code changes. MassTransit consumer routes based on message <code class="inline">Type</code> field.</li>
+</ul>
+</div>
+
+<!-- ══ 2. ARCHITECTURE PRINCIPLES ══ -->
+<div class="section" id="s2">
+<div class="section-title">2. Architecture Principles</div>
+<div class="tw"><table>
+<thead><tr><th>#</th><th>Principle</th><th>Evidence from Code</th><th>Implementation Details</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><strong>Clean Architecture</strong></td><td>4 layers per microservice: Api, Application, Domain, Infrastructure</td><td>Domain has zero external NuGet dependencies. Application defines interfaces; Infrastructure implements them. <code>Application.csproj</code> only references <code>Domain.csproj</code>.</td></tr>
+<tr><td>2</td><td><strong>CQRS</strong></td><td><code>CreateAcmeProductRequest</code>, <code>GetAcmeProductListQuery</code>, MediatR 13.1.0</td><td>Commands return data mutations; Queries return DTOs. Separate validators, handlers, and repository calls per direction. Dispatched via <code>ApiControllerBase.Mediator</code>.</td></tr>
+<tr><td>3</td><td><strong>Domain-Driven Design</strong></td><td><code>AcmeProduct</code>, <code>Policy</code> implement <code>IHasDomainEvent</code></td><td>Aggregate roots raise typed domain events on state changes. <code>AuditableEntity</code> base with full audit trail. <code>DomainEvent</code> base class. Value objects via <code>ValueObject</code> base.</td></tr>
+<tr><td>4</td><td><strong>Event-Driven Architecture</strong></td><td><code>IDomainEventService</code>, <code>MassTransitPublisher</code>, MassTransit 8.5.7</td><td>Domain events → MediatR notification → MassTransit publish → PostgreSQL outbox → consumer. 14 domain event types across 5 aggregates.</td></tr>
+<tr><td>5</td><td><strong>Defense in Depth</strong></td><td><code>AuthorizationMiddleware</code>, <code>ApiKeyAuthBehaviour</code>, <code>FieldPermissionBehaviour</code></td><td>5 defense layers: TLS → JWT/AzureAD → API Key → Claims policy → Field-level ACL. Every layer independently enforced.</td></tr>
+<tr><td>6</td><td><strong>Separation of Concerns</strong></td><td>Each service owns exactly one domain; no shared databases</td><td>netcoreapi owns business data; netnotificationapi owns email; networker owns background event processing. Shared contracts via <code>Messaging.Contract</code> project.</td></tr>
+<tr><td>7</td><td><strong>Resilience</strong></td><td><code>Infrastructure/DependencyInjection.cs</code>; <code>HostOptions.BackgroundServiceExceptionBehavior = Ignore</code></td><td>MassTransit: <code>UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(10)))</code>. Background services isolated from host crash. Health checks at <code>/api/health</code> and <code>/health-ui</code>.</td></tr>
+<tr><td>8</td><td><strong>Observability First</strong></td><td>NLog 6.0.5, <code>RequestTimingMiddleware</code></td><td>Structured logging with CorrelationId → CausationId chain. Request timing logged to <code>ApiRequestLog</code> table. DB logging target available.</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<!-- ══ 3. SYSTEM OVERVIEW ══ -->
+<div class="section" id="s3">
+<div class="section-title">3. System Overview</div>
+
+<h3>3.1 Solution Overview</h3>
+<p>The diagram below illustrates the full system topology — from external consumers through the API Gateway, into the microservices layer, and down to the data and external service tiers.</p>
+<ul class="doc">
+  <li>Quincy is a .NET 10 microservices solution comprising multiple projects organized around Clean Architecture principles.</li>
+  <li>All services are hosted OutOfProcess and communicate via a single Ocelot API Gateway.</li>
+  <li>Inter-service messaging uses MassTransit with PostgreSQL as the primary transport.</li>
+  <li>Authentication supports both Azure AD (Entra ID) and custom database JWT through a PolicyScheme selector.</li>
+</ul>
+<div class="mermaid-wrap">
+<div class="mermaid-title">Figure 1 — System Context</div>
+<div class="mermaid">
+flowchart LR
+    Client(["🖥️ Client\nBrowser / Mobile / API"])
+    Gateway["🔀 API Gateway\nOcelot 24.0.1\nstaigateway.azurewebsites.net"]
+    Core["⚙️ netcoreapi\nBusiness Domain\nsystemdesign-api.azurewebsites.net"]
+    Notify["📧 netnotificationapi\nEmail / SMS"]
+    Worker["⚡ networker\nBackground Worker"]
+    Auth["🔐 netauthlib\nShared Auth Library"]
+    AzureAD(["☁️ Azure AD\nEntra ID"])
+    SQL[("🗄️ SQL Server\n14.194.34.44")]
+    PG[("🐘 PostgreSQL\npg-server-1.postgres.database.azure.com")]
+
+    Client-->|HTTPS Bearer JWT|Gateway
+    Gateway-->|HTTPS X-Request-Uid headers|Core
+    Gateway-->|Permission lookup|Auth
+    Core-->|MassTransit PostgreSQL outbox|PG
+    Core-->|Dapper queries|SQL
+    Notify-->|Consumes CreateNotificationMessage|PG
+    Auth-->|Dapper queries|SQL
+    Gateway-->|JWT validation|AzureAD
+    Core-->|JWT validation|AzureAD
+</div>
+</div>
+
+<div class="mermaid-wrap">
+<div class="mermaid-title">Figure 2 — Container Architecture</div>
+<div class="mermaid">
+flowchart TD
+    subgraph AzureApp["Azure App Services (OutOfProcess / Kestrel)"]
+        GW["API Gateway\nOcelot 24.0.1 · net10.0\nMultiAuth · Permission · Cache"]
+        NC["netcoreapi\nnet10.0\nCQRS · DDD · Rules · Hangfire"]
+        NN["netnotificationapi\nnet10.0\nMassTransit Consumer\nZepto · Graph"]
+        NW["networker\nnet10.0\nBackground Worker\nApiWorkerService"]
+    end
+    subgraph Shared["Shared Library"]
+        NA["netauthlib\nnet10.0\nUser · Role · Permission\nFieldPermissionService"]
+    end
+    subgraph Data["Data Tier"]
+        SQL2[("SQL Server\nMainDB [api-design-10]\nUserDB [UserPool]")]
+        PG2[("PostgreSQL\nEventDB")]
+    end
+    subgraph Ext["External Services"]
+        AAD["Azure AD Entra ID"]
+        ZM["ZeptoMail API"]
+        MSG["Microsoft Graph"]
+    end
+    GW-->NC & NA
+    NC-->SQL2 & PG2 & ZM & MSG
+    NN-->PG2 & ZM & MSG
+    GW-->AAD
+    NC-->AAD
+    NA-->SQL2 & PG2
+</div>
+</div>
+
+<h3>3.2 API Gateway — Deep Architecture</h3>
+<p>The diagram below illustrates the full API Gateway inbound request pipeline. All inbound traffic enters via the Ocelot Gateway. The gateway inspects the Bearer token issuer and delegates to either Azure AD or the custom JWT validator before forwarding the authenticated request downstream.</p>
+
+<div class="pipe">
+  <div class="pipe-row"><div class="pipe-n">1</div><div class="pipe-name">TLS Termination</div><div class="pipe-desc">Accept connection, terminate SSL. HTTPS enforced; HSTS enabled on all services.</div></div>
+  <div class="pipe-row"><div class="pipe-n">2</div><div class="pipe-name">CORS Enforcement</div><div class="pipe-desc">Validate Origin against allowed-origins policy (<code>WebUrl:AllowOriginApis</code>). Policy: <code>"allowSpecificOrigin"</code>. No wildcard origins.</div></div>
+  <div class="pipe-row"><div class="pipe-n">3</div><div class="pipe-name">Rate Limiting</div><div class="pipe-desc">Token-bucket check per client key. Configured per-route in <code>ocelot.json</code>.</div></div>
+  <div class="pipe-row"><div class="pipe-n">4</div><div class="pipe-name">Authentication</div><div class="pipe-desc">PolicyScheme <code>MultiAuth</code>: inspects token issuer → routes to AzureAd or DbAuth handler. Clock skew: 0s.</div></div>
+  <div class="pipe-row"><div class="pipe-n">5</div><div class="pipe-name">Claims Extraction</div><div class="pipe-desc">Append X-Request-Uid (email→preferred_username→unique_name), X-Request-Oid (oid), X-Correlation-Id, X-Request-Id, X-Api-Key, X-Gateway-Start-Ms headers.</div></div>
+  <div class="pipe-row"><div class="pipe-n">6</div><div class="pipe-name">Authorisation</div><div class="pipe-desc">Policy evaluation on populated ClaimsPrincipal. AzureUsersOnly requires <code>iss</code> claim. DbUsersOnly requires <code>auth_type=db</code> claim.</div></div>
+  <div class="pipe-row"><div class="pipe-n">7</div><div class="pipe-name">Cache Lookup</div><div class="pipe-desc">Memory / SQL Server response cache lookup before forwarding. Returns cached response if hit.</div></div>
+  <div class="pipe-row"><div class="pipe-n">8</div><div class="pipe-name">Route Matching</div><div class="pipe-desc">Ocelot downstream config — match path + method. <code>/netcore/{everything}</code> → <code>systemdesign-api.azurewebsites.net/api/{everything}</code>.</div></div>
+  <div class="pipe-row"><div class="pipe-n">9</div><div class="pipe-name">Request Forwarding</div><div class="pipe-desc">Proxy request to downstream microservice with enriched headers.</div></div>
+  <div class="pipe-row"><div class="pipe-n">10</div><div class="pipe-name">Response &amp; Compression</div><div class="pipe-desc">Transform response + Gzip / Brotli encoding. Log elapsed time to <code>ApiRequestLog</code> table.</div></div>
+</div>
+
+<h4>3.2.1 Multi-Auth Policy Scheme</h4>
+<p>A PolicyScheme named <strong>MultiAuth</strong> inspects the raw JWT issuer (without signature validation) and forwards to one of two handlers:</p>
+<div class="tw"><table class="blue">
+<thead><tr><th>Token Issuer</th><th>Handler</th><th>Validation Method</th></tr></thead>
+<tbody>
+<tr><td>starts with <code>https://sts.windows.net</code></td><td>AzureAd</td><td>Microsoft.Identity.Web 4.0.1 — tenant/audience validated. Domain: stai09.onmicrosoft.com</td></tr>
+<tr><td>anything else (issuer = <code>"netapi"</code>)</td><td>DbAuth</td><td>JwtBearer symmetric key — HS256. Issuer + Audience: <code>"netapi"</code>. Clock skew: 0s.</td></tr>
+</tbody>
+</table></div>
+
+<h4>3.2.2 Claims Extraction &amp; Header Injection</h4>
+<div class="tw"><table>
+<thead><tr><th>Header Set</th><th>JWT Claim Source</th><th>Priority</th></tr></thead>
+<tbody>
+<tr><td><code>X-Request-Uid</code></td><td>email → preferred_username → unique_name</td><td>First non-null claim</td></tr>
+<tr><td><code>X-Request-Oid</code></td><td>oid</td><td>Direct</td></tr>
+<tr><td><code>X-Correlation-Id</code></td><td>Existing header or new GUID</td><td>Preserved if present</td></tr>
+<tr><td><code>X-Request-Id</code></td><td>Existing header or new GUID</td><td>Preserved if present</td></tr>
+<tr><td><code>X-Api-Key</code></td><td>appsettings.json → Api:api-key</td><td>Static per environment</td></tr>
+</tbody>
+</table></div>
+
+<h4>3.2.3 Cache Hierarchy &amp; Sync</h4>
+<div class="tw"><table>
+<thead><tr><th>Layer</th><th>Provider</th><th>Scope</th><th>TTL</th></tr></thead>
+<tbody>
+<tr><td>1. In-Memory</td><td>IMemoryCache</td><td>Process-local (per instance)</td><td><code>CacheSettings:InMemoryCacheExpiryHour</code></td></tr>
+<tr><td>2. SQL Server</td><td>IDistributedCache</td><td>Shared across instances</td><td>Sliding — table: Cache / dbo</td></tr>
+<tr><td>3. NetAuth Service</td><td>HTTP → stored procs</td><td>Source of truth</td><td>N/A — live query</td></tr>
+</tbody>
+</table></div>
+<p><code>CacheSyncService</code> (BackgroundService) runs every 30 seconds. It reads the <code>DeletedInMemoryCacheLog</code> table in SQL Server and evicts stale entries from in-memory cache, enabling cross-instance invalidation without Redis.</p>
+
+<h3>3.3 netcoreapi — Deep Architecture</h3>
+<p>The primary domain service. Every inbound command/query traverses an ordered MediatR pipeline before the handler executes.</p>
+
+<div class="mermaid-wrap">
+<div class="mermaid-title">Figure 3 — netcoreapi MediatR Pipeline &amp; Validation Layers</div>
+<div class="mermaid">
+flowchart LR
+    C2["HTTP Request\n(Controller)\nawait mediator.Send(command/query)"]
+    L["1\nLogging\nBehaviour"]
+    U["2\nUnhandled\nException"]
+    A["3\nApiKey\nAuth"]
+    AZ2["4\nAuthorization\nBehaviour"]
+    V["5\nValidation\nBehaviour"]
+    P["6\nPerformance\nBehaviour"]
+    H["HANDLER\nBusiness Logic\nDomain ops · Repository calls · Domain events raised"]
+    CB["7*\nCaching\nBehaviour"]
+
+    C2-->L-->U-->A-->AZ2-->V-->P-->H-->CB
+    style H fill:#b8860b,color:#fff,font-weight:bold
+    style CB fill:#888,color:#fff
+</div>
+</div>
+
+<p>Below the pipeline, a <strong>3-Stage Validation</strong> applies at the ValidationBehaviour step:</p>
+<div class="mermaid-wrap">
+<div class="mermaid-title">Figure 4 — 3-Stage Validation (applied at ValidationBehaviour)</div>
+<div class="mermaid">
+flowchart LR
+    S1["Stage 1\nFluentValidation\nIValidator&lt;TRequest&gt;\npre-handler · 400 on fail"]
+    S2["Stage 2\nRules Engine JSON\nengine.ExecuteAllRules()\nAsync — dynamic business rules"]
+    S3["Stage 3\nDomain Rules\nISpecification&lt;T&gt;\nchain · post-handler"]
+    S1-->S2-->S3
+    style S1 fill:#1e4d9b,color:#fff
+    style S2 fill:#b8860b,color:#fff
+    style S3 fill:#7c3aed,color:#fff
+</div>
+</div>
+
+<h4>3.3.1 MediatR Pipeline — Exact Execution Order</h4>
+<div class="tw"><table class="blue">
+<thead><tr><th>Order</th><th>Behaviour</th><th>Responsibility</th><th>Throws</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>LoggingBehaviour</td><td>Logs RequestName, UserId, CorrelationId, full request body</td><td>No</td></tr>
+<tr><td>2</td><td>UnhandledExceptionBehaviour</td><td>try/catch wrapper — logs Error, rethrows</td><td>Rethrows</td></tr>
+<tr><td>3</td><td>ApiKeyAuthBehaviour</td><td>Validates X-Api-Key vs Api:api-key config</td><td>UnauthorizedAccessException</td></tr>
+<tr><td>4</td><td>AuthorizationBehaviour</td><td>ValidateRequestUser() — checks IsActive, IsDeleted</td><td>UnauthorizedAccessException</td></tr>
+<tr><td>5</td><td>ValidationBehaviour</td><td>Runs all IValidator&lt;TRequest&gt; (FluentValidation)</td><td>ValidationException</td></tr>
+<tr><td>6</td><td>PerformanceBehaviour</td><td>Stopwatch — logs Warning if elapsed &gt; 1000 ms</td><td>No</td></tr>
+<tr><td>7*</td><td>CachingBehaviour</td><td>Post-execution: cache result or invalidate query cache</td><td>No</td></tr>
+</tbody>
+</table></div>
+
+<h4>3.3.2 Domain Events — End-to-End Flow</h4>
+<div class="mermaid-wrap">
+<div class="mermaid-title">Figure 5 — Domain Events Flow</div>
+<div class="mermaid">
+sequenceDiagram
+    participant H as Handler
+    participant E as Domain Entity
+    participant DES as DomainEventService
+    participant MED as MediatR IPublisher
+    participant EH as EventHandler
+    participant MTP as MassTransitPublisher
+    participant PG3 as PostgreSQL Outbox
+    participant NN2 as netnotificationapi Consumer
+    participant EXT as ZeptoMail / Graph
+
+    H->>E: entity.Done = true
+    E->>E: DomainEvents.Add(AcmeProductCreatedEvent)
+    H->>DES: Publish(AcmeProductCreatedEvent)
+    DES->>MED: IPublisher.Publish(DomainEventNotification)
+    MED->>EH: Dispatch to handler
+    EH->>MTP: PublishEventAsync(data, type)
+    MTP->>PG3: Publish CreateNotificationMessage
+    Note over PG3: 3 retries × 10s interval
+    PG3->>NN2: CreateNotificationConsumer
+    NN2->>EXT: Send email notification
+</div>
+</div>
+</div>
+
+<!-- ══ 4. SERVICE CATALOG ══ -->
+<div class="section" id="s4">
+<div class="section-title">4. Service Catalog</div>
+<div class="tw"><table>
+<thead><tr><th>Service</th><th>Path</th><th>Purpose</th><th>Technology</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td><strong>API Gateway</strong></td><td><code>ApiGateway/Gateway/Gateway.csproj</code></td><td>Single entry point. Routing, dual-auth, permission enforcement, response caching, request timing.</td><td>Ocelot 24.0.1, net10.0</td><td>Production</td></tr>
+<tr><td><strong>netcoreapi</strong></td><td><code>Microservices/netcoreapi/src/Api/Api.csproj</code></td><td>Primary business domain: AcmeProduct, Policy, TodoItem/List, CronJobRule, Master, CustomFields, VersionTrack, Auth, RuleEngine.</td><td>ASP.NET Core 10, MediatR 13.1.0, Dapper 2.1.66, Hangfire 1.8.22</td><td>Production</td></tr>
+<tr><td><strong>netnotificationapi</strong></td><td><code>Microservices/netnotificationapi/src/Api/Api.csproj</code></td><td>Multi-provider notification hub. MassTransit consumer + REST endpoints. Providers: ZeptoMail API, Microsoft Graph.</td><td>MassTransit 8.5.7, net10.0</td><td>Production</td></tr>
+<tr><td><strong>networker</strong></td><td><code>Microservices/networker/src/Api/Api.csproj</code></td><td>Background worker service. Forwards events to netnotificationapi REST endpoint.</td><td>net10.0, ApiWorkerService hosted service</td><td>Production</td></tr>
+<tr><td><strong>netauthlib</strong></td><td><code>Auth/netauthlib/NetAuth.Lib.csproj</code></td><td>Shared identity library. User/role/permission CRUD, FieldPermissionService. Registered via <code>NetAuthLibServices.ConfigureServices()</code>.</td><td>Dapper 2.1.66, net10.0</td><td>Shared Library</td></tr>
+<tr><td><strong>Messaging.Contract</strong></td><td><code>Messaging.Contract/Messaging.Contract.csproj</code></td><td>Shared message contracts. <code>CreateNotificationMessage</code>, <code>MessageEnvelope&lt;T&gt;</code>, <code>FailedMessage</code>.</td><td>net10.0, no external deps</td><td>Shared Library</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<!-- ══ 5. SECURITY ARCHITECTURE ══ -->
+<div class="section" id="s5">
+<div class="section-title">5. Security Architecture</div>
+
+<h3>5.1 Dual-Authentication Strategy</h3>
+<p>A PolicyScheme transparently routes tokens to the correct validator, enabling Azure AD enterprise identities and internal database users to co-exist without consumer-facing changes.</p>
+<div class="mermaid-wrap">
+<div class="mermaid-title">Figure 6 — Security Architecture — Dual Authentication Flow</div>
+<div class="mermaid">
+flowchart TD
+    T["Bearer Token"] --> I{"Inspect issuer\n(no sig validation)"}
+    I -->|"starts with\nhttps://sts.windows.net"| AZ3["AzureAd Handler\nMicrosoft.Identity.Web 4.0.1\nTenant: 5e93fb32-...\nDomain: stai09.onmicrosoft.com"]
+    I -->|"anything else\n(netapi issuer)"| DB["DbAuth Handler\nJwtBearer HS256\nKey: Jwt:Key config\nIssuer+Audience: 'netapi'\nClockSkew: 0s"]
+    AZ3 --> CP["Unified ClaimsPrincipal"]
+    DB --> CP
+    CP --> POL{"Authorization\nPolicy Check"}
+    POL -->|"Claims satisfied"| OK["✅ Access Granted"]
+    POL -->|"Claims missing"| DENY["❌ 403 Forbidden"]
+</div>
+</div>
+
+<h3>5.2 Defense-in-Depth Model</h3>
+<div class="tw"><table class="blue">
+<thead><tr><th>Layer</th><th>Control</th><th>Enforcement Location</th></tr></thead>
+<tbody>
+<tr><td><strong>L1 — Transport</strong></td><td>HTTPS enforced, HSTS enabled, Brotli/Gzip compression</td><td>Kestrel / Azure App Service TLS</td></tr>
+<tr><td><strong>L2 — JWT/AzureAD Token</strong></td><td>Bearer token validated by MultiAuth PolicyScheme. Clock skew = 0s.</td><td>API Gateway, netcoreapi (if SelfAuthentication=true)</td></tr>
+<tr><td><strong>L3 — API Key</strong></td><td>X-Api-Key header validated against <code>Api:api-key</code> config</td><td>netcoreapi MediatR pipeline</td></tr>
+<tr><td><strong>L4 — Claims Policy</strong></td><td>IsActive, IsDeleted checks via <code>ICurrentUserService</code></td><td>netcoreapi MediatR pipeline</td></tr>
+<tr><td><strong>L5 — Field-Level ACL</strong></td><td><code>[FieldPermission(view, edit, throwError)]</code> on entity properties. VIEW masking + EDIT validation via reflection.</td><td>netcoreapi MediatR pipeline</td></tr>
+</tbody>
+</table></div>
+
+<h3>5.3 Authorization Model</h3>
+<div class="tw"><table>
+<thead><tr><th>Type</th><th>Implementation</th></tr></thead>
+<tbody>
+<tr><td>RBAC</td><td>User ↔ Role (UserRole), Role ↔ Permission (RolePermission), Role ↔ UiPermission. Managed by netauthlib.</td></tr>
+<tr><td>Claims-Based</td><td>AzureUsersOnly (requires <code>iss</code> claim), DbUsersOnly (requires <code>auth_type=db</code> claim)</td></tr>
+<tr><td>Resource-Level (API route)</td><td><code>Permission</code> table — ApiName maps to route. <code>HasPermissionAsync(userId, route)</code> in Gateway <code>AuthorizationMiddleware</code></td></tr>
+<tr><td>Field-Level Security</td><td><code>[FieldPermission(view:"...", edit:"...", throwError:bool)]</code> on domain entity properties. Reflection metadata cached per type in <code>ConcurrentDictionary</code>.</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<!-- ══ 6. CLEAN ARCHITECTURE & CQRS ══ -->
+<div class="section" id="s6">
+<div class="section-title">6. Clean Architecture &amp; CQRS</div>
+
+<h3>6.1 Dependency Model</h3>
+<p>Each microservice strictly follows Clean Architecture. The golden rule: dependencies only point inward. Domain is completely infrastructure-agnostic.</p>
+
+<h3>6.2 Layer Responsibilities</h3>
+<p>Every microservice (netcoreapi, netnotificationapi) follows the same four-layer structure. Dependencies point inward — Infrastructure depends on Application, Application depends on Domain, Domain has no external dependencies.</p>
+<div class="tw"><table>
+<thead><tr><th>Layer</th><th>Contents</th><th>Direction</th></tr></thead>
+<tbody>
+<tr><td><strong>Api</strong></td><td>Controllers · Middleware · Program.cs · Filters</td><td>→ depends on Application</td></tr>
+<tr><td><strong>Application</strong></td><td>Commands · Queries · MediatR Handlers · Validators · Interfaces</td><td>→ depends on Domain only</td></tr>
+<tr><td><strong>Domain</strong></td><td>Entities · Value Objects · Domain Events · Custom Exceptions</td><td>No external dependencies</td></tr>
+<tr><td><strong>Infrastructure</strong></td><td>Repositories · DbContext · MassTransit · Hangfire · File Storage</td><td>→ implements Application interfaces</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<!-- ══ 7. DATA ARCHITECTURE ══ -->
+<div class="section" id="s7">
+<div class="section-title">7. Data Architecture</div>
+
+<h3>7.1 Polyglot Persistence</h3>
+<p>No shared databases between services. Each service owns its store; the backend (SQL Server vs PostgreSQL) is selected at runtime via a configuration flag.</p>
+<div class="mermaid-wrap">
+<div class="mermaid-title">Figure 7 — Polyglot Persistence Strategy</div>
+<div class="mermaid">
+flowchart LR
+    subgraph Services
+        NC2["netcoreapi"]
+        NN3["netnotificationapi"]
+        NW3["networker"]
+        NA2["netauthlib"]
+        GW2["Gateway"]
+    end
+    subgraph Stores["Data Layer — Polyglot Persistence"]
+        S1[("SQL Server\nMainDB [api-design-10]\nUserDB [UserPool]")]
+        S2[("PostgreSQL\nEventDB")]
+    end
+    NC2-->S1
+    NA2-->S1
+    GW2-->S1
+    NN3-->S2
+    NW3-->S2
+    style S2 fill:#b8860b,color:#fff
+</div>
+</div>
+<p><em>Each service owns its data — no shared databases between services. Database selection driven by config flag: <code>Api:SqlDatabaseServer = "PostgreSql" | "MsSqlServer"</code></em></p>
+
+<h3>7.2 Dual Database Strategy</h3>
+<div class="mermaid-wrap">
+<div class="mermaid-title">Figure 8 — Data Access Architecture — Dual DB + SQL-from-XML</div>
+<div class="mermaid">
+flowchart TD
+    CFG["appsettings.json\nApi:SqlDatabaseServer"]
+    CFG -->|MsSqlServer| MS["MsSqlServer\nSqlConnection\nConnectionStrings:SqlDBConnection\nXML: MsSqlServer/*.xml"]
+    CFG -->|PostgreSql| PG4["PostgreSql\nNpgsqlConnection\nConnectionStrings:PostgreSqlDBConnection\nXML: PostgreSql/*.xml"]
+    MS --> DICT["LoadSqlQueriesXml('TodoItem')\n→ Dictionary&lt;string,string&gt;\nKey: 'TodoItem.GetList'\nValue: 'SELECT * FROM TodoItem WHERE IsActive=1...'"]
+    PG4 --> DICT
+    Note["△ Both XML files must be updated when adding a new query"]
+    DICT --> Note
+    style CFG fill:#b8860b,color:#fff
+</div>
+</div>
+<p>The config key <code>Api:SqlDatabaseServer</code> switches all Dapper connections and all SQL file paths at startup. The same codebase runs on either MSSQL or PostgreSQL without code changes.</p>
+<div class="tw"><table>
+<thead><tr><th>Setting Value</th><th>Connection Type</th><th>XML Folder</th><th>Config Section</th></tr></thead>
+<tbody>
+<tr><td>MsSqlServer</td><td>Microsoft.Data.SqlClient.SqlConnection</td><td><code>Api/MsSqlServer/</code></td><td>MsSqlQueriesXmlPath:*</td></tr>
+<tr><td>PostgreSql</td><td>Npgsql.NpgsqlConnection</td><td><code>Api/PostgreSql/</code></td><td>PostgreSqlQueriesXmlPath:*</td></tr>
+</tbody>
+</table></div>
+
+<h3>7.4 Custom Field System</h3>
+<p>Every major entity supports a dynamic custom field system. Fields are stored as a JSON column (<code>CustomFieldJson</code>) in the DB and deserialized to <code>List&lt;CustomField&gt;</code> in C#. Each field carries its own validation metadata:</p>
+<pre>public class CustomField {
+    public string field_name         { get; set; }  // DB column name
+    public string display_name       { get; set; }
+    public object field_value        { get; set; }  // dynamic value
+    public string field_type         { get; set; }  // text, number, date, ...
+    public int    field_length       { get; set; }
+    public bool   field_is_required  { get; set; }
+    public string field_defaultValue { get; set; }
+    public string regex              { get; set; }  // validation regex
+}</pre>
+
+<h3>7.5 Schema Migration — DbUp</h3>
+<p>Database schemas are version-controlled and automatically applied at service startup using DbUp. Scripts stored under <code>/Infrastructure/Persistence/BuildScripts/Scripts/</code> with naming convention: <code>YYMMDD-{Seq}-{Description}.sql</code>. The <code>InitialSetUpController</code> endpoint triggers schema bootstrap on demand.</p>
+<div class="tw"><table>
+<thead><tr><th>Tool</th><th>Packages</th><th>Location</th><th>Execution Method</th></tr></thead>
+<tbody>
+<tr><td>DbUp</td><td><code>dbup-sqlserver 6.0.16</code>, <code>dbup-postgresql 6.1.5</code></td><td><code>/Infrastructure/Persistence/BuildScripts/Scripts/YYMMDD-{Seq}-{Description}.sql</code></td><td>Auto-applied at startup via <code>DatabaseInitializer</code> singleton. Manual trigger via <code>InitialSetUpController</code>.</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<!-- ══ 8. MESSAGING ══ -->
+<div class="section" id="s8">
+<div class="section-title">8. Messaging &amp; Event-Driven Architecture</div>
+
+<h3>8.1 Messaging Architecture</h3>
+<div class="mermaid-wrap">
+<div class="mermaid-title">Figure 9 — Transactional Outbox Architecture</div>
+<div class="mermaid">
+flowchart LR
+    subgraph Producer["Producer (netcoreapi)"]
+        AH["Application Handler"]-->MTP2["MassTransitPublisher\n.PublishEventAsync()"]
+        MTP2-->OB["Outbox Table\napp.messages"]
+    end
+    subgraph Transport["MassTransit Transport"]
+        OB-->|"Retry: 3× · 10s interval"|OW["Outbox Worker\nMassTransit.SqlTransport\n.PostgreSQL 8.5.7"]
+    end
+    subgraph Consumer["Consumer (netnotificationapi)"]
+        OW-->CC["CreateNotificationConsumer\nbatch=20 msgs / 20s"]
+        CC-->NP["Notification Processor\nZeptoMail · Graph"]
+        NP-->ML["EventDB Audit Log"]
+    end
+</div>
+</div>
+
+<h3>8.2 Message Contracts</h3>
+<div class="tw"><table>
+<thead><tr><th>Contract</th><th>Type</th><th>Fields</th><th>Producer</th><th>Consumer</th></tr></thead>
+<tbody>
+<tr><td><code>CreateNotificationMessage</code></td><td>record</td><td><code>NotificationId(Guid)</code>, <code>Type(string)</code>, <code>PayloadJson(string)</code>, <code>CreatedAtUtc(DateTime)</code></td><td>netcoreapi <code>MassTransitPublisher</code></td><td>netnotificationapi <code>CreateNotificationConsumer</code></td></tr>
+<tr><td><code>MessageEnvelope&lt;T&gt;</code></td><td>record</td><td><code>MessageId</code>, <code>CorrelationId</code>, <code>CausationId</code>, <code>MessageType</code>, <code>Version="1.0"</code>, <code>CreatedAt</code>, <code>Payload:T</code>, <code>Headers</code>, <code>Source</code>, <code>RetryCount=0</code></td><td>netcoreapi <code>MassTransitPublisher</code></td><td>Message Envelope Consumer</td></tr>
+<tr><td><code>FailedMessage</code></td><td>class</td><td><code>Id(Guid)</code>, <code>QueueName</code>, <code>MessageType</code>, <code>Payload</code>, <code>Exception</code>, <code>FailedDateTime</code></td><td>MassTransit error pipeline</td><td>Dead-letter handler</td></tr>
+</tbody>
+</table></div>
+
+<h3>8.3 Reliability Features</h3>
+<div class="tw"><table>
+<thead><tr><th>Feature</th><th>Implementation</th><th>Configuration</th></tr></thead>
+<tbody>
+<tr><td>Message Retry</td><td><code>UseMessageRetry(r =&gt; r.Interval(3, TimeSpan.FromSeconds(10)))</code></td><td>3 retries × 10-second intervals. Source: <code>Infrastructure/DependencyInjection.cs</code></td></tr>
+<tr><td>Transactional Outbox</td><td>MassTransit PostgreSQL outbox. Messages written atomically with business transaction.</td><td><code>MassTransit.SqlTransport.PostgreSQL 8.5.7</code></td></tr>
+<tr><td>Dead Letter</td><td><code>FailedMessage</code> contract in <code>Messaging.Contract</code></td><td>Dead-letter queue tracking via <code>FailedMessage</code> records</td></tr>
+<tr><td>Background Service Isolation</td><td><code>HostOptions.BackgroundServiceExceptionBehavior = Ignore</code></td><td>Background service exception doesn't crash host</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<!-- ══ 9. CACHING ══ -->
+<div class="section" id="s9">
+<div class="section-title">9. Caching Strategy</div>
+<p>A hybrid, multi-tier cache minimises database load while providing configurable expiry and consistency controls. A background <code class="inline">CacheSyncService</code> invalidates stale identity and permission entries every 5 minutes.</p>
+
+<div class="stat-row">
+  <div class="stat"><div class="lbl">Gateway In-Memory TTL</div><div class="val">30 minutes (0.5h)</div></div>
+  <div class="stat"><div class="lbl">netcoreapi In-Memory TTL</div><div class="val">1 hour</div></div>
+  <div class="stat"><div class="lbl">HybridCache Default Expiry</div><div class="val">24 hours</div></div>
+  <div class="stat"><div class="lbl">HybridCache Local Expiry</div><div class="val">18 hours</div></div>
+  <div class="stat"><div class="lbl">CacheSyncService Check Interval</div><div class="val">Every 30 seconds</div></div>
+  <div class="stat"><div class="lbl">Identity Cache Sync Interval</div><div class="val">Every 5 minutes</div></div>
+</div>
+
+<h3>9.1 Cache Tier Hierarchy</h3>
+<div class="mermaid-wrap">
+<div class="mermaid-title">Figure 10 — Multi-Tier Hybrid Caching Strategy</div>
+<div class="mermaid">
+flowchart TD
+    Q["Incoming Query"]
+    L1{"L1 — In-Process\nIMemoryCache\nGateway: 0.5h TTL\nnetcoreapi: 1h TTL"}
+    L2{"L2 — Distributed Cache\nSQL Server · PostgreSQL"}
+    DB2["Primary Database\nSQL Server / PostgreSQL"]
+    CS["CacheSyncService\n(BackgroundService)\nInvalidates stale identity\n& permission entries\nevery 5 minutes"]
+
+    Q-->L1
+    L1-->|HIT|R1["Return cached"]
+    L1-->|MISS|L2
+    L2-->|HIT|BK1["Back-fill L1\nReturn cached"]
+    L2-->|MISS|DB2
+    DB2-->POP["Populate L2\nReturn fresh data"]
+    CS-.->L1
+
+    style CS fill:#b8860b,color:#fff
+</div>
+</div>
+<p><em>Backend configurable at runtime: InMemory · PostgreSQL · SqlServer</em></p>
+
+<h3>9.2 Cache Inventory</h3>
+<div class="tw"><table>
+<thead><tr><th>Cache Layer</th><th>Provider</th><th>TTL</th><th>Config Flag</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>L1 In-Memory</td><td><code>IMemoryCache</code> → <code>InMemoryCacheService</code></td><td>0.5h (Gateway) / 1h (netcoreapi)</td><td><code>CacheSettings:UseInMemoryCache=true</code></td><td>Fastest lookup; identity/permission caching per instance</td></tr>
+<tr><td>L2 SQL Server</td><td><code>ISqlServerCacheService</code> → dbo.Cache</td><td>Sliding expiry</td><td><code>CacheSettings:UseSqlServerCache=true</code></td><td>Durable; shared across instances; cross-service sync point</td></tr>
+<tr><td>HybridCache</td><td><code>Microsoft.Extensions.Caching.Hybrid 9.10.0</code></td><td>24h default / 18h local</td><td>Startup.cs <code>AddHybridCache()</code></td><td>Application-level L1+L2 combined; max payload 1MB</td></tr>
+<tr><td>Dapper Query Cache</td><td><code>Dapper.Extensions.MSSQL 5.3.1</code></td><td>Per-query</td><td><code>AllMethodsEnableCache=false</code> (opt-in)</td><td>Transparent SQL query result caching</td></tr>
+</tbody>
+</table></div>
+
+<h3>9.3 Three Independent Caching Systems (netcoreapi)</h3>
+<div class="tw"><table>
+<thead><tr><th>System</th><th>Provider</th><th>Scope</th><th>Key Strategy</th></tr></thead>
+<tbody>
+<tr><td>CachingBehaviour</td><td>IMemoryCache or IDistributedCache</td><td>MediatR query results</td><td><code>{env}|{api}|{RequestType}|{prop}|{val}</code></td></tr>
+<tr><td>HybridCache</td><td>InMemory + Distributed</td><td>Application-level</td><td>Manual</td></tr>
+<tr><td>Dapper.Extensions</td><td>IMemoryCache (transparent)</td><td>SQL query results</td><td>Automatic per query</td></tr>
+</tbody>
+</table></div>
+
+<h3>9.4 Cache Invalidation Strategy</h3>
+<div class="tw"><table>
+<thead><tr><th>Trigger</th><th>Cache Affected</th><th>Mechanism</th></tr></thead>
+<tbody>
+<tr><td>Write command (Command handler)</td><td>MediatR query cache</td><td><code>[InvalidateCache]</code> attribute → <code>CachingBehaviour</code> evicts keys matching pattern</td></tr>
+<tr><td>User/permission deleted</td><td>L1 In-Memory (Gateway)</td><td><code>CacheSyncService</code> reads <code>dbo.DeletedInMemoryCacheLog</code> every 30s, evicts on 5-min cycle</td></tr>
+<tr><td>TTL expiry</td><td>All layers</td><td>Automatic by provider (IMemoryCache, IDistributedCache)</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<!-- ══ 10. DEPLOYMENT ══ -->
+<div class="section" id="s10">
+<div class="section-title">10. Deployment &amp; Infrastructure</div>
+
+<div class="mermaid-wrap">
+<div class="mermaid-title">Figure 11 — Deployment &amp; Infrastructure Topology</div>
+<div class="mermaid">
+flowchart TD
+    subgraph Azure["Microsoft Azure — Azure App Services (PaaS) — OutOfProcess / Kestrel"]
+        GWS["API Gateway"]
+        NCS["netcoreapi"]
+        NNS["netnotificationapi"]
+        NAS["netauthapi"]
+    end
+    subgraph AzureData["Azure Managed Data"]
+        APPG["Azure PostgreSQL\npg-server-1.postgres.database.azure.com"]
+        AZBLO["Azure Blob Storage"]
+        AZAD["Azure AD\nEntra ID"]
+    end
+    subgraph OnPrem["On-Premises"]
+        OPSQL[("SQL Server\n111.93.220.178\nMainDB [api-design-10]\nUserDB [UserPool]")]
+        OPPG[("PostgreSQL\n9.189.253.251\nEventDB")]
+    end
+    subgraph SaaS["SaaS / Cloud Services"]
+        ZPT["ZeptoMail\nEmail API"]
+        MSG["Microsoft Graph\nEmail"]
+        S3["AWS S3\nFile Storage"]
+    end
+    GWS-->NCS & NNS & NAS
+    NCS & NNS-->APPG
+    GWS & NAS-->OPSQL
+    NAS-->OPPG
+    NNS-->ZPT & MSG
+    GWS-->AZAD
+    NCS-->AZBLO & S3
+</div>
+</div>
+
+<h3>10.1 Hosting Model</h3>
+<p>All services use <strong>OutOfProcess hosting</strong> (Kestrel behind Azure App Service / IIS). This is a deliberate choice to avoid the <em>'ANCM Mixed Hosting Models Not Supported'</em> issue and ensures consistent behavior across Azure App Service plans and on-premises IIS deployments.</p>
+
+<h3>10.2 External Service Integrations</h3>
+<div class="tw"><table>
+<thead><tr><th>Service</th><th>Provider</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>Email (Transactional)</td><td>ZeptoMail API</td><td>High-deliverability transactional email</td></tr>
+<tr><td>Email (Enterprise)</td><td>Microsoft Graph</td><td>Outlook / Microsoft 365 integration</td></tr>
+<tr><td>File Storage</td><td>AWS S3</td><td>Import / export files</td></tr>
+<tr><td>File Storage</td><td>Azure Blob Storage</td><td>Attachments</td></tr>
+<tr><td>Identity</td><td>Azure AD Entra ID</td><td>Enterprise SSO</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<!-- ══ 11. TECH STACK ══ -->
+<div class="section" id="s11">
+<div class="section-title">11. Technology Stack Reference</div>
+
+<h3>Platform &amp; Runtime</h3>
+<div class="tw"><table class="green">
+<thead><tr><th>Technology</th><th>Version</th><th>Project(s)</th></tr></thead>
+<tbody>
+<tr><td>.NET / ASP.NET Core</td><td>10.0</td><td>All projects (net10.0)</td></tr>
+<tr><td>C#</td><td>13</td><td>All projects</td></tr>
+<tr><td>Ocelot</td><td>24.0.1</td><td>Gateway.csproj</td></tr>
+<tr><td>Ocelot.Cache.CacheManager</td><td>24.0.0</td><td>Gateway.csproj</td></tr>
+<tr><td>Swashbuckle.AspNetCore</td><td>9.0.6 (GW/Core), 7.3.0 (Notif)</td><td>Api.csproj files</td></tr>
+<tr><td>Microsoft.AspNetCore.Mvc.Versioning</td><td>5.1.0</td><td>Api.csproj files</td></tr>
+<tr><td>Microsoft.Identity.Web</td><td>4.0.1</td><td>Gateway.csproj</td></tr>
+<tr><td>System.IdentityModel.Tokens.Jwt</td><td>8.15.0</td><td>All auth projects</td></tr>
+</tbody>
+</table></div>
+
+<h3>Application Layer</h3>
+<div class="tw"><table class="green">
+<thead><tr><th>Library</th><th>Version</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>MediatR</td><td>13.1.0 (GW/Core), 12.4.1 (Notif)</td><td>CQRS dispatcher + pipeline behaviors</td></tr>
+<tr><td>AutoMapper.Extensions.Microsoft.DependencyInjection</td><td>12.0.1</td><td>Entity ↔ DTO mapping</td></tr>
+<tr><td>FluentValidation</td><td>12.1.0 (Core), 11.11.0 (Notif)</td><td>Request input validation</td></tr>
+<tr><td>RulesEngine</td><td>6.0.0</td><td>JSON-based business rule evaluation</td></tr>
+<tr><td>Hangfire</td><td>1.8.22</td><td>Background job scheduling (cron)</td></tr>
+<tr><td>Hangfire.PostgreSql</td><td>1.20.13</td><td>Hangfire PostgreSQL storage</td></tr>
+<tr><td>Hangfire.SqlServer</td><td>1.8.22</td><td>Hangfire SQL Server storage</td></tr>
+<tr><td>Microsoft.Extensions.Caching.Hybrid</td><td>9.10.0</td><td>HybridCache — 24h default / 18h local / 1MB payload</td></tr>
+<tr><td>BCrypt.Net-Next</td><td>4.1.0</td><td>Password hashing</td></tr>
+</tbody>
+</table></div>
+
+<h3>Data Layer</h3>
+<div class="tw"><table class="green">
+<thead><tr><th>Technology</th><th>Version</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>Dapper</td><td>2.1.66</td><td>Micro-ORM, parameterized SQL via XML files</td></tr>
+<tr><td>Dapper.Extensions.MSSQL</td><td>5.3.1 (Core), 5.3.3 (Notif)</td><td>Dapper extensions with caching</td></tr>
+<tr><td>Microsoft.Data.SqlClient</td><td>6.1.2</td><td>SQL Server driver</td></tr>
+<tr><td>Npgsql</td><td>10.0.0 (GW/Core), 9.0.3 (Notif)</td><td>PostgreSQL driver</td></tr>
+<tr><td>Microsoft.EntityFrameworkCore</td><td>9.0.10</td><td>Present but DbContext commented out — DbUp used for migrations</td></tr>
+<tr><td>dbup-sqlserver</td><td>6.0.16</td><td>SQL Server schema migrations</td></tr>
+<tr><td>dbup-postgresql</td><td>6.1.5</td><td>PostgreSQL schema migrations</td></tr>
+<tr><td>Community.Microsoft.Extensions.Caching.PostgreSql</td><td>6.0.1 (GW), 5.0.1 (Infra)</td><td>PostgreSQL distributed cache backend</td></tr>
+</tbody>
+</table></div>
+
+<h3>Messaging &amp; Infrastructure</h3>
+<div class="tw"><table class="green">
+<thead><tr><th>Technology</th><th>Version</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>MassTransit</td><td>8.5.7</td><td>Message bus (6 transport options)</td></tr>
+<tr><td>MassTransit.SqlTransport.PostgreSQL</td><td>8.5.7</td><td>PostgreSQL transactional outbox</td></tr>
+<tr><td>MassTransit.SqlTransport.SqlServer</td><td>8.5.7</td><td>SQL Server transport (inactive)</td></tr>
+<tr><td>NLog</td><td>6.0.5 (Core), 5.4.0 (Notif)</td><td>Structured logging</td></tr>
+<tr><td>NLog.Database</td><td>6.0.3</td><td>DB logging target</td></tr>
+<tr><td>Microsoft.Extensions.Caching.SqlServer</td><td>9.0.10</td><td>SQL Server distributed cache</td></tr>
+<tr><td>Community.Microsoft.Extensions.Caching.PostgreSql</td><td>6.0.1</td><td>PostgreSQL distributed cache</td></tr>
+<tr><td>AspNetCore.HealthChecks.SqlServer</td><td>9.0.0</td><td>Health check: SQL Server</td></tr>
+<tr><td>AspNetCore.HealthChecks.UI</td><td>9.0.0</td><td>Health check dashboard /health-ui</td></tr>
+<tr><td>Microsoft.Graph</td><td>5.103.0</td><td>Microsoft 365 email</td></tr>
+<tr><td>AWSSDK.S3</td><td>4.0.11</td><td>AWS S3 file storage</td></tr>
+<tr><td>Azure.Storage.Blobs</td><td>12.26.0</td><td>Azure Blob Storage</td></tr>
+</tbody>
+</table></div>
+
+<h3>Notification Providers</h3>
+<div class="tw"><table class="green">
+<thead><tr><th>Provider</th><th>SDK</th><th>Version</th><th>Config</th></tr></thead>
+<tbody>
+<tr><td>ZeptoMail</td><td>ZeptoMail SDK / sib_api_v3_sdk</td><td>4.0.2</td><td><code>NotificationSettings[n]:AuthToken</code></td></tr>
+<tr><td>Microsoft Graph</td><td>Microsoft.Graph</td><td>5.103.0</td><td><code>MSGraphSettings:TenantId/ClientId/Thumbprint</code></td></tr>
+</tbody>
+</table></div>
+<h3>Testing</h3>
+<div class="tw"><table class="green">
+<thead><tr><th>Component</th><th>Technology</th><th>Version</th></tr></thead>
+<tbody>
+<tr><td>Test Framework</td><td>NUnit</td><td>4.3.2</td></tr>
+<tr><td>Mocking</td><td>Moq</td><td>4.20.72</td></tr>
+<tr><td>Assertions</td><td>FluentAssertions</td><td>8.1.1</td></tr>
+<tr><td>Coverage</td><td>coverlet.collector</td><td>6.0.4</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<!-- ══ 12. NON-FUNCTIONAL ══ -->
+<div class="section" id="s12">
+<div class="section-title">12. Non-Functional Characteristics</div>
+
+<h3>Scalability</h3>
+<ul class="doc">
+  <li><strong>Horizontal Scaling:</strong> Stateless services (no in-process session state) — scale out via Azure App Service plan with zero config changes.</li>
+  <li><strong>Async Messaging:</strong> MassTransit PostgreSQL outbox decouples producers from consumers — burst traffic absorbed naturally. Batch consumer: 20 messages per 20-second window.</li>
+  <li><strong>Caching:</strong> HybridCache (L1+L2) + pluggable backends. <code>CachingBehaviour</code> auto-caches MediatR query results via <code>[CacheQueryResponse]</code>.</li>
+</ul>
+
+<h3>Resilience</h3>
+<ul class="doc">
+  <li><strong>Retry Strategy:</strong> MassTransit: <code>UseMessageRetry(r =&gt; r.Interval(3, TimeSpan.FromSeconds(10)))</code>. 3 attempts before dead-letter.</li>
+  <li><strong>Transactional Outbox:</strong> Messages committed atomically with business transaction — guaranteed delivery even if consumer offline.</li>
+  <li><strong>Background Service Isolation:</strong> <code>HostOptions.BackgroundServiceExceptionBehavior = Ignore</code> — background service crash doesn't bring down the host.</li>
+</ul>
+
+<h3>Security</h3>
+<ul class="doc">
+  <li><strong>Authentication:</strong> Dual-scheme (Azure AD Entra ID + HS256 JWT) via MultiAuth PolicyScheme. ClockSkew = 0s.</li>
+  <li><strong>Authorization:</strong> 3-tier: API-level gateway permission → Request-level MediatR behavior → Field-level reflection attribute enforcement.</li>
+  <li><strong>Data Protection:</strong> HTTPS enforced; Brotli/Gzip compression; BCrypt.Net-Next 4.1.0 for password hashing.</li>
+</ul>
+
+<h3>Maintainability</h3>
+<ul class="doc">
+  <li><strong>Modularity:</strong> Clean Architecture + CQRS. Domain has zero external NuGet dependencies. New features follow same pattern without touching existing code.</li>
+  <li><strong>Testability:</strong> All dependencies injected via interfaces. Application layer has no infrastructure references — fully unit-testable with mock implementations.</li>
+  <li><strong>Configuration Management:</strong> DB engine, transport, auth scheme, notification providers, cache backends — all runtime-switchable via single config flags. No code changes required.</li>
+  <li><strong>Rule Externalisation:</strong> Business rules in JSON files (RulesEngine 6.0.0). No redeployment for rule changes — restart required.</li>
+  <li><strong>SQL Externalisation:</strong> All SQL in XML files per entity per DB dialect. Adding a query = update XML only. No recompile.</li>
+</ul>
+</div>
+
+
+</div><!-- /main -->
+<footer>
+  System Architecture Document — Quincy Microservices Platform &nbsp;·&nbsp; Version 1.0, April 2026<br>
+  Prepared by: Manish Singh Bisht &nbsp;·&nbsp; manish.bisht@kmgus.com &nbsp;·&nbsp; For queries or amendments, contact the Solution Architect.
+</footer>
+</body>
+</html>

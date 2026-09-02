@@ -1,0 +1,56 @@
+﻿Connect to your Azure SQL Database server with SSMS as an admin in master. 
+Create a SQL authentication login called ‘msb’ with a 
+password of ‘DevSuperSecret!’, create a user mapped to the 
+login called ‘msb’ in a database, and then 
+add it to the db_datareader and db_datawriter roles.
+
+-- create SQL auth login from master 
+CREATE LOGIN msb 
+WITH PASSWORD = 'DevSuperSecret!'
+Open another query window and choose your user database in the dropdown.
+
+-- select your db in the dropdown and create a user mapped to a login 
+CREATE USER [msb] 
+FOR LOGIN [msb] 
+WITH DEFAULT_SCHEMA = dbo; 
+  
+-- add user to role(s) in db 
+ALTER ROLE db_datareader ADD MEMBER [msb]; 
+ALTER ROLE db_datawriter ADD MEMBER [msb]; 
+GRANT EXECUTE ON SCHEMA::dbo TO msb; 
+GRANT SELECT, UPDATE, DELETE, INSERT, EXECUTE ON SCHEMA::dbo TO msb;
+GRANT SELECT, INSERT, DELETE, ALTER, EXECUTE, CONTROL ON SCHEMA::dbo TO msb;
+GRANT CREATE TABLE TO msb;
+GRANT CREATE VIEW TO msb;
+GRANT CREATE PROCEDURE TO msb;
+GRANT ALTER ON SCHEMA::[dbo] TO msb;
+GO
+
+Repeat second step for all databases you are adding ‘msb’ to. 
+Note, you will need to open a new connection(s).
+======================================================================
+======================================================================
+Execute this if you want the user to have role of dbmanager and login manager roles.
+-- add user to role(s) in db 
+ALTER ROLE dbmanager ADD MEMBER [msb]; 
+ALTER ROLE loginmanager ADD MEMBER [msb];
+
+=====================================================================
+=====================================================================
+
+Lastly, we'll add an Azure Active Directory user that can also manage 
+databases and logins. Connect to your Azure SQL Database server 
+with SSMS as an admin in master. Add a contained user ‘name@domain.com’ and add it 
+to the dbmanager and login manager roles.
+-- add contained Azure AD user 
+CREATE USER [name@domain.com] 
+FROM EXTERNAL PROVIDER 
+WITH DEFAULT_SCHEMA = dbo;  
+  
+-- add user to role(s) in db 
+ALTER ROLE dbmanager ADD MEMBER [name@domain.com]; 
+ALTER ROLE loginmanager ADD MEMBER [name@domain.com]; 
+
+=====================================================================
+=====================================================================
+

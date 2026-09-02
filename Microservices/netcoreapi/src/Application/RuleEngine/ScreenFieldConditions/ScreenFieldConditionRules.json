@@ -1,0 +1,513 @@
+[
+  {
+    "WorkflowName": "PolicyScreenConditions",
+    "Rules": [
+      {
+        "RuleName": "RelatedPolicyTbdRequiresAnticipatedEffDate",
+        "SuccessEvent": "Anticipated Effective Date is valid",
+        "ErrorMessage": "Anticipated Effective Date is mandatory when Related Policy is TBD.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.Is(input1.RelatedPolicy, \"TBD\") || input1.HasValue(input1.AnticipatedEffectiveDate)"
+      },
+      {
+        "RuleName": "AccountCreditRequiresRelatedPolicy",
+        "SuccessEvent": "Account Credit related fields are valid",
+        "ErrorMessage": "Related Policy and Policy Number are mandatory when Account Credit is Yes.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsYes(input1.AccountCredit) || input1.HasValue(input1.RelatedPolicy)"
+      },
+      {
+        "RuleName": "IrpmAdjustmentRangeNonFleet",
+        "SuccessEvent": "IRPM Adjustment is within range",
+        "ErrorMessage": "IRPM Adjustment must be between -40 and 0 when Fleet Vehicles = No.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.IrpmAdjustment == null || !input1.IsNo(input1.FleetVehicles) || input1.InRange(input1.IrpmAdjustment, -40, 0)"
+      },
+      {
+        "RuleName": "IrpmAdjustmentRangeFleet",
+        "SuccessEvent": "IRPM Adjustment is within range",
+        "ErrorMessage": "IRPM Adjustment must be between -40 and +25 when Fleet Vehicles = Yes.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.IrpmAdjustment == null || !input1.IsYes(input1.FleetVehicles) || input1.InRange(input1.IrpmAdjustment, -40, 25)"
+      },
+      {
+        "RuleName": "IccPucFilingsBlocksQuote",
+        "SuccessEvent": "ICC/PUC filings response is valid",
+        "ErrorMessage": "ICC or PUC filings are required - the quote cannot proceed. Return to the Policy Dashboard.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsYes(input1.IccPucFilings)"
+      },
+      {
+        "RuleName": "HazardousMaterialsBlocksQuote",
+        "SuccessEvent": "Hazardous materials response is valid",
+        "ErrorMessage": "Operations involving transportation of hazardous materials cannot proceed. Return to the Policy Dashboard.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsYes(input1.HazardousMaterialsTransport)"
+      },
+      {
+        "RuleName": "SnowRemovalRequiresDetail",
+        "SuccessEvent": "Snow removal detail is valid",
+        "ErrorMessage": "An answer (Town, State, Municipalities, Big box stores/Residential/Other) is mandatory when snowplowing/snow removal is done for a fee.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsYes(input1.SnowRemovalForFee) || input1.HasValue(input1.SnowRemovalDetail)"
+      },
+      {
+        "RuleName": "PriorDeclinedRequiresExplanation",
+        "SuccessEvent": "Prior declined explanation is valid",
+        "ErrorMessage": "An explanation is mandatory when a policy or coverage was declined, cancelled or non-renewed during the prior 3 years.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsYes(input1.PriorPolicyDeclined) || input1.HasValue(input1.PriorPolicyDeclinedExplanation)"
+      },
+      {
+        "RuleName": "DeliveryServiceRequiresDetails",
+        "SuccessEvent": "Delivery service details are valid",
+        "ErrorMessage": "An explanation and answers to the time-constraint and personal-auto delivery questions are mandatory when the insured provides delivery service.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsYes(input1.DeliveryService) || (input1.HasValue(input1.DeliveryServiceExplanation) && input1.HasValue(input1.TimeConstraintDeliveries) && input1.HasValue(input1.PersonalAutoDeliveries))"
+      },
+      {
+        "RuleName": "TimeConstraintDeliveriesRequiresExplanation",
+        "SuccessEvent": "Time constraint deliveries explanation is valid",
+        "ErrorMessage": "An explanation is mandatory when deliveries are subject to time constraints.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsYes(input1.TimeConstraintDeliveries) || input1.HasValue(input1.TimeConstraintDeliveriesExplanation)"
+      },
+      {
+        "RuleName": "PersonalAutoDeliveriesRequiresExplanation",
+        "SuccessEvent": "Personal auto deliveries explanation is valid",
+        "ErrorMessage": "An explanation is mandatory when employees use their personal autos to perform delivery service.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsYes(input1.PersonalAutoDeliveries) || input1.HasValue(input1.PersonalAutoDeliveriesExplanation)"
+      },
+      {
+        "RuleName": "EndorsementRequiresComments",
+        "SuccessEvent": "Endorsement comments are valid",
+        "ErrorMessage": "Comments are mandatory when Transaction Type is Endorsement.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.Is(input1.TransactionType, \"Endorsement\") || input1.HasValue(input1.Comments)"
+      },
+      {
+        "RuleName": "CancelReasonRequiresNewCarrierFields",
+        "SuccessEvent": "Cancellation fields are valid",
+        "ErrorMessage": "New Carrier and 'Was this policy retained by the agency?' are mandatory when Cancel Reason is Insured Request or Rewritten with other company - 2A.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.In(input1.CancelReason, \"Insured Request|Rewritten with other company - 2A|2A\") || (input1.HasValue(input1.NewCarrier) && input1.HasValue(input1.RetainedByAgency))"
+      }
+    ]
+  },
+  {
+    "WorkflowName": "VehicleScreenConditions",
+    "Rules": [
+      {
+        "RuleName": "PrivatePassengerClassCodeNonFleet",
+        "SuccessEvent": "Class Code is valid",
+        "ErrorMessage": "Class Code must be 739100 for a Private Passenger vehicle when Fleet Vehicles = No.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.IsNonOwnedEntry || input1.IsHiredCarEntry || !input1.Is(input1.VehicleType, \"Private Passenger\") || !input1.IsNo(input1.FleetVehicles) || !input1.HasValue(input1.ClassCode) || !input1.In(input1.ClassCode, \"739100|739800\") || input1.Is(input1.ClassCode, \"739100\")"
+      },
+      {
+        "RuleName": "PrivatePassengerClassCodeFleet",
+        "SuccessEvent": "Class Code is valid",
+        "ErrorMessage": "Class Code must be 739800 for a Private Passenger vehicle when Fleet Vehicles = Yes.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.IsNonOwnedEntry || input1.IsHiredCarEntry || !input1.Is(input1.VehicleType, \"Private Passenger\") || !input1.IsYes(input1.FleetVehicles) || !input1.HasValue(input1.ClassCode) || !input1.In(input1.ClassCode, \"739100|739800\") || input1.Is(input1.ClassCode, \"739800\")"
+      },
+      {
+        "RuleName": "PrivatePassengerSizeUseRadiusHidden",
+        "SuccessEvent": "Size, Use and Radius are valid",
+        "ErrorMessage": "Size, Use and Radius are not applicable when Vehicle Type = Private Passenger.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.IsNonOwnedEntry || input1.IsHiredCarEntry || !input1.Is(input1.VehicleType, \"Private Passenger\") || (!input1.HasValue(input1.Size) && !input1.HasValue(input1.Radius))"
+      },
+      {
+        "RuleName": "TowingOnlyValidForPrivatePassenger",
+        "SuccessEvent": "Towing is valid",
+        "ErrorMessage": "Towing coverage is only applicable for a Private Passenger vehicle.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Towing) || input1.Is(input1.VehicleType, \"Private Passenger\")"
+      },
+      {
+        "RuleName": "TowingRequiresAutoPlusEndorsementOff",
+        "SuccessEvent": "Towing and Auto Plus Endorsement are valid",
+        "ErrorMessage": "Towing is already included in the Auto Plus Endorsement.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Towing) || !input1.IsYes(input1.AutoPlusEndorsement)"
+      },
+      {
+        "RuleName": "RentalRequiresAutoPlusEndorsementOff",
+        "SuccessEvent": "Rental and Auto Plus Endorsement are valid",
+        "ErrorMessage": "Rental is already included in the Auto Plus Endorsement.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsYes(input1.Rental) || !input1.IsYes(input1.AutoPlusEndorsement)"
+      },
+      {
+        "RuleName": "TrailerSizeHidden",
+        "SuccessEvent": "Size is valid",
+        "ErrorMessage": "Size is not applicable when Vehicle Type = Service/Utility Trailer.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.Is(input1.VehicleType, \"Service/Utility Trailer\") || !input1.HasValue(input1.Size)"
+      },
+      {
+        "RuleName": "NumberOfIndividualsRequiredForDriveOtherCar",
+        "SuccessEvent": "Number of individuals is valid",
+        "ErrorMessage": "Number of individuals covered must be entered.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsDriveOtherCarEntry || input1.HasValue(input1.NumberOfIndividuals)"
+      },
+      {
+        "RuleName": "BodilyInjuryAllOrNoneConflict",
+        "SuccessEvent": "Bodily Injury is consistent with the other coverages",
+        "ErrorMessage": "Bodily Injury amount is in conflict with All or None coverage",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.IsVirtualVehicleEntry || !input1.IsBlank(input1.BodilyInjury) || !input1.HasAnyCoverageSelected"
+      },
+      {
+        "RuleName": "PipAllOrNoneConflict",
+        "SuccessEvent": "PIP Limit is consistent with Collision",
+        "ErrorMessage": "PIP amount is in conflict with All or None coverage",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.IsVirtualVehicleEntry || !input1.IsBlank(input1.PipLimit) || !input1.HasCollision"
+      },
+      {
+        "RuleName": "PipLimitOptions",
+        "SuccessEvent": "PIP Limit is valid",
+        "ErrorMessage": "Coverage amount for PIP is invalid",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.PipLimit) || input1.In(input1.PipLimit, \"No Coverage|8000\")"
+      },
+      {
+        "RuleName": "CollisionDeductibleOptions",
+        "SuccessEvent": "Collision deductible is valid",
+        "ErrorMessage": "Collision coverage amount is invalid",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Collision) || input1.In(input1.Collision, \"No Coverage|200|250|300|500|1,000|2,000|3,000|4,000|5,000\")"
+      },
+      {
+        "RuleName": "LimitedCollisionDeductibleOptions",
+        "SuccessEvent": "LCL deductible is valid",
+        "ErrorMessage": "Coverage amount for LCL is invalid",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.LimitedCollision) || input1.In(input1.LimitedCollision, \"No Coverage|0|300|500|1,000|2,000\")"
+      },
+      {
+        "RuleName": "ComprehensiveDeductibleOptions",
+        "SuccessEvent": "Comprehensive deductible is valid",
+        "ErrorMessage": "Coverage amount for Comprehensive is invalid",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Comprehensive) || input1.In(input1.Comprehensive, \"No Coverage|300|500|1,000|2,000|3,000|4,000|5,000\")"
+      },
+      {
+        "RuleName": "TowingCoverageOptions",
+        "SuccessEvent": "Towing coverage is valid",
+        "ErrorMessage": "Coverage amount for Towing is invalid",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Towing) || input1.In(input1.Towing, \"No Coverage|50|100\")"
+      },
+      {
+        "RuleName": "BodilyInjuryOptionsBeforeJuly2025",
+        "SuccessEvent": "Bodily Injury limit is valid",
+        "ErrorMessage": "Bodily Injury must be No Coverage or 20/40 when the Effective Date is before 1 July 2025.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.BodilyInjury) || !input1.HasEffectiveDate || input1.IsEffectiveOnOrAfterJuly2025 || input1.In(input1.BodilyInjury, \"No Coverage|20/40\")"
+      },
+      {
+        "RuleName": "BodilyInjuryOptionsOnOrAfterJuly2025",
+        "SuccessEvent": "Bodily Injury limit is valid",
+        "ErrorMessage": "Bodily Injury must be No Coverage or 25/50 when the Effective Date is on or after 1 July 2025.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.BodilyInjury) || !input1.HasEffectiveDate || !input1.IsEffectiveOnOrAfterJuly2025 || input1.In(input1.BodilyInjury, \"No Coverage|25/50\")"
+      },
+      {
+        "RuleName": "OptionalBodilyInjuryOptionsBeforeJuly2025",
+        "SuccessEvent": "Optional Bodily Injury limit is valid",
+        "ErrorMessage": "Optional Bodily Injury is not a valid option for an Effective Date before 1 July 2025.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.OptionalBodilyInjury) || !input1.HasEffectiveDate || input1.IsEffectiveOnOrAfterJuly2025 || input1.In(input1.OptionalBodilyInjury, \"No Coverage|20/40|20/50|25/50|30/60|35/70|35/80|50/100|50/200|75/150|100/200|100/300|100/500|200/200|200/400|250/500|300/300|300/600|500/500|500/1,000|1,000/1,000|100,000|300,000|500,000|1,000,000\")"
+      },
+      {
+        "RuleName": "OptionalBodilyInjuryOptionsOnOrAfterJuly2025",
+        "SuccessEvent": "Optional Bodily Injury limit is valid",
+        "ErrorMessage": "Optional Bodily Injury is not a valid option for an Effective Date on or after 1 July 2025.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.OptionalBodilyInjury) || !input1.HasEffectiveDate || !input1.IsEffectiveOnOrAfterJuly2025 || input1.In(input1.OptionalBodilyInjury, \"No Coverage|25/50|30/60|35/70|35/80|40/90|50/100|50/200|75/150|100/200|100/300|100/500|200/200|200/400|250/500|300/300|300/600|500/500|500/1,000|1,000/1,000|100,000|300,000|500,000|1,000,000\")"
+      },
+      {
+        "RuleName": "OptionalBodilyInjuryRequiresBodilyInjury",
+        "SuccessEvent": "Optional Bodily Injury dependency is valid",
+        "ErrorMessage": "Optional Bodily Injury cannot be selected when the Bodily Injury limit is blank.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.OptionalBodilyInjury) || !input1.IsBlank(input1.BodilyInjury)"
+      },
+      {
+        "RuleName": "UninsuredNotLowerThanBodilyInjury",
+        "SuccessEvent": "Uninsured limit is valid",
+        "ErrorMessage": "Uninsured Limit Invalid - Uninsured cannot be lower than the Bodily Injury limit.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Uninsured) || !input1.HasValue(input1.BodilyInjury) || !input1.IsLowerThan(input1.Uninsured, input1.BodilyInjury)"
+      },
+      {
+        "RuleName": "UnderinsuredNotLowerThanBodilyInjury",
+        "SuccessEvent": "Underinsured limit is valid",
+        "ErrorMessage": "Underinsured Limit Invalid - Underinsured cannot be lower than the Bodily Injury limit.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Underinsured) || !input1.HasValue(input1.BodilyInjury) || !input1.IsLowerThan(input1.Underinsured, input1.BodilyInjury)"
+      },
+      {
+        "RuleName": "UninsuredExceedsOptionalBodilyInjury",
+        "SuccessEvent": "Uninsured limit is within the allowable maximum",
+        "ErrorMessage": "Uninsured coverage exceeds allowable limit",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Uninsured) || !input1.HasValue(input1.OptionalBodilyInjury) || !input1.IsHigherThan(input1.Uninsured, input1.OptionalBodilyInjury)"
+      },
+      {
+        "RuleName": "UnderinsuredExceedsOptionalBodilyInjury",
+        "SuccessEvent": "Underinsured limit is within the allowable maximum",
+        "ErrorMessage": "Underinsured coverage exceeds allowable limit",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Underinsured) || !input1.HasValue(input1.OptionalBodilyInjury) || !input1.IsHigherThan(input1.Underinsured, input1.OptionalBodilyInjury)"
+      },
+      {
+        "RuleName": "PropertyDamageIncludedOnlyWithQualifyingSingleLimitBI",
+        "SuccessEvent": "Property Damage is valid",
+        "ErrorMessage": "Property Damage not valid with single limit's coverage.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.In(input1.OptionalBodilyInjury, \"100,000|300,000|500,000|1,000,000\") || !input1.HasValue(input1.PropertyDamage) || !input1.Is(input1.PropertyDamage, \"Included\")"
+      },
+      {
+        "RuleName": "PropertyDamageIncludedWithSingleLimitBI",
+        "SuccessEvent": "Property Damage is valid",
+        "ErrorMessage": "Property Damage must be Included when Optional Bodily Injury is a single limit of 100,000, 300,000, 500,000 or 1,000,000.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.In(input1.OptionalBodilyInjury, \"100,000|300,000|500,000|1,000,000\") || !input1.HasValue(input1.PropertyDamage) || input1.Is(input1.PropertyDamage, \"Included\")"
+      },
+      {
+        "RuleName": "PropertyDamageRequiredWithOptionalBodilyInjury",
+        "SuccessEvent": "Property Damage is selected",
+        "ErrorMessage": "Property Damage must be selected when Optional Bodily Injury has a value.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.OptionalBodilyInjury) || input1.HasValue(input1.PropertyDamage)"
+      },
+      {
+        "RuleName": "LoanLeaseRequiresPhysicalDamage",
+        "SuccessEvent": "Auto Loan/Lease coverage is valid",
+        "ErrorMessage": "Loan/Lease Valid Only with Physical Damage",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsYes(input1.LoanLeaseCoverage) || (input1.HasComprehensive && (input1.HasCollision || input1.HasLimitedCollision))"
+      },
+      {
+        "RuleName": "WaiverOfDeductibleRequiresCollision",
+        "SuccessEvent": "Waiver of Deductible is valid",
+        "ErrorMessage": "Coverage Consistency Edit",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.IsVirtualVehicleEntry || !input1.IsYes(input1.WaiverOfDeductible) || input1.HasCollision"
+      },
+      {
+        "RuleName": "StatedAmountRequiresPhysicalDamage",
+        "SuccessEvent": "Stated Amount is valid",
+        "ErrorMessage": "Stated Amount Invalid.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsPositiveAmount(input1.StatedAmount) || input1.HasPhysicalDamage"
+      },
+      {
+        "RuleName": "CostNewRequiredWithPhysicalDamage",
+        "SuccessEvent": "Cost New is valid",
+        "ErrorMessage": "Cost New Required.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "input1.IsVirtualVehicleEntry || !(input1.HasComprehensive || input1.HasCollision) || input1.IsPositiveAmount(input1.CostNew)"
+      },
+      {
+        "RuleName": "PlateNumberCannotContainEmbeddedSpaces",
+        "SuccessEvent": "Plate number format is valid",
+        "ErrorMessage": "Plate Number Invalid.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasEmbeddedSpace(input1.PlateNumber)"
+      },
+      {
+        "RuleName": "OemPartsNotAllowedOnVehicleOverTenYears",
+        "SuccessEvent": "OEM parts coverage is valid",
+        "ErrorMessage": "OEM parts coverage is not available for a vehicle older than 10 years.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!(input1.IsYes(input1.OemCollision) || input1.IsYes(input1.OemComprehensive)) || !input1.IsOlderThan(10)"
+      },
+      {
+        "RuleName": "AntiTheftRestrictedForMotorcycleAntiqueEquipment",
+        "SuccessEvent": "Anti-Theft code is valid for the vehicle type",
+        "ErrorMessage": "Anti-Theft Code Invalid",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!(input1.Is(input1.VehicleType, \"MC\") || input1.Is(input1.VehicleType, \"AM\") || input1.Is(input1.VehicleType, \"EM\")) || !input1.HasValue(input1.AntiTheft) || input1.In(input1.AntiTheft, \"0|4\")"
+      },
+      {
+        "RuleName": "PropertyDamageOptionsBeforeJuly2025",
+        "SuccessEvent": "Property Damage limit is valid",
+        "ErrorMessage": "Property Damage is not a valid option for an Effective Date before 1 July 2025.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.PropertyDamage) || !input1.HasEffectiveDate || input1.IsEffectiveOnOrAfterJuly2025 || input1.In(input1.PropertyDamage, \"No Coverage|5,000|10,000|15,000|20,000|25,000|30,000|35,000|50,000|75,000|100,000|150,000|200,000|250,000|300,000|350,000|400,000|500,000|750,000|1,000,000\")"
+      },
+      {
+        "RuleName": "PropertyDamageOptionsOnOrAfterJuly2025",
+        "SuccessEvent": "Property Damage limit is valid",
+        "ErrorMessage": "Property Damage is not a valid option for an Effective Date on or after 1 July 2025.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.PropertyDamage) || !input1.HasEffectiveDate || !input1.IsEffectiveOnOrAfterJuly2025 || input1.In(input1.PropertyDamage, \"Included|30,000|35,000|50,000|75,000|100,000|150,000|200,000|250,000|300,000|350,000|400,000|500,000|750,000|1,000,000\")"
+      },
+      {
+        "RuleName": "UninsuredOptionsBeforeJuly2025",
+        "SuccessEvent": "Uninsured limit is valid",
+        "ErrorMessage": "Uninsured is not a valid option for an Effective Date before 1 July 2025.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Uninsured) || !input1.HasEffectiveDate || input1.IsEffectiveOnOrAfterJuly2025 || input1.In(input1.Uninsured, \"No Coverage|20/40|20/50|25/50|25/65|30/60|35/70|35/80|50/100|50/200|100/200|100/300|100/500|250/500|300/500|500/500|500/1,000|1,000/1,000\")"
+      },
+      {
+        "RuleName": "UninsuredOptionsOnOrAfterJuly2025",
+        "SuccessEvent": "Uninsured limit is valid",
+        "ErrorMessage": "Uninsured is not a valid option for an Effective Date on or after 1 July 2025.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Uninsured) || !input1.HasEffectiveDate || !input1.IsEffectiveOnOrAfterJuly2025 || input1.In(input1.Uninsured, \"No Coverage|25/50|25/65|30/60|35/70|35/80|40/90|50/100|50/200|100/200|100/300|100/500|250/500|300/500|500/500|500/1,000|1,000/1,000\")"
+      },
+      {
+        "RuleName": "UnderinsuredOptionsBeforeJuly2025",
+        "SuccessEvent": "Underinsured limit is valid",
+        "ErrorMessage": "Underinsured is not a valid option for an Effective Date before 1 July 2025.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Underinsured) || !input1.HasEffectiveDate || input1.IsEffectiveOnOrAfterJuly2025 || input1.In(input1.Underinsured, \"No Coverage|20/40|20/50|25/50|25/65|30/60|35/70|35/80|50/100|50/200|100/200|100/300|100/500|250/500|500/500|500/1,000\")"
+      },
+      {
+        "RuleName": "UnderinsuredOptionsOnOrAfterJuly2025",
+        "SuccessEvent": "Underinsured limit is valid",
+        "ErrorMessage": "Underinsured is not a valid option for an Effective Date on or after 1 July 2025.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Underinsured) || !input1.HasEffectiveDate || !input1.IsEffectiveOnOrAfterJuly2025 || input1.In(input1.Underinsured, \"No Coverage|25/50|25/65|30/60|35/70|35/80|50/100|50/200|100/200|100/300|100/500|250/500|500/500|500/1,000\")"
+      },
+      {
+        "RuleName": "MedicalPaymentsOptions",
+        "SuccessEvent": "Medical Payments limit is valid",
+        "ErrorMessage": "Medical Payments is not a valid option.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.MedicalPayments) || input1.In(input1.MedicalPayments, \"No Coverage|5,000|10,000|15,000|20,000|25,000\")"
+      },
+      {
+        "RuleName": "MedicalPaymentsRestrictedForTruck",
+        "SuccessEvent": "Medical Payments limit is valid for vehicle type",
+        "ErrorMessage": "Medical Payments coverage amount not allowed for vehicle type",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.Is(input1.VehicleType, \"Truck\") || !input1.IsLimitAbove(input1.MedicalPayments, 5000)"
+      },
+      {
+        "RuleName": "FreeformVehicleLicenseState",
+        "SuccessEvent": "License State is valid",
+        "ErrorMessage": "License State is not a valid selection for a Freeform Vehicle.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.FreeformVehicle) || !input1.HasValue(input1.LicenseState) || input1.In(input1.LicenseState, \"MA|ME|CT|RI|AK|AL|AR|AZ|CA|CO|DC|DE|FL|FR|GA|HI|IA|ID|IL|IN|KS|KY|LA|MD|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV|WY\")"
+      },
+      {
+        "RuleName": "CollisionAndLimitedCollisionExclusive",
+        "SuccessEvent": "Collision coverages are valid",
+        "ErrorMessage": "LCL Coverage is Invalid when Collision coverage is requested.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.Collision) || input1.Is(input1.Collision, \"No Coverage\") || !input1.HasValue(input1.LimitedCollision) || input1.Is(input1.LimitedCollision, \"No Coverage\")"
+      },
+      {
+        "RuleName": "HiredCarExcessBlankClassCode",
+        "SuccessEvent": "Hired Car class code is valid",
+        "ErrorMessage": "Class Code must be 661900 when Excess Hired within Hired Car is blank.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsHiredCarEntry || !input1.HasValue(input1.ClassCode) || input1.IsAbove(input1.ExcessHired, 0) || input1.Is(input1.ClassCode, \"661900\")"
+      },
+      {
+        "RuleName": "HiredCarExcessPositiveClassCode",
+        "SuccessEvent": "Hired Car class code is valid",
+        "ErrorMessage": "Class Code must be 661100 when Excess Hired within Hired Car is greater than 0.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsHiredCarEntry || !input1.HasValue(input1.ClassCode) || !input1.IsAbove(input1.ExcessHired, 0) || input1.Is(input1.ClassCode, \"661100\")"
+      },
+      {
+        "RuleName": "NonOwnedAddlInsuredClassCode",
+        "SuccessEvent": "Non-Owned class code is valid",
+        "ErrorMessage": "Class Code must be 667100 when Employees as Additional Insured is Yes.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsNonOwnedEntry || !input1.HasValue(input1.ClassCode) || !input1.IsYes(input1.EmployeesAsAdditionalInsured) || input1.Is(input1.ClassCode, \"667100\")"
+      },
+      {
+        "RuleName": "NonOwnedEmployeeCountClassCode",
+        "SuccessEvent": "Non-Owned class code is valid",
+        "ErrorMessage": "Non-Owned Class Code must match the number of employees: 0-25 = 660100, 26-100 = 660200, 101-500 = 660300, 501-1000 = 660400, over 1000 = 660500.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.IsNonOwnedEntry || !input1.HasValue(input1.ClassCode) || input1.IsYes(input1.EmployeesAsAdditionalInsured) || input1.NonOwnedEmployeeCount == null || (input1.InRange(input1.NonOwnedEmployeeCount, 0, 25) && input1.Is(input1.ClassCode, \"660100\")) || (input1.InRange(input1.NonOwnedEmployeeCount, 26, 100) && input1.Is(input1.ClassCode, \"660200\")) || (input1.InRange(input1.NonOwnedEmployeeCount, 101, 500) && input1.Is(input1.ClassCode, \"660300\")) || (input1.InRange(input1.NonOwnedEmployeeCount, 501, 1000) && input1.Is(input1.ClassCode, \"660400\")) || (input1.IsAbove(input1.NonOwnedEmployeeCount, 1000) && input1.Is(input1.ClassCode, \"660500\"))"
+      }
+    ]
+  },
+  {
+    "WorkflowName": "DriverScreenConditions",
+    "Rules": [
+      {
+        "RuleName": "NonMaLicenseRequiresRegStatus",
+        "SuccessEvent": "Reg Status is valid",
+        "ErrorMessage": "Reg Status is mandatory when License State is not MA.",
+        "ErrorType": "Error",
+        "RuleExpressionType": "LambdaExpression",
+        "Expression": "!input1.HasValue(input1.LicenseState) || input1.Is(input1.LicenseState, \"MA\") || input1.HasValue(input1.RegStatus)"
+      }
+    ]
+  }
+]

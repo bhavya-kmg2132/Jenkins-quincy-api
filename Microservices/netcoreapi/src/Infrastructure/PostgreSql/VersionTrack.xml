@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<sql-set>
+	<sql name="VersionTrack.Add">
+		<![CDATA[
+		INSERT INTO "VersionTrack" (
+			"PlatformType",
+			"VersionNumber",
+			"ReleaseDate",
+			"CreatedDate",
+			"ReleaseNotes",
+			"ReleasedBy",
+			"ReleasedTo"
+		)
+		VALUES (
+			@PlatformType,
+			@VersionNumber,
+			@ReleaseDate,
+			@CreatedDate,
+			@ReleaseNotes,
+			@ReleasedBy,
+			@ReleasedTo
+		)
+		RETURNING "Id";
+		]]>
+	</sql>
+
+	<sql name="VersionTrack.GetVersionTrack">
+		<![CDATA[
+		SELECT 
+			"Id",
+			"PlatformType",
+			"VersionNumber",
+			"ReleaseDate",
+			"CreatedDate",
+			"ReleaseNotes",
+			"ReleasedBy",
+			"ReleasedTo",
+			"IsActive"
+		FROM "VersionTrack"
+		ORDER BY "ReleaseDate" DESC;
+		]]>
+	</sql>
+</sql-set>
