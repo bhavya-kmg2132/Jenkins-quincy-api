@@ -424,6 +424,14 @@
             "Npgsql": {
               "target": "Package",
               "version": "[10.0.0, )"
+            },
+            "Oracle.ManagedDataAccess.Core": {
+              "target": "Package",
+              "version": "[2.19.180, )"
+            },
+            "System.Security.Cryptography.Xml": {
+              "target": "Package",
+              "version": "[10.0.10, )"
             }
           },
           "imports": [
@@ -1119,9 +1127,9 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "dependencies": {
-            "AutoMapper.Extensions.Microsoft.DependencyInjection": {
+            "AutoMapper": {
               "target": "Package",
-              "version": "[12.0.1, )"
+              "version": "[16.2.0, )"
             },
             "BCrypt.Net-Next": {
               "target": "Package",
@@ -1229,6 +1237,10 @@
               "target": "Package",
               "version": "[10.0.0, )"
             },
+            "Oracle.ManagedDataAccess.Core": {
+              "target": "Package",
+              "version": "[2.19.180, )"
+            },
             "RestSharp": {
               "target": "Package",
               "version": "[112.1.0, )"
@@ -1240,6 +1252,10 @@
             "Swashbuckle.AspNetCore.Annotations": {
               "target": "Package",
               "version": "[9.0.6, )"
+            },
+            "System.Security.Cryptography.Xml": {
+              "target": "Package",
+              "version": "[10.0.10, )"
             }
           },
           "imports": [
@@ -1590,7 +1606,7 @@
           "dependencies": {
             "MessagePack": {
               "target": "Package",
-              "version": "[3.1.4, )"
+              "version": "[3.1.7, )"
             }
           },
           "imports": [
@@ -1945,6 +1961,10 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "dependencies": {
+            "AWSSDK.Core": {
+              "target": "Package",
+              "version": "[4.0.3.3, )"
+            },
             "AWSSDK.S3": {
               "target": "Package",
               "version": "[4.0.11, )"
@@ -2071,6 +2091,10 @@
               "target": "Package",
               "version": "[1.0.0, )"
             },
+            "Oracle.ManagedDataAccess.Core": {
+              "target": "Package",
+              "version": "[2.19.180, )"
+            },
             "System.CodeDom": {
               "target": "Package",
               "version": "[9.0.10, )"
@@ -2090,6 +2114,10 @@
             "System.Runtime.Caching": {
               "target": "Package",
               "version": "[9.0.10, )"
+            },
+            "System.Security.Cryptography.Xml": {
+              "target": "Package",
+              "version": "[10.0.10, )"
             },
             "System.ServiceModel.Http": {
               "target": "Package",
