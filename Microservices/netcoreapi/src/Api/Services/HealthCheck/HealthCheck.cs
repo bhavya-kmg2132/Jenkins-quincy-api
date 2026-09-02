@@ -15,8 +15,11 @@ namespace Api.Services.HealthCheck
                 // Reason: No remote endpoint currently available for validation.
                 // This check should be re-enabled once a remote service or API is configured for health monitoring.
                 //.AddCheck<RemoteHealthCheck>("Remote endpoints Health Check", failureStatus: HealthStatus.Unhealthy)
-                .AddCheck<MemoryHealthCheck>($"Feedback Service Memory Check", failureStatus: HealthStatus.Unhealthy, tags: new[] { "Feedback Service" })
-                .AddUrlGroup(new Uri(configuration["HealthCheckEndpoints:heartbeatapi"]), name: "base URL", failureStatus: HealthStatus.Unhealthy);
+                .AddCheck<MemoryHealthCheck>($"Feedback Service Memory Check", failureStatus: HealthStatus.Unhealthy, tags: new[] { "Feedback Service" });
+                // "base URL" AddUrlGroup check removed: HealthCheckEndpoints:heartbeatapi pointed at a
+                // dev-machine-only address with no equivalent deployed service (UseNetAuthLib is true,
+                // i.e. auth runs via the embedded NetAuth.Lib, not a separate netauthapi microservice).
+                // It made /api/health permanently report Unhealthy outside that one dev machine.
 
             //services.AddHealthChecksUI();
             services.AddHealthChecksUI(setupSettings: opt =>
