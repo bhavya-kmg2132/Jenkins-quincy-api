@@ -90,7 +90,21 @@ pipeline {
                 powershell '''
                     $ErrorActionPreference = "Stop"
                     $settingsPath = Join-Path $env:PUBLISH_DIR "appsettings.json"
-                    $json = Get-Content $settingsPath -Raw | ConvertFrom-Json
+                    $raw = Get-Content $settingsPath -Raw
+
+                    # appsettings.json uses // comments (JSONC), which .NET's config loader
+                    # tolerates at runtime but ConvertFrom-Json does not. Strip them first,
+                    # taking care not to mangle "https://" (or similar) inside string values:
+                    # the pattern tries to match a whole quoted string first (left alternative),
+                    # so real string content is passed through untouched; only a bare // that
+                    # is NOT inside a string reaches the second alternative and gets removed.
+                    $commentEvaluator = [System.Text.RegularExpressions.MatchEvaluator]{
+                        param($m)
+                        if ($m.Groups[1].Success) { "" } else { $m.Value }
+                    }
+                    $cleaned = [regex]::Replace($raw, '"(?:\\\\.|[^"\\\\])*"|(//.*)', $commentEvaluator)
+
+                    $json = $cleaned | ConvertFrom-Json
 
                     $json.ConnectionStrings.SqlDBConnection = ""
                     $json.ConnectionStrings.PostgreSqlDBConnection = ""
