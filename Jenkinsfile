@@ -45,7 +45,7 @@ pipeline {
 
         // --- IIS / Web Deploy target — UPDATE THESE for the real server ---
         IIS_APP_POOL      = 'QuincyApi'
-        IIS_SITE_APP      = 'http://localhost:8081/'          // msdeploy -dest:iisApp value
+        IIS_SITE_APP      = 'QuincyApi'          // msdeploy -dest:contentPath value (IIS site name in IIS Manager)
         IIS_PHYSICAL_PATH = 'C:\\inetpub\\wwwroot\\QuincyApi'     // must match IIS_SITE_APP's physical path
         HEALTH_CHECK_URL  = 'http://localhost:8081/api/health'
         MSDEPLOY_EXE      = 'C:\\Program Files\\IIS\\Microsoft Web Deploy V3\\msdeploy.exe'
