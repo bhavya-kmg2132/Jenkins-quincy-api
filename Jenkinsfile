@@ -6,7 +6,8 @@
 //
 // Test execution is intentionally NOT part of this pipeline yet (build + deploy only).
 //
-// REQUIRED Jenkins Credentials (Manage Jenkins > Credentials) — create these before running:
+// REQUIRED Jenkins Credentials (Manage Jenkins > Credentials) — only needed when DEPLOY=true,
+// since they're bound inside the "Inject Runtime Secrets" stage rather than pipeline-wide:
 //   quincy-prod-sql-connstring   (Secret text) SQL connection string IIS should use at runtime
 //   quincy-prod-pg-connstring    (Secret text) PostgreSQL connection string IIS should use at runtime
 //   quincy-prod-jwt-key          (Secret text) JwtConfig:Key used at runtime
@@ -48,12 +49,6 @@ pipeline {
         IIS_PHYSICAL_PATH = 'C:\\inetpub\\wwwroot\\QuincyApi'     // must match IIS_SITE_APP's physical path
         HEALTH_CHECK_URL  = 'http://localhost/QuincyApi/api/health'
         MSDEPLOY_EXE      = 'C:\\Program Files\\IIS\\Microsoft Web Deploy V3\\msdeploy.exe'
-
-        // --- Secrets pulled from Jenkins Credentials (never from committed appsettings.json) ---
-        PROD_SQL_CONNSTRING = credentials('quincy-prod-sql-connstring')
-        PROD_PG_CONNSTRING  = credentials('quincy-prod-pg-connstring')
-        PROD_JWT_KEY        = credentials('quincy-prod-jwt-key')
-        PROD_AZUREAD_SECRET = credentials('quincy-prod-azuread-secret')
     }
 
     stages {
@@ -139,6 +134,14 @@ pipeline {
 
         stage('Inject Runtime Secrets') {
             when { expression { return params.DEPLOY } }
+            // Credentials are bound here (not at the top-level environment block) so build-only
+            // runs (DEPLOY=false) never require these to exist in Jenkins.
+            environment {
+                PROD_SQL_CONNSTRING = credentials('quincy-prod-sql-connstring')
+                PROD_PG_CONNSTRING  = credentials('quincy-prod-pg-connstring')
+                PROD_JWT_KEY        = credentials('quincy-prod-jwt-key')
+                PROD_AZUREAD_SECRET = credentials('quincy-prod-azuread-secret')
+            }
             steps {
                 powershell '''
                     $ErrorActionPreference = "Stop"
